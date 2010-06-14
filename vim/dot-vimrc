@@ -1,0 +1,14 @@
+nmap ,s :source $MYVIMRC<CR>
+nmap ,v :e $MYVIMRC<CR>
+map ,; :s /^/;; /<CR>
+map ,: :s /^;; //<CR>
+map <F2> :set hlsearch!<CR>
+map <silent> <F3> :call BufferList()<CR>
+set autoindent
+set lisp
+set tabstop=4
+set showmatch
+set cpoptions-=m
+nmap <C-p> ?^(<CR>
+nmap <C-n> /^(<CR>
+syntax enable

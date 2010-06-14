@@ -1,0 +1,3 @@
+alias st='git status'
+alias ll='ls -l --hide=*~ --hide=#*#'
+alias cl=clear
