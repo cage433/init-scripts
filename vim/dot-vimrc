@@ -11,3 +11,4 @@ nmap <C-n> /^(<CR>
 syntax enable
 syntax off
 filetype plugin indent on
+set autowrite
