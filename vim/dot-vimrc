@@ -9,6 +9,7 @@ set cpoptions-=m
 nmap <C-p> ?^(<CR>
 nmap <C-n> /^(<CR>
 syntax enable
-syntax off
+"syntax off
 filetype plugin indent on
 set autowrite
+autocmd FileType scala setlocal shiftwidth=2 tabstop=2
