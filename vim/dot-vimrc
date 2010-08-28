@@ -13,3 +13,19 @@ syntax enable
 filetype plugin indent on
 set autowrite
 autocmd FileType scala setlocal shiftwidth=2 tabstop=2
+
+" Change PWD to that of the current file
+map <silent> ,c :cd %:h<CR>
+
+" Revert PWD to its original value
+let g:initialdir = getcwd()
+function! PutPwdBack()
+	exec ":cd " . g:initialdir
+endfunction
+map ,d :call PutPwdBack()<CR>
+
+
+
+
+
+
