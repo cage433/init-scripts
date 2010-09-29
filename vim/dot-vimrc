@@ -1,3 +1,4 @@
+call pathogen#runtime_append_all_bundles() 
 nmap ,s :source $MYVIMRC<CR>
 nmap ,v :e $MYVIMRC<CR>
 map ,; :s /^/;; /<CR>
@@ -34,6 +35,8 @@ imap <down> <nop>
 imap <left> <nop>
 imap <right> <nop>
 
-
+:set tabstop=2
+:set shiftwidth=2
+:set expandtab
 
 
