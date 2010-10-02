@@ -1,6 +1,34 @@
+set nocompatible
+call pathogen#helptags()
 call pathogen#runtime_append_all_bundles() 
-nmap ,s :source $MYVIMRC<CR>
-nmap ,v :e $MYVIMRC<CR>
+let mapleader=","
+nmap <silent> <leader>sv :so $MYVIMRC<CR>
+nmap <silent> <leader>se :e $MYVIMRC<CR>
+set hidden
+set nowrap
+
+set nowrap        " don't wrap lines
+set backspace=indent,eol,start " allow backspacing over everything in insert mode
+set autoindent    " always set autoindenting on
+set copyindent    " copy the previous indentation on autoindenting
+set number        " always show line numbers
+set shiftround    " use multiple of shiftwidth when indenting with '<' and '>'
+set showmatch     " set show matching parenthesis
+set ignorecase    " ignore case when searching
+set smartcase     " ignore case if search pattern is all lowercase,  case-sensitive otherwise
+set smarttab      " insert tabs on the start of a line according to shiftwidth, not tabstop
+set hlsearch      " highlight search terms
+set incsearch     " show search matches as you type
+set nobackup
+set noswapfile
+set pastetoggle=2
+nnoremap ; :
+map <C-h> <C-w>h
+map <C-j> <C-w>j
+map <C-k> <C-w>k
+map <C-l> <C-w>l
+nmap <silent> ,/ :nohlsearch<CR>
+
 map ,; :s /^/;; /<CR>
 map ,: :s /^;; //<CR>
 map <F2> :set hlsearch!<CR>
