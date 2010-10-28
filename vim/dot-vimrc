@@ -19,9 +19,10 @@ set smartcase     " ignore case if search pattern is all lowercase,  case-sensit
 set smarttab      " insert tabs on the start of a line according to shiftwidth, not tabstop
 set hlsearch      " highlight search terms
 set incsearch     " show search matches as you type
+set gdefault
 set nobackup
 set noswapfile
-set pastetoggle=2
+set pastetoggle=<F2>
 nnoremap ; :
 map <C-h> <C-w>h
 map <C-j> <C-w>j
@@ -67,4 +68,23 @@ imap <right> <nop>
 :set shiftwidth=2
 :set expandtab
 
+
+inoremap jj <ESC>
+
+set encoding=utf-8
+set scrolloff=3
+set autoindent
+set showmode
+set showcmd
+set hidden
+set wildmenu
+set wildmode=list:longest
+set visualbell
+set cursorline
+set ttyfast
+set ruler
+set backspace=indent,eol,start
+"set laststatus=
+"set relativenumber
+"set undofile
 
