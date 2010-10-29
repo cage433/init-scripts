@@ -68,6 +68,7 @@ imap <right> <nop>
 :set shiftwidth=2
 :set expandtab
 
+:set gdefault
 
 inoremap jj <ESC>
 
@@ -88,3 +89,12 @@ set backspace=indent,eol,start
 "set relativenumber
 "set undofile
 
+"Search recursively for tags file
+set tags=tags;/
+
+" CD to the current files directory
+autocmd BufEnter * lcd %:p:h 
+
+" comment
+map ,m mb:.,'as/^/\/\/<CR>,/'b
+map ,n mb:.,'as/^\/\//<CR>,/'b
