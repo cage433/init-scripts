@@ -113,3 +113,11 @@ map ,m mb:.,'as/^/\/\/<CR>,/'b
 map ,n mb:.,'as/^\/\//<CR>,/'b
 
 :set noignorecase
+
+map ,i ma:r ! find_imports.rb <cword><CR>`a
+map ,o ma:r ! find_imports.rb <cword> -a<CR>`a
+"map ,u ma?^[^i]<CR>mb'ayy?\(\(^i\)\|\(^p\)\)<CR>p'b
+map ,u ma?^[^i]<CR>mb'ayy?^i<CR>p'b:.,$g/^import/d<CR>'b
+
+
+
