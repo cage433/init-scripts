@@ -54,6 +54,19 @@ function! PutPwdBack()
 endfunction
 map ,d :call PutPwdBack()<CR>
 
+"Compile current file
+function! SaveCurrentFileName()
+  let g:currentFileName = expand("%:p")
+endfunction
+function! CompileCurrentFile()
+  exec ":r ! fsc -d /home/alex/tmp/ " . g:currentFileName . " | cat"
+endfunction
+map ,l :call SaveCurrentFileName()<CR>:only<CR>:vs<CR><C-l>:vi ~/comp<CR>
+\ggdG
+\:call CompileCurrentFile()<CR>
+\:r ! echo "DONE"<CR>
+\<C-h>
+
 " disable arrow keys
 map <up> <nop>
 map <down> <nop>
@@ -98,3 +111,5 @@ autocmd BufEnter * lcd %:p:h
 " comment
 map ,m mb:.,'as/^/\/\/<CR>,/'b
 map ,n mb:.,'as/^\/\//<CR>,/'b
+
+:set noignorecase
