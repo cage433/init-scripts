@@ -9,7 +9,7 @@ def add_imports(file)
   regexp = /^#{$short_name}\s+((\w|\.)+)/
   IO.readlines(file).each do |line|
     if line =~ regexp
-      $imports.unshift("import #{$1}")
+      $imports.unshift("import #{$1}.#{$short_name}")
     end
   end
 end

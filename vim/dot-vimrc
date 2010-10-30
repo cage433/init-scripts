@@ -23,6 +23,7 @@ set gdefault
 set nobackup
 set noswapfile
 set pastetoggle=<F2>
+set lazyredraw
 nnoremap ; :
 map <C-h> <C-w>h
 map <C-j> <C-w>j
@@ -61,7 +62,7 @@ endfunction
 function! CompileCurrentFile()
   exec ":r ! fsc -d /home/alex/tmp/ " . g:currentFileName . " | cat"
 endfunction
-map ,l :call SaveCurrentFileName()<CR>:only<CR>:vs<CR><C-l>:vi ~/comp<CR>
+map ,l :w<CR>:call SaveCurrentFileName()<CR>:only<CR>:vs<CR><C-l>:vi ~/comp<CR>
 \ggdG
 \:call CompileCurrentFile()<CR>
 \:r ! echo "DONE"<CR>
@@ -119,8 +120,26 @@ map ,i ma:r ! find_imports.rb <cword><CR>`a
 " show all imports
 map ,o ma:r ! find_imports.rb <cword> -a<CR>`a
 "use import
-map ,u ma?^[^i]<CR>mb'ayy?^i<CR>p'b:.,$g/^import/d<CR>'b
+map ,u ma?^[^i]<CR>mb'ayy'b?^i<CR>p'b:.,$g/^import/d<CR>'b,/
 "jump to parent
 map ,p ?extends<CR>w<C-]>
+:set textwidth=0
+function! CompileThisFile()
+  let scalafile = expand("%:p")
+  let classdir = "/" . join(split(scalafile, "/")[0:3], "/") .  "/target/scala_2.8.0.final-local/classes/"
+  w
+  only
+  vs
+  exec "normal \<C-l>"
+  vi("~/comp")
+  exec "normal ggdG"
 
+  "exec ":silent r ! fsc -d /home/alex/tmp/ " . scalafile . " | cat"
+  exec ":silent r ! fsc -d " . classdir . " " . scalafile . " | cat"
+  exec ":silent r ! echo 'DONE'"
+  exec ":silent r ! date"
+  exec "normal \<C-h>"
+endfunction
+
+map <silent> ,k :call CompileThisFile()<CR>
 
