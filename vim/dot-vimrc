@@ -55,19 +55,6 @@ function! PutPwdBack()
 endfunction
 map ,d :call PutPwdBack()<CR>
 
-"Compile current file
-function! SaveCurrentFileName()
-  let g:currentFileName = expand("%:p")
-endfunction
-function! CompileCurrentFile()
-  exec ":r ! fsc -d /home/alex/tmp/ " . g:currentFileName . " | cat"
-endfunction
-map ,l :w<CR>:call SaveCurrentFileName()<CR>:only<CR>:vs<CR><C-l>:vi ~/comp<CR>
-\ggdG
-\:call CompileCurrentFile()<CR>
-\:r ! echo "DONE"<CR>
-\<C-h>
-
 " disable arrow keys
 map <up> <nop>
 map <down> <nop>
@@ -131,15 +118,35 @@ function! CompileThisFile()
   only
   vs
   exec "normal \<C-l>"
-  vi("~/comp")
+  exec ":silent vi ~/starling/comp"
   exec "normal ggdG"
 
-  "exec ":silent r ! fsc -d /home/alex/tmp/ " . scalafile . " | cat"
   exec ":silent r ! fsc -d " . classdir . " " . scalafile . " | cat"
-  exec ":silent r ! echo 'DONE'"
   exec ":silent r ! date"
   exec "normal \<C-h>"
 endfunction
 
-map <silent> ,k :call CompileThisFile()<CR>
+map <silent> ,l :call CompileThisFile()<CR>
 
+function! RunTheseTests()
+  let scalafile = expand("%:p")
+  let pkg = join(split(scalafile, "/")[5:-2], ".")
+  let classname = expand("%:r")
+  let fullclassname = pkg . "." . classname
+  w
+  only
+  vs
+  exec "normal \<C-l>"
+  exec ":silent vi ~/starling/test"
+  "vi "/home/alex/starling/test"
+  exec "normal ggdG"
+
+  exec ":silent r ! scala org.testng.TestNG -listener starling.utils.SBTTestListener -testclass " . fullclassname . " | cat "
+  "exec "r ! echo $CLASSPATH"
+  "exec (":silent r ! scala -howtorun:object " . " org.testng.TestNG" )
+  exec ":silent r ! date"
+  exec "normal \<C-h>"
+  "exec "r ! echo " . fullclassname
+endfunction
+
+map ,j :call RunTheseTests()<CR>
