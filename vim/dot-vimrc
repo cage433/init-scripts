@@ -102,7 +102,7 @@ autocmd BufEnter * lcd %:p:h
 
 " comment and uncomment
 map ,m mb:.,'as/^/\/\/<CR>,/'b
-map ,n mb:.,'as/^\/\//<CR>,/'b
+map ,n mb:.,'as/^\/\//g<CR>,/'b
 
 "show starling imports
 map ,i ma:r ! find_imports.rb <cword><CR>`a
