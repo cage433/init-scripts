@@ -96,21 +96,39 @@ set tags=tags;/
 " CD to the current files directory
 autocmd BufEnter * lcd %:p:h 
 
-" comment
+
+:set noignorecase
+:set textwidth=0
+
+" comment and uncomment
 map ,m mb:.,'as/^/\/\/<CR>,/'b
 map ,n mb:.,'as/^\/\//<CR>,/'b
 
-:set noignorecase
-
 "show starling imports
 map ,i ma:r ! find_imports.rb <cword><CR>`a
+
 " show all imports
 map ,o ma:r ! find_imports.rb <cword> -a<CR>`a
-"use import
-map ,u ma?^[^i]<CR>mb'ayy'b?^i<CR>p'b:.,$g/^import/d<CR>'b,/
-"jump to parent
+
+function! SaveWinline()
+  let g:currentwinline = winline()
+endfunction
+
+" Stops the buffer jumping around when adding imports
+function! RestoreWinline()
+  while winline() > g:currentwinline
+    exec "normal \<C-e>"
+  endwhile
+  while winline() < g:currentwinline
+    exec "normal \<C-y>"
+  endwhile
+endfunction
+
+"Put the selected import line at the top and delete any others
+map ,u ma?^[^i]<CR>mb:call SaveWinline()<CR>'ayy'b?^i<CR>p'b:.,$g/^import/d<CR>'b,/:call RestoreWinline()<CR>
+
+"jump to parent class
 map ,p ?extends<CR>w<C-]>
-:set textwidth=0
 function! CompileThisFile()
   let scalafile = expand("%:p")
   let classdir = "/" . join(split(scalafile, "/")[0:3], "/") .  "/target/scala_2.8.0.final-local/classes/"
@@ -128,13 +146,14 @@ endfunction
 
 map <silent> ,l :call CompileThisFile()<CR>
 
-function! RunTheseTests()
-  let scalafile = expand("%:p")
-  let pkg = join(split(scalafile, "/")[5:-2], ".")
-  let classname = expand("%:r")
-  let fullclassname = pkg . "." . classname
+function! RunATest(scalafile, classname)
+  let g:lasttestfile = a:scalafile
+  let g:lastclassname = a:classname
+  let pkg = join(split(a:scalafile, "/")[5:-2], ".")
+  "let classname = expand("%:r")
+  let fullclassname = pkg . "." . a:classname
   w
-  only
+  exec ":silent only"
   vs
   exec "normal \<C-l>"
   exec ":silent vi ~/starling/test"
@@ -146,7 +165,16 @@ function! RunTheseTests()
   "exec (":silent r ! scala -howtorun:object " . " org.testng.TestNG" )
   exec ":silent r ! date"
   exec "normal \<C-h>"
-  "exec "r ! echo " . fullclassname
 endfunction
 
-map ,j :call RunTheseTests()<CR>
+function! RunThisTest() 
+  call RunATest(expand("%:p"), expand("%:r"))
+endfunction
+
+function! RunLastTest()
+  call RunATest(g:lasttestfile, g:lastclassname)
+endfunction
+
+map ,k :call RunThisTest()<CR>
+map ,j :call RunLastTest()<CR>
+
