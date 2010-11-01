@@ -25,6 +25,7 @@ set noswapfile
 set pastetoggle=<F2>
 set lazyredraw
 nnoremap ; :
+nnoremap \ ;
 map <C-h> <C-w>h
 map <C-j> <C-w>j
 map <C-k> <C-w>k
