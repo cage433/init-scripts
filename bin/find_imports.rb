@@ -18,4 +18,4 @@ if include_external then
   add_imports("#{ENV['HOME']}/starling/external_imports")
 end
 
-puts $imports
+puts $imports.uniq
