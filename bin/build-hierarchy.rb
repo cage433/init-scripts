@@ -13,7 +13,7 @@ def add_to_map(map, k, v)
   end
 end
 Find.find("#{ENV['HOME']}/starling") do |file|
-  if file =~ /OilVols\.scala$/ then
+  if file =~ /\.scala$/ then
     file_text = IO.readlines(file, nil)[0]
     file_text.scan(/class\s+([A-Z]\w*)([^{]*){/).each do |match|
       sub_class = match[0]
