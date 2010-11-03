@@ -167,7 +167,7 @@ function! RunATest(scalafile, classname)
 endfunction
 
 function! RunThisTest() 
-  call RunATest(expand("%:p"), expand("%:r"))
+  call RunATest(expand("%:p"), expand("%:t:r"))
 endfunction
 
 function! RunLastTest()
