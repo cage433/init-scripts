@@ -17,7 +17,7 @@ Find.find("/home/alex/starling") do |file|
   if file =~ /.*\.scala$/ then
     puts file
     IO.readlines(file).each do |line|
-      if line =~ /\s*(class|trait|object)\s*(\w+)\s*(private)?\s*({|\()/ then
+      if line =~ /\s*(class|trait|object)\s*(\w+)\s*(private)?\s*(((extends)|(with))\s+\w+\s*)*({|\()/ then
         puts line
         starling_classes.unshift([$2, package_name(file)])
       end
