@@ -47,7 +47,7 @@ set autowrite
 autocmd FileType scala setlocal shiftwidth=2 tabstop=2
 
 " Change PWD to that of the current file
-map <silent> ,c :cd %:h<CR>
+"map <silent> ,c :cd %:h<CR>
 
 " Revert PWD to its original value
 let g:initialdir = getcwd()
@@ -95,7 +95,7 @@ set backspace=indent,eol,start
 set tags=tags;/
 
 " CD to the current files directory
-autocmd BufEnter * lcd %:p:h 
+"
 
 
 :set noignorecase
@@ -134,11 +134,11 @@ function! CompileThisFile()
   let scalafile = expand("%:p")
   let classdir = "/" . join(split(scalafile, "/")[0:3], "/") .  "/target/scala_2.8.0.final-local/classes/"
   w
-  only
+  exec ":silent only"
   vs
   exec "normal \<C-l>"
   exec ":silent vi ~/starling/comp"
-  exec "normal ggdG"
+  exec ":silent normal ggdG"
 
   exec ":silent r ! fsc -d " . classdir . " " . scalafile . " | cat"
   exec ":silent r ! date"
@@ -159,11 +159,9 @@ function! RunATest(scalafile, classname)
   exec "normal \<C-l>"
   exec ":silent vi ~/starling/test"
   "vi "/home/alex/starling/test"
-  exec "normal ggdG"
+  exec ":silent normal ggdG"
 
   exec ":silent r ! scala org.testng.TestNG -listener starling.utils.SBTTestListener -testclass " . fullclassname . " | cat "
-  "exec "r ! echo $CLASSPATH"
-  "exec (":silent r ! scala -howtorun:object " . " org.testng.TestNG" )
   exec ":silent r ! date"
   exec "normal \<C-h>"
 endfunction
@@ -175,6 +173,16 @@ endfunction
 function! RunLastTest()
   call RunATest(g:lasttestfile, g:lastclassname)
 endfunction
+
+function! ToggleSourceAndTestFile()
+  if stridx(expand("%"), "Tests.scala") == -1
+    exec ":vi " . substitute(expand("%:r"), "\/src\/", "/tests/", "") . "Tests.scala" 
+  else 
+    let otherfile = substitute(expand("%:r"), "\/tests\/", "/src/", "")
+    exec ":vi " . substitute(otherfile, "Tests", "", "") . ".scala"
+  endif
+endfunction
+map ,t :call ToggleSourceAndTestFile()<CR>
 
 map ,k :call RunThisTest()<CR>
 map ,j :call RunLastTest()<CR>
