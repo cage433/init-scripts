@@ -149,6 +149,7 @@ function! OutputDateAndSwitchBuffer()
   exec "normal gg"
   exec "normal \<C-w>w"
 endfunction
+
 function! CompileThisFile()
   let scalafile = expand("%:p")
   let classdir = "/" . join(split(scalafile, "/")[0:3], "/") .  "/target/scala_2.8.0.final-local/classes/"
