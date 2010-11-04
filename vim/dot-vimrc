@@ -2,7 +2,7 @@ set nocompatible
 call pathogen#helptags()
 call pathogen#runtime_append_all_bundles() 
 let mapleader=","
-nmap <silent> <leader>sv :so $MYVIMRC<CR>
+nmap <silent> <leader>sv :w $MYVIMRC<CR>:so $MYVIMRC<CR>
 nmap <silent> <leader>se :e $MYVIMRC<CR>
 set hidden
 
@@ -219,5 +219,6 @@ map ,T :call ToggleSourceAndTestFileOtherWindow()<CR>
 
 map ,k :call RunThisTest()<CR>
 map ,j :call RunLastTest()<CR>
+map ,J :call CompileThisFile()<CR>:call RunLastTest()<CR>
 
 map ,w :call OpenTagInOtherWindow()<CR>,/
