@@ -230,3 +230,5 @@ map <leader>I <leader>ij<leader>u
 "jump to parent class
 map <leader>p ?extends<CR>w<C-]>
 
+" Wipe buffer without deleting window
+map <leader>z :BW<CR>
