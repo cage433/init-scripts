@@ -157,7 +157,7 @@ function! CompileThisFile()
   call SplitScreenIfNecessary()
   exec ":silent vi ~/starling/starling_comp"
   exec ":silent normal ggdG"
-
+  exec ":silent r ! date"
   exec ":silent r ! fsc -d " . classdir . " " . scalafile . " | cat"
   call OutputDateAndSwitchBuffer()
 endfunction
