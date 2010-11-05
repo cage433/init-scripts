@@ -232,3 +232,7 @@ map <leader>p ?extends<CR>w<C-]>
 
 " Wipe buffer without deleting window
 map <leader>z :BW<CR>
+
+"Comment out all tests except this
+map <leader>x :call SaveWinline()<CR>ma?@Test<CR>mb:0,-1s/@Test/\/\/@Test/e<CR>'b:+1,$s/@Test/\/\/@Test/e<CR>'a:call RestoreWinline()<CR>,/
+map <silent> <leader>X ma:call SaveWinline()<CR>:%s/\/\/@Test/@Test<CR>'a:call RestoreWinline()<CR>,/
