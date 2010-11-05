@@ -33,8 +33,6 @@ nmap <silent> ,/ :nohlsearch<CR>
 map j gj
 map k gk
 
-map ,; :s /^/;; /<CR>
-map ,: :s /^;; //<CR>
 map <F2> :set hlsearch!<CR>
 map <silent> <F3> :call BufferList()<CR>
 set showmatch
@@ -47,15 +45,12 @@ filetype plugin indent on
 set autowrite
 autocmd FileType scala setlocal shiftwidth=2 tabstop=2
 
-" Change PWD to that of the current file
-map <silent> ,c :cd %:h<CR>
 
 " Revert PWD to its original value
 let g:initialdir = getcwd()
 function! PutPwdBack()
 	exec ":cd " . g:initialdir
 endfunction
-map ,d :call PutPwdBack()<CR>
 
 " disable arrow keys
 map <up> <nop>
@@ -101,20 +96,6 @@ set tags=tags;/
 
 :set noignorecase
 :set textwidth=0
-
-" comment and uncomment
-map ,m mb:.,'as/^/\/\/<CR>,/'b
-map ,n mb:.,'as/^\/\///g<CR>,/'b
-
-"show starling imports
-map ,i ma:r ! find_imports.rb <cword><CR>`a
-
-"Show sub classes
-map ,s ma:r ! find_subtypes.rb <cword><CR>`a
-
-" show all imports
-map ,o ma:r ! find_imports.rb <cword> -a<CR>`a
-
 function! SaveWinline()
   let g:currentwinline = winline()
 endfunction
@@ -136,13 +117,6 @@ function! SplitScreenIfNecessary()
   endif
   exec "normal \<C-w>w"
 endfunction
-
-"Put the selected import line at the top and delete any others
-map ,u ma?^[^i]<CR>mb:call SaveWinline()<CR>'ayy'b?^i<CR>p'b:.,$g/^import/d<CR>'b,/:call RestoreWinline()<CR>
-
-"jump to parent class
-map ,p ?extends<CR>w<C-]>
-
 function! OutputDateAndSwitchBuffer()
   exec ":silent r ! date"
   w
@@ -215,11 +189,44 @@ endfunction
 
 
 
-map ,t :call ToggleSourceAndTestFile()<CR>
-map ,T :call ToggleSourceAndTestFileOtherWindow()<CR>
+map <leader>t :call ToggleSourceAndTestFile()<CR>
+map <leader>T :call ToggleSourceAndTestFileOtherWindow()<CR>
 
-map ,k :call RunThisTest()<CR>
-map ,j :call RunLastTest()<CR>
-map ,J :call CompileThisFile()<CR>:call RunLastTest()<CR>
+map <leader>k :call RunThisTest()<CR>
+map <leader>j :call RunLastTest()<CR>
+map <leader>J :call CompileThisFile()<CR>:call RunLastTest()<CR>
 
-map ,w :call OpenTagInOtherWindow()<CR>,/
+map <leader>w :call OpenTagInOtherWindow()<CR>,/
+
+" Lisp comment/uncomment
+map <leader>; :s /^/;; /<CR>
+map <leader>: :s /^;; //<CR>
+
+" Change PWD to that of the current file
+map <silent> <leader>c :cd %:h<CR>
+
+" And put it back
+map <leader>d :call PutPwdBack()<CR>
+
+" comment and uncomment
+map <leader>m mb:.,'as/^/\/\/<CR>,/'b
+map <leader>n mb:.,'as/^\/\///g<CR>,/'b
+
+"show starling imports
+map <leader>i ma:r ! find_imports.rb <cword><CR>`a
+
+" show all imports
+map <leader>o ma:r ! find_imports.rb <cword> -a<CR>`a
+
+"Show sub classes
+map <leader>s ma:r ! find_subtypes.rb <cword><CR>`a
+
+"Put the selected import line at the top and delete any others
+map <leader>u ma?^[^i]<CR>mb:call SaveWinline()<CR>'ayy'b?^i<CR>p'b:.,$g/^import/d<CR>'b,/:call RestoreWinline()<CR>
+
+" Add first import
+map <leader>I <leader>ij<leader>u
+
+"jump to parent class
+map <leader>p ?extends<CR>w<C-]>
+
