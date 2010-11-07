@@ -198,13 +198,13 @@ function! RunATest(scalafile, classname)
   exec ":silent normal ggdG"
   exec ":silent r ! date"
   if stridx(fullclassname, "Test") == -1
-    exec ":silent r ! scala " . fullclassname
+    exec ":silent r ! /usr/local/bin/scala " . fullclassname
   else
     "echo ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
     exec ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
   endif
 
-  "call OutputDateAndSwitchBuffer()
+  call OutputDateAndSwitchBuffer()
 endfunction
 
 function! RunThisTest() 
@@ -229,8 +229,10 @@ endfunction
 function! TestOrSourceFile()
   if stridx(expand("%"), "Tests.scala") == -1
     return substitute(expand("%:r"), "\/src\/", "/tests/", "") . "Tests.scala" 
+    "return substitute(expand("%:r"), "\/main\/", "/test/", "") . "Tests.scala" 
   else 
     let otherfile = substitute(expand("%:r"), "\/tests\/", "/src/", "")
+    "let otherfile = substitute(expand("%:r"), "\/test\/", "/main/", "")
     return substitute(otherfile, "Tests", "", "") . ".scala"
   endif
 endfunction
