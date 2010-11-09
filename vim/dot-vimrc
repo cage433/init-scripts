@@ -25,6 +25,8 @@ set pastetoggle=<F2>
 set lazyredraw
 nnoremap ; :
 nnoremap \ ;
+vnoremap ; :
+vnoremap \ ;
 map <C-h> <C-w>h
 map <C-j> <C-w>j
 map <C-k> <C-w>k
