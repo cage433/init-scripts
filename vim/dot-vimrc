@@ -1,3 +1,4 @@
+:so ~/machine-specific-vim
 set nocompatible
 call pathogen#helptags()
 call pathogen#runtime_append_all_bundles() 
@@ -115,7 +116,11 @@ endfunction
 function! SplitScreenIfNecessary()
   if winnr() == 1
     exec ":silent only"
-    exec ":vs"
+    if g:isvertical
+      exec ":" . winheight(1) * 3 / 4 . "split"
+    else
+      exec ":vs"
+    endif
   endif
   exec "normal \<C-w>w"
 endfunction
@@ -150,8 +155,10 @@ function! RunATest(scalafile, classname)
   call SplitScreenIfNecessary()
   exec ":silent vi ~/starling/starling_test"
   exec ":silent normal ggdG"
+  exec ":silent r ! date"
+  exec ":silent r ! scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
 
-  exec ":silent r ! scala org.testng.TestNG -listener starling.utils.SBTTestListener -testclass " . fullclassname . " | cat "
+"  exec ":silent r ! scala org.testng.TestNG -listener starling.utils.SBTTestListener -testclass " . fullclassname . " | cat "
   call OutputDateAndSwitchBuffer()
 endfunction
 
