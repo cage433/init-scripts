@@ -8,6 +8,7 @@
 --regex-scala=/^[ \t]*trait[ \t]+([a-zA-Z0-9_]+)/\1/t,traits/
 --regex-scala=/^[ \t]*type[ \t]+([a-zA-Z0-9_]+)/\1/T,types/
 --regex-scala=/^[ \t]*def[ \t]+([a-zA-Z0-9_]+)/\1/m,methods/
+--regex-scala=/^[ \t]*private[ \t]+def[ \t]+([a-zA-Z0-9_]+)/\1/m,privatemethods/
 --regex-scala=/^[ \t]*val[ \t]+([a-zA-Z0-9_]+)/\1/C,constants/
 --regex-scala=/^[ \t]*lazy[ \t]+val[ \t]+([a-zA-Z0-9_]+)/\1/C,constants/
 --regex-scala=/^[ \t]*var[ \t]+([a-zA-Z0-9_]+)/\1/l,local variables/

@@ -1,3 +1,4 @@
+set number        " always show line numbers
 :so ~/machine-specific-vim
 set nocompatible
 call pathogen#helptags()
@@ -11,7 +12,6 @@ set wrap
 set backspace=indent,eol,start " allow backspacing over everything in insert mode
 set autoindent    " always set autoindenting on
 set copyindent    " copy the previous indentation on autoindenting
-set number        " always show line numbers
 set shiftround    " use multiple of shiftwidth when indenting with '<' and '>'
 set showmatch     " set show matching parenthesis
 set ignorecase    " ignore case when searching
@@ -133,7 +133,12 @@ endfunction
 
 function! CompileThisFile()
   let scalafile = expand("%:p")
-  let classdir = "/" . join(split(scalafile, "/")[0:3], "/") .  "/target/scala_2.8.0.final-local/classes/"
+  if stridx(scalafile, "Test") == -1
+    let last_dir = "classes/"
+  else
+    let last_dir = "test-classes/"
+  endif
+  let classdir = "/" . join(split(scalafile, "/")[0:3], "/") .  "/target/scala_2.8.0.final-local/" . last_dir
   w
   call SplitScreenIfNecessary()
   exec ":silent vi ~/starling/starling_comp"
@@ -143,7 +148,7 @@ function! CompileThisFile()
   call OutputDateAndSwitchBuffer()
 endfunction
 
-map <silent> ,l :call CompileThisFile()<CR>
+map  <leader>l :call CompileThisFile()<CR>
 
 function! RunATest(scalafile, classname)
   let g:lasttestfile = a:scalafile
@@ -245,3 +250,7 @@ map <leader>z :BW<CR>
 "Comment out all tests except this
 map <leader>x :call SaveWinline()<CR>ma?@Test<CR>mb:0,-1s/@Test/\/\/@Test/e<CR>'b:+1,$s/@Test/\/\/@Test/e<CR>'a:call RestoreWinline()<CR>,/
 map <silent> <leader>X ma:call SaveWinline()<CR>:%s/\/\/@Test/@Test<CR>'a:call RestoreWinline()<CR>,/
+
+"Switch between tabs
+" map  <leader>L :tabnext<CR>
+" map  <leader>H :tabprevious<CR>
