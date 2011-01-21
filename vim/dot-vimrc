@@ -10,7 +10,7 @@ set hidden
 
 set wrap        
 set backspace=indent,eol,start " allow backspacing over everything in insert mode
-set autoindent    " always set autoindenting on
+set noautoindent    " always set autoindenting on
 set copyindent    " copy the previous indentation on autoindenting
 set shiftround    " use multiple of shiftwidth when indenting with '<' and '>'
 set showmatch     " set show matching parenthesis
@@ -33,10 +33,12 @@ map <C-j> <C-w>j
 map <C-k> <C-w>k
 map <C-l> <C-w>l
 nmap <silent> ,/ :nohlsearch<CR>
-map j gj
-map k gk
+nmap j gj
+nmap k gk
 
 map <F2> :set hlsearch!<CR>
+map <F10> :only <CR>
+map <F9> :split <CR>
 map <silent> <F3> :call BufferList()<CR>
 set showmatch
 set cpoptions-=m
@@ -75,7 +77,6 @@ inoremap jj <ESC>
 
 set encoding=utf-8
 set scrolloff=3
-set autoindent
 set showmode
 set showcmd
 set hidden
@@ -123,6 +124,8 @@ function! SplitScreenIfNecessary()
     endif
   endif
   exec "normal \<C-w>w"
+  :set nonumber
+  :set norelativenumber
 endfunction
 function! OutputDateAndSwitchBuffer()
   exec ":silent r ! date"
@@ -133,7 +136,7 @@ endfunction
 
 function! CompileThisFile()
   let scalafile = expand("%:p")
-  if stridx(scalafile, "Test") == -1
+  if stridx(scalafile, "tests") == -1
     let last_dir = "classes/"
   else
     let last_dir = "test-classes/"
@@ -161,7 +164,11 @@ function! RunATest(scalafile, classname)
   exec ":silent vi ~/starling/starling_test"
   exec ":silent normal ggdG"
   exec ":silent r ! date"
-  exec ":silent r ! scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
+  if stridx(fullclassname, "Test") == -1
+    exec ":silent r ! scala " . fullclassname
+  else
+    exec ":silent r ! scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
+  endif
 
 "  exec ":silent r ! scala org.testng.TestNG -listener starling.utils.SBTTestListener -testclass " . fullclassname . " | cat "
   call OutputDateAndSwitchBuffer()
@@ -200,8 +207,13 @@ function! OpenTagInOtherWindow()
   call SplitScreenIfNecessary()
   exec ":tag " . tag
 endfunction
+function! InsertClassName()
+  let name = expand("%:t:r")
+  exe "normal a".name
+  redraw!
+endfunction
 
-
+imap <F5> system.err.println("Debug: <Esc>:call InsertClassName()<CR>a: " + )<Esc>i
 
 map <leader>t :call ToggleSourceAndTestFile()<CR>
 map <leader>T :call ToggleSourceAndTestFileOtherWindow()<CR>
@@ -254,3 +266,5 @@ map <silent> <leader>X ma:call SaveWinline()<CR>:%s/\/\/@Test/@Test<CR>'a:call R
 "Switch between tabs
 " map  <leader>L :tabnext<CR>
 " map  <leader>H :tabprevious<CR>
+
+
