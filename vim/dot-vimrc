@@ -40,6 +40,8 @@ map <F2> :set hlsearch!<CR>
 map <F10> :only <CR>
 map <F9> :split <CR>
 map <silent> <F3> :call BufferList()<CR>
+map <silent> <F1> <ESC>
+imap <silent> <F1> <ESC>
 set showmatch
 set cpoptions-=m
 nmap <C-p> ?^(<CR>
@@ -49,6 +51,7 @@ syntax enable
 filetype plugin indent on
 set autowrite
 autocmd FileType scala setlocal shiftwidth=2 tabstop=2
+autocmd FileType c setlocal shiftwidth=8 tabstop=8
 
 
 " Revert PWD to its original value
@@ -267,4 +270,4 @@ map <silent> <leader>X ma:call SaveWinline()<CR>:%s/\/\/@Test/@Test<CR>'a:call R
 " map  <leader>L :tabnext<CR>
 " map  <leader>H :tabprevious<CR>
 
-
+iab pfl printf("File %s, line %d\n", __FILE__, __LINE__);
