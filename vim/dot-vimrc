@@ -38,7 +38,11 @@ nmap k gk
 
 map <F2> :set hlsearch!<CR>
 map <F10> :only <CR>
-map <F9> :vs <CR>
+if g:isvertical
+  map <F9> :split <CR>
+else
+  map <F9> :vsplit <CR>
+endif
 map <silent> <F3> :call BufferList()<CR>
 map <silent> <F1> <ESC>
 imap <silent> <F1> <ESC>
@@ -216,7 +220,7 @@ function! InsertClassName()
   redraw!
 endfunction
 
-imap <F5> system.err.println("Debug: <Esc>:call InsertClassName()<CR>a: " + )<Esc>i
+imap <F5> println("Debug: <Esc>:call InsertClassName()<CR>a: " + )<Esc>i
 
 map <leader>t :call ToggleSourceAndTestFile()<CR>
 map <leader>T :call ToggleSourceAndTestFileOtherWindow()<CR>
