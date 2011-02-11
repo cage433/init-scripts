@@ -15,7 +15,7 @@ end
 Find.find("#{ENV['HOME']}/starling") do |file|
   if file =~ /\.scala$/ then
     file_text = IO.readlines(file, nil)[0]
-    file_text.scan(/class\s+([A-Z]\w*)([^{]*){/).each do |match|
+    file_text.scan(/class\s+([A-Z]\w*)([^{]*)\{/).each do |match|
       sub_class = match[0]
       match[1].scan(/((extends)|(with))\s+([A-Z]\w*)/).each do |submatch|
         super_class = submatch[3]
