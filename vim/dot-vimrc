@@ -38,7 +38,7 @@ nmap k gk
 
 map <F2> :set hlsearch!<CR>
 map <F10> :only <CR>
-map <F9> :split <CR>
+map <F9> :vs <CR>
 map <silent> <F3> :call BufferList()<CR>
 map <silent> <F1> <ESC>
 imap <silent> <F1> <ESC>
@@ -51,7 +51,7 @@ syntax enable
 filetype plugin indent on
 set autowrite
 autocmd FileType scala setlocal shiftwidth=2 tabstop=2
-autocmd FileType c setlocal shiftwidth=8 tabstop=8
+autocmd FileType c setlocal shiftwidth=4 tabstop=4
 
 
 " Revert PWD to its original value
@@ -263,7 +263,7 @@ map <leader>p ?extends<CR>w<C-]>
 map <leader>z :BW<CR>
 
 "Comment out all tests except this
-map <leader>x :call SaveWinline()<CR>ma?@Test<CR>mb:0,-1s/@Test/\/\/@Test/e<CR>'b:+1,$s/@Test/\/\/@Test/e<CR>'a:call RestoreWinline()<CR>,/
+map <leader>x :call SaveWinline()<CR>ma?//@Test<CR>mb:0,-1s///@Test/\/\///@Test/e<CR>'b:+1,$s///@Test/\/\///@Test/e<CR>'a:call RestoreWinline()<CR>,/
 map <silent> <leader>X ma:call SaveWinline()<CR>:%s/\/\/@Test/@Test<CR>'a:call RestoreWinline()<CR>,/
 
 "Switch between tabs
