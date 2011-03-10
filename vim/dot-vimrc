@@ -1,6 +1,6 @@
 set number        " always show line numbers
-:so ~/machine-specific-vim
 set nocompatible
+set path=.,**,,
 call pathogen#helptags()
 call pathogen#runtime_append_all_bundles() 
 let mapleader=","
@@ -10,19 +10,20 @@ set hidden
 
 set wrap        
 set backspace=indent,eol,start " allow backspacing over everything in insert mode
-set autoindent    " always set autoindenting on
+set noautoindent    " always set autoindenting on
 set copyindent    " copy the previous indentation on autoindenting
 set shiftround    " use multiple of shiftwidth when indenting with '<' and '>'
 set showmatch     " set show matching parenthesis
 set ignorecase    " ignore case when searching
 set smartcase     " ignore case if search pattern is all lowercase,  case-sensitive otherwise
 set smarttab      " insert tabs on the start of a line according to shiftwidth, not tabstop
-set hlsearch      " highlight search terms
+"set hlsearch      " highlight search terms
 set incsearch     " show search matches as you type
 set gdefault
 set nobackup
 set noswapfile
-set pastetoggle=<F2>
+"set pastetoggle=<F4>
+set nopaste
 set lazyredraw
 nnoremap ; :
 nnoremap \ ;
@@ -33,11 +34,33 @@ map <C-j> <C-w>j
 map <C-k> <C-w>k
 map <C-l> <C-w>l
 nmap <silent> ,/ :nohlsearch<CR>
-map j gj
-map k gk
+nmap j gj
+nmap k gk
 
 map <F2> :set hlsearch!<CR>
+function! SplitOrOnly()
+  if winnr("$") == 1
+    exec ":vs"
+  else
+    exec ":only"
+  endif
+endfunction
+map <silent> <F10> :call SplitOrOnly()<CR>
+
+function! TogglePaste()
+  if &paste
+    exec ":set nopaste"
+    echo "Paste Off"
+  else
+    exec ":set paste"
+    echo "Paste On"
+  endif
+endfunction
+map <silent> <F4> :call TogglePaste()<CR>
+
 map <silent> <F3> :call BufferList()<CR>
+map <silent> <F1> <ESC>
+imap <silent> <F1> <ESC>
 set showmatch
 set cpoptions-=m
 nmap <C-p> ?^(<CR>
@@ -57,16 +80,6 @@ function! PutPwdBack()
 	exec ":cd " . g:initialdir
 endfunction
 
-" disable arrow keys
-map <up> <nop>
-map <down> <nop>
-map <left> <nop>
-map <right> <nop>
-imap <up> <nop>
-imap <down> <nop>
-imap <left> <nop>
-imap <right> <nop>
-
 :set tabstop=2
 :set shiftwidth=2
 :set expandtab
@@ -74,10 +87,11 @@ imap <right> <nop>
 :set gdefault
 
 inoremap jj <ESC>
+inoremap jk <ESC>o
+inoremap kj <ESC>O
 
 set encoding=utf-8
 set scrolloff=3
-set autoindent
 set showmode
 set showcmd
 set hidden
@@ -118,11 +132,7 @@ endfunction
 function! SplitScreenIfNecessary()
   if winnr() == 1
     exec ":silent only"
-    if g:isvertical
-      exec ":" . winheight(1) * 3 / 4 . "split"
-    else
-      exec ":vs"
-    endif
+    exec ":vs"
   endif
   exec "normal \<C-w>w"
 endfunction
@@ -133,37 +143,68 @@ function! OutputDateAndSwitchBuffer()
   exec "normal \<C-w>w"
 endfunction
 
+function! TargetDirectory(scalafile)
+  let path = split(a:scalafile, "/")
+  while ! empty(path)
+    let candidate_target = "/".join(path, "/")."/target"
+    if isdirectory(candidate_target)
+      return candidate_target
+    endif
+    call remove(path, -1)
+  endwhile
+  return ""
+endfunction!
+
 function! CompileThisFile()
   let scalafile = expand("%:p")
-  if stridx(scalafile, "Test") == -1
+  if stridx(scalafile, "tests") == -1
     let last_dir = "classes/"
   else
     let last_dir = "test-classes/"
   endif
-  let classdir = "/" . join(split(scalafile, "/")[0:3], "/") .  "/target/scala_2.8.0.final-local/" . last_dir
+  let target_dir = TargetDirectory(scalafile)
+  if target_dir == ""
+    echo "Target dir not found"
+    return
+  endif
+  "let classdir = "/" . join(split(scalafile, "/")[0:3], "/") .  "/target/scala_2.8.1.final-local/" . last_dir
+  let classdir = target_dir . "/scala_2.8.1.final-local/" . last_dir
   w
   call SplitScreenIfNecessary()
-  exec ":silent vi ~/starling/starling_comp"
+  exec ":silent vi ~/tmp/starling_comp"
   exec ":silent normal ggdG"
   exec ":silent r ! date"
-  exec ":silent r ! fsc -d " . classdir . " " . scalafile . " | cat"
+  exec ":silent r ! /usr/local/scala/bin/fsc -deprecation -d " . classdir . " " . scalafile . " | cat"
   call OutputDateAndSwitchBuffer()
 endfunction
 
 map  <leader>l :call CompileThisFile()<CR>
 
+function! StarlingPackage(scalafile)
+  let path = reverse(split(a:scalafile, "/"))
+  let idx = index(path, "starling")
+  let package_path = path[1:idx]
+  return join(reverse(package_path), ".")
+endfunction
+
 function! RunATest(scalafile, classname)
   let g:lasttestfile = a:scalafile
   let g:lastclassname = a:classname
-  let pkg = join(split(a:scalafile, "/")[5:-2], ".")
+  "let pkg = join(split(a:scalafile, "/")[5:-2], ".")
+  let pkg = StarlingPackage(a:scalafile)
   "let classname = expand("%:r")
   let fullclassname = pkg . "." . a:classname
   w
   call SplitScreenIfNecessary()
-  exec ":silent vi ~/starling/starling_test"
+  exec ":silent vi ~/tmp/starling_test"
   exec ":silent normal ggdG"
   exec ":silent r ! date"
-  exec ":silent r ! scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
+  if stridx(fullclassname, "Test") == -1
+    exec ":silent r ! scala " . fullclassname
+  else
+    "echo ":silent r ! scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
+    exec ":silent r ! scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
+  endif
 
 "  exec ":silent r ! scala org.testng.TestNG -listener starling.utils.SBTTestListener -testclass " . fullclassname . " | cat "
   call OutputDateAndSwitchBuffer()
@@ -202,8 +243,38 @@ function! OpenTagInOtherWindow()
   call SplitScreenIfNecessary()
   exec ":tag " . tag
 endfunction
+function! InsertClassName()
+  let name = expand("%:t:r")
+  exe "normal a".name
+  redraw!
+endfunction
 
 
+function! TidyScalaImports()
+  let scalafile = expand("%")
+  "exec ":silent ~/tidy-imports.rb ".shellescape(expand("%"))
+  exec ":%d"
+  exec ":silent r ! ".shellescape(expand("~/bin/tidy-imports.rb"))." ".shellescape(expand("%:p"))
+  exec ":normal ggdd"
+  exec ":w"
+  "system("~/tidy-imports.rb ".shellescape(expand("%")))
+endfunction
+
+function! SwitchNumbering()
+  if &relativenumber
+    set norelativenumber
+    set number
+  elseif &number
+    set norelativenumber
+    set nonumber
+  else
+    set nonumber
+    set relativenumber
+  end
+endfunction
+map <F9> :call SwitchNumbering()<CR>
+map <leader>Q :call TidyScalaImports()<CR>
+imap <F5> println("Debug: <Esc>:call InsertClassName()<CR>a: " + )<Esc>i
 
 map <leader>t :call ToggleSourceAndTestFile()<CR>
 map <leader>T :call ToggleSourceAndTestFileOtherWindow()<CR>
@@ -215,8 +286,8 @@ map <leader>J :call CompileThisFile()<CR>:call RunLastTest()<CR>
 map <leader>w :call OpenTagInOtherWindow()<CR>,/
 
 " Lisp comment/uncomment
-map <leader>; :s /^/;; /<CR>
-map <leader>: :s /^;; //<CR>
+map <leader>; :s /^/\/\/ /<CR>
+map <leader>: :s /^\/\/ //<CR>
 
 " Change PWD to that of the current file
 map <silent> <leader>c :cd %:h<CR>
@@ -256,3 +327,25 @@ map <silent> <leader>X ma:call SaveWinline()<CR>:%s/\/\/@Test/@Test<CR>'a:call R
 "Switch between tabs
 " map  <leader>L :tabnext<CR>
 " map  <leader>H :tabprevious<CR>
+
+iab pfl printf("File %s, line %d\n", __FILE__, __LINE__);
+" set paste
+
+set exrc
+
+function! ExtractJars()
+	silent! g/\[INFO]/d
+	silent! s/\:/\r/
+"	silent! %s/\(\.\|\w\|\/\|-\)\+\//
+endfunction
+
+map <leader>q :call ExtractJars()<CR>
+
+function! GetDepsFn()
+  silent! g!/dependency/d
+  silent! g!/trafigura/d
+  silent! %s/.\+class /
+  silent! %s/'.\+$/
+endfunction
+
+command! GetDeps call GetDepsFn()
