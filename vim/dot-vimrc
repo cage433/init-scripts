@@ -22,7 +22,7 @@ set incsearch     " show search matches as you type
 set gdefault
 set nobackup
 set noswapfile
-set pastetoggle=<F2>
+set pastetoggle=<F4>
 set lazyredraw
 nnoremap ; :
 nnoremap \ ;
@@ -65,15 +65,15 @@ function! PutPwdBack()
 endfunction
 
 " disable arrow keys
-map <up> <nop>
-map <down> <nop>
-map <left> <nop>
-map <right> <nop>
-imap <up> <nop>
-imap <down> <nop>
-imap <left> <nop>
-imap <right> <nop>
-
+" map <up> <nop>
+" map <down> <nop>
+" map <left> <nop>
+" map <right> <nop>
+" imap <up> <nop>
+" imap <down> <nop>
+" imap <left> <nop>
+" imap <right> <nop>
+" 
 :set tabstop=2
 :set shiftwidth=2
 :set expandtab
@@ -81,6 +81,8 @@ imap <right> <nop>
 :set gdefault
 
 inoremap jj <ESC>
+inoremap jk <ESC>o
+inoremap kj <ESC>O
 
 set encoding=utf-8
 set scrolloff=3
@@ -287,4 +289,23 @@ map <silent> <leader>X ma:call SaveWinline()<CR>:%s/\/\/@Test/@Test<CR>'a:call R
 " map  <leader>H :tabprevious<CR>
 
 iab pfl printf("File %s, line %d\n", __FILE__, __LINE__);
-set paste
+" set paste
+
+set exrc
+
+function! ExtractJars()
+	silent! g/\[INFO]/d
+	silent! s/\:/\r/
+"	silent! %s/\(\.\|\w\|\/\|-\)\+\//
+endfunction
+
+map <leader>q :call ExtractJars()<CR>
+
+function! GetDepsFn()
+  silent! g!/dependency/d
+  silent! g!/trafigura/d
+  silent! %s/.\+class /
+  silent! %s/'.\+$/
+endfunction
+
+command! GetDeps call GetDepsFn()

@@ -1,7 +1,8 @@
 let g:netrw_dirhistmax  =10
-let g:netrw_dirhist_cnt =5
+let g:netrw_dirhist_cnt =6
 let g:netrw_dirhist_1='/home/alex/starling/utils/src/starling/utils'
 let g:netrw_dirhist_2='/home/alex/starling'
 let g:netrw_dirhist_3='/home/alex/starling/instrument/tests/starling/instrument'
 let g:netrw_dirhist_4='/home/alex/starling/curves/src/starling/market'
 let g:netrw_dirhist_5='/home/alex/model3/scala-model-with-persistence'
+let g:netrw_dirhist_6='/home/alex/dev/services/costsandincomes/component-tests'
