@@ -12,7 +12,7 @@ def add_to_map(map, k, v)
     map[k] = [v]
   end
 end
-Find.find("#{ENV['HOME']}/starling") do |file|
+Find.find("#{ENV['HOME']}/dev/services/starling") do |file|
   if file =~ /\.scala$/ then
     file_text = IO.readlines(file, nil)[0]
     file_text.scan(/class\s+([A-Z]\w*)([^{]*)\{/).each do |match|
@@ -26,7 +26,7 @@ Find.find("#{ENV['HOME']}/starling") do |file|
   end
 end
 def write_map_to_file(file, map)
-  File.open("#{ENV['HOME']}/starling/" + file, "w") do |f|
+  File.open("#{ENV['HOME']}/dev/services/starling/" + file, "w") do |f|
     map.each { |k, v|
       f.puts "#{k}\t#{v.uniq.join(",")}"
     }

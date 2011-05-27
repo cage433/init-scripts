@@ -248,8 +248,8 @@ map <leader>J :call CompileThisFile()<CR>:call RunLastTest()<CR>
 map <leader>w :call OpenTagInOtherWindow()<CR>,/
 
 " Lisp comment/uncomment
-map <leader>; :s /^/;; /<CR>
-map <leader>: :s /^;; //<CR>
+map <leader>; :s /^/\/\/ /<CR>
+map <leader>: :s /^\/\/ //<CR>
 
 " Change PWD to that of the current file
 map <silent> <leader>c :cd %:h<CR>

@@ -12,6 +12,6 @@ def add_subtypes(file)
     end
   end
 end
-add_subtypes("#{ENV['HOME']}/starling/starling_super_to_sub")
+add_subtypes("#{ENV['HOME']}/dev/services/starling/starling_super_to_sub")
 
 puts $subtypes.uniq

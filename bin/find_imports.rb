@@ -13,9 +13,9 @@ def add_imports(file)
     end
   end
 end
-add_imports("#{ENV['HOME']}/starling/starling_imports")
+add_imports("#{ENV['HOME']}/dev/services/starling/starling_imports")
 if include_external then
-  add_imports("#{ENV['HOME']}/starling/external_imports")
+  add_imports("#{ENV['HOME']}/dev/services/starling/external_imports")
 end
 
 puts $imports.uniq

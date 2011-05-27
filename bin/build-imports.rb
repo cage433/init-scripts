@@ -18,7 +18,7 @@ def is_jar_to_extract(file)
   file =~/.*\.jar$/ && file !~ /modulejar/ #&& $jars_to_extract.find{ |jar_regex| file =~ jar_regex}
 end
 
-Find.find("/home/alex/starling") do |file|
+Find.find("/home/alex/dev/services/starling") do |file|
   if file =~ /.*\.scala$/ then
     IO.readlines(file).each do |line|
       if line =~ /\s*(class|trait|object)\s*(\w+)\s*(private)?\s*(((extends)|(with))\s+\w+\s*)*(\{|\[|\(|$)/ then
@@ -40,7 +40,7 @@ Find.find("/home/alex/starling") do |file|
   end
 end
 
-File.open("/home/alex/starling/starling_imports", "w") do |f|
+File.open("/home/alex/dev/services/starling/starling_imports", "w") do |f|
   starling_classes.each do |x|
     klass, pckg = x
     f.puts("#{klass}\t#{pckg}")
@@ -48,7 +48,7 @@ File.open("/home/alex/starling/starling_imports", "w") do |f|
 end
 
 if do_external_classes then
-  File.open("/home/alex/starling/external_imports", "w") do |f|
+  File.open("/home/alex/dev/services/starling/external_imports", "w") do |f|
     external_classes.each do |x|
       klass, pckg = x
       f.puts("#{klass}\t#{pckg}")
