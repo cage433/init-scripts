@@ -16,7 +16,7 @@ set showmatch     " set show matching parenthesis
 set ignorecase    " ignore case when searching
 set smartcase     " ignore case if search pattern is all lowercase,  case-sensitive otherwise
 set smarttab      " insert tabs on the start of a line according to shiftwidth, not tabstop
-set hlsearch      " highlight search terms
+"set hlsearch      " highlight search terms
 set incsearch     " show search matches as you type
 set gdefault
 set nobackup
@@ -65,16 +65,6 @@ function! PutPwdBack()
 	exec ":cd " . g:initialdir
 endfunction
 
-" disable arrow keys
-" map <up> <nop>
-" map <down> <nop>
-" map <left> <nop>
-" map <right> <nop>
-" imap <up> <nop>
-" imap <down> <nop>
-" imap <left> <nop>
-" imap <right> <nop>
-" 
 :set tabstop=2
 :set shiftwidth=2
 :set expandtab
@@ -231,6 +221,19 @@ function! TidyScalaImports()
   "system("~/tidy-imports.rb ".shellescape(expand("%")))
 endfunction
 
+function! SwitchNumbering()
+  if &relativenumber
+    set norelativenumber
+    set number
+  elseif &number
+    set norelativenumber
+    set nonumber
+  else
+    set nonumber
+    set relativenumber
+  end
+endfunction
+map <F9> :call SwitchNumbering()<CR>
 map <leader>Q :call TidyScalaImports()<CR>
 imap <F5> println("Debug: <Esc>:call InsertClassName()<CR>a: " + )<Esc>i
 
