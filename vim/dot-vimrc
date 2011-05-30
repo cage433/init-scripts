@@ -37,7 +37,7 @@ nmap k gk
 
 map <F2> :set hlsearch!<CR>
 map <F10> :only <CR>
-map <F9> :split <CR>
+map <F9> :vsplit <CR>
 map <silent> <F3> :call BufferList()<CR>
 map <silent> <F1> <ESC>
 imap <silent> <F1> <ESC>
