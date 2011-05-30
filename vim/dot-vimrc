@@ -1,5 +1,6 @@
 set number        " always show line numbers
 set nocompatible
+set path=.,**,,
 call pathogen#helptags()
 call pathogen#runtime_append_all_bundles() 
 let mapleader=","
