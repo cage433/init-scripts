@@ -1,5 +1,4 @@
 set number        " always show line numbers
-:so ~/.machine-specific-vim
 set nocompatible
 call pathogen#helptags()
 call pathogen#runtime_append_all_bundles() 
@@ -38,11 +37,7 @@ nmap k gk
 
 map <F2> :set hlsearch!<CR>
 map <F10> :only <CR>
-if g:isvertical
-  map <F9> :split <CR>
-else
-  map <F9> :vsplit <CR>
-endif
+map <F9> :split <CR>
 map <silent> <F3> :call BufferList()<CR>
 map <silent> <F1> <ESC>
 imap <silent> <F1> <ESC>
