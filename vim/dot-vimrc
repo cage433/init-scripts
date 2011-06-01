@@ -22,7 +22,8 @@ set incsearch     " show search matches as you type
 set gdefault
 set nobackup
 set noswapfile
-set pastetoggle=<F4>
+"set pastetoggle=<F4>
+set nopaste
 set lazyredraw
 nnoremap ; :
 nnoremap \ ;
@@ -45,6 +46,18 @@ function! SplitOrOnly()
   endif
 endfunction
 map <silent> <F10> :call SplitOrOnly()<CR>
+
+function! TogglePaste()
+  if &paste
+    exec ":set nopaste"
+    echo "Paste Off"
+  else
+    exec ":set paste"
+    echo "Paste On"
+  endif
+endfunction
+map <silent> <F4> :call TogglePaste()<CR>
+
 map <silent> <F3> :call BufferList()<CR>
 map <silent> <F1> <ESC>
 imap <silent> <F1> <ESC>
