@@ -132,7 +132,6 @@ function! SplitScreenIfNecessary()
   if winnr() == 1
     exec ":silent only"
     exec ":vs"
-    endif
   endif
   exec "normal \<C-w>w"
   :set nonumber
@@ -145,6 +144,18 @@ function! OutputDateAndSwitchBuffer()
   exec "normal \<C-w>w"
 endfunction
 
+function! TargetDirectory(scalafile)
+  let path = split(a:scalafile, "/")
+  while ! empty(path)
+    let candidate_target = "/".join(path, "/")."/target"
+    if isdirectory(candidate_target)
+      return candidate_target
+    endif
+    call remove(path, -1)
+  endwhile
+  return ""
+endfunction!
+
 function! CompileThisFile()
   let scalafile = expand("%:p")
   if stridx(scalafile, "tests") == -1
@@ -152,10 +163,16 @@ function! CompileThisFile()
   else
     let last_dir = "test-classes/"
   endif
-  let classdir = "/" . join(split(scalafile, "/")[0:3], "/") .  "/target/scala_2.8.1.final-local/" . last_dir
+  let target_dir = TargetDirectory(scalafile)
+  if target_dir == ""
+    echo "Target dir not found"
+    return
+  endif
+  "let classdir = "/" . join(split(scalafile, "/")[0:3], "/") .  "/target/scala_2.8.1.final-local/" . last_dir
+  let classdir = target_dir . "/scala_2.8.1.final-local/" . last_dir
   w
   call SplitScreenIfNecessary()
-  exec ":silent vi ~/starling/starling_comp"
+  exec ":silent vi ~/tmp/starling_comp"
   exec ":silent normal ggdG"
   exec ":silent r ! date"
   exec ":silent r ! fsc -deprecation -d " . classdir . " " . scalafile . " | cat"
@@ -164,20 +181,29 @@ endfunction
 
 map  <leader>l :call CompileThisFile()<CR>
 
+function! StarlingPackage(scalafile)
+  let path = reverse(split(a:scalafile, "/"))
+  let idx = index(path, "starling")
+  let package_path = path[1:idx]
+  return join(reverse(package_path), ".")
+endfunction
+
 function! RunATest(scalafile, classname)
   let g:lasttestfile = a:scalafile
   let g:lastclassname = a:classname
-  let pkg = join(split(a:scalafile, "/")[5:-2], ".")
+  "let pkg = join(split(a:scalafile, "/")[5:-2], ".")
+  let pkg = StarlingPackage(a:scalafile)
   "let classname = expand("%:r")
   let fullclassname = pkg . "." . a:classname
   w
   call SplitScreenIfNecessary()
-  exec ":silent vi ~/starling/starling_test"
+  exec ":silent vi ~/tmp/starling_test"
   exec ":silent normal ggdG"
   exec ":silent r ! date"
   if stridx(fullclassname, "Test") == -1
     exec ":silent r ! scala " . fullclassname
   else
+    "echo ":silent r ! scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
     exec ":silent r ! scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
   endif
 
