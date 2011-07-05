@@ -175,7 +175,7 @@ function! CompileThisFile()
   exec ":silent vi ~/tmp/starling_comp"
   exec ":silent normal ggdG"
   exec ":silent r ! date"
-  exec ":silent r ! fsc -deprecation -d " . classdir . " " . scalafile . " | cat"
+  exec ":silent r ! /usr/local/scala/bin/fsc -deprecation -d " . classdir . " " . scalafile . " | cat"
   call OutputDateAndSwitchBuffer()
 endfunction
 
