@@ -134,8 +134,6 @@ function! SplitScreenIfNecessary()
     exec ":vs"
   endif
   exec "normal \<C-w>w"
-  :set nonumber
-  :set norelativenumber
 endfunction
 function! OutputDateAndSwitchBuffer()
   exec ":silent r ! date"

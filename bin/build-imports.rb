@@ -3,7 +3,7 @@
 require 'find'
 
 starling_classes = []
-external_classes = []
+$external_classes = []
 do_external_classes = ARGV.index("-e")
 
 def package_name(file)
@@ -18,6 +18,18 @@ def is_jar_to_extract(file)
   file =~/.*\.jar$/ && file !~ /modulejar/ #&& $jars_to_extract.find{ |jar_regex| file =~ jar_regex}
 end
 
+def extract_jar(file)
+  `jar tvf #{file}`.split("\n").each do |line|
+    if line =~ /(\S+)\.class/
+      file_name = $1
+      pckg = File.dirname(file_name).split("/").join(".")
+      klass = File.basename(file_name, ".class")
+      if klass !~ /\$/ then
+        $external_classes.unshift([klass, pckg])
+      end
+    end
+  end
+end
 #Find.find("/home/alex/dev/services/starling") do |file|
 Find.find(Dir.pwd) do |file|
   if file =~ /.*\.scala$/ then
@@ -28,17 +40,12 @@ Find.find(Dir.pwd) do |file|
     end
   elsif do_external_classes && is_jar_to_extract(file) then
     puts file
-    `jar tvf #{file}`.split("\n").each do |line|
-      if line =~ /(\S+)\.class/
-        file_name = $1
-        pckg = File.dirname(file_name).split("/").join(".")
-        klass = File.basename(file_name, ".class")
-        if klass !~ /\$/ then
-          external_classes.unshift([klass, pckg])
-        end
-      end
-    end
+    extract_jar(file)
   end
+end
+
+if do_external_classes then
+  extract_jar("/usr/local/jdk/jre/lib/rt.jar")
 end
 
 File.open("#{Dir.pwd}/starling_imports", "w") do |f|
@@ -50,7 +57,7 @@ end
 
 if do_external_classes then
   File.open("#{Dir.pwd}/external_imports", "w") do |f|
-    external_classes.each do |x|
+    $external_classes.each do |x|
       klass, pckg = x
       f.puts("#{klass}\t#{pckg}")
     end
