@@ -166,8 +166,7 @@ function! CompileThisFile()
     echo "Target dir not found"
     return
   endif
-  "let classdir = "/" . join(split(scalafile, "/")[0:3], "/") .  "/target/scala_2.8.1.final-local/" . last_dir
-  let classdir = target_dir . "/scala_2.8.1.final-local/" . last_dir
+  let classdir = target_dir . "/scala_2.9.0-1/" . last_dir
   w
   call SplitScreenIfNecessary()
   exec ":silent vi ~/tmp/starling_comp"
@@ -189,9 +188,7 @@ endfunction
 function! RunATest(scalafile, classname)
   let g:lasttestfile = a:scalafile
   let g:lastclassname = a:classname
-  "let pkg = join(split(a:scalafile, "/")[5:-2], ".")
   let pkg = StarlingPackage(a:scalafile)
-  "let classname = expand("%:r")
   let fullclassname = pkg . "." . a:classname
   w
   call SplitScreenIfNecessary()
@@ -201,12 +198,11 @@ function! RunATest(scalafile, classname)
   if stridx(fullclassname, "Test") == -1
     exec ":silent r ! scala " . fullclassname
   else
-    "echo ":silent r ! scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
-    exec ":silent r ! scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
+    "echo ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
+    exec ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
   endif
 
-"  exec ":silent r ! scala org.testng.TestNG -listener starling.utils.SBTTestListener -testclass " . fullclassname . " | cat "
-  call OutputDateAndSwitchBuffer()
+  "call OutputDateAndSwitchBuffer()
 endfunction
 
 function! RunThisTest() 
