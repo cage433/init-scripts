@@ -59,6 +59,7 @@ endfunction
 map <silent> <F4> :call TogglePaste()<CR>
 
 map <silent> <F3> :call BufferList()<CR>
+map <silent> <F6> :NERDTreeToggle<CR>
 map <silent> <F1> <ESC>
 imap <silent> <F1> <ESC>
 set showmatch
@@ -135,6 +136,7 @@ function! SplitScreenIfNecessary()
   endif
   exec "normal \<C-w>w"
 endfunction
+
 function! OutputDateAndSwitchBuffer()
   exec ":silent r ! date"
   w
