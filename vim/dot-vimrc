@@ -59,6 +59,7 @@ endfunction
 map <silent> <F4> :call TogglePaste()<CR>
 
 map <silent> <F3> :call BufferList()<CR>
+map <silent> <F6> :NERDTreeToggle<CR>
 map <silent> <F1> <ESC>
 imap <silent> <F1> <ESC>
 set showmatch
@@ -137,6 +138,7 @@ function! SplitScreenIfNecessary()
   endif
   exec "normal \<C-w>w"
 endfunction
+
 function! OutputDateAndSwitchBuffer()
   exec ":silent r ! date"
   w
@@ -191,7 +193,6 @@ endfunction
 function! RunATest(scalafile, classname)
   let g:lasttestfile = a:scalafile
   let g:lastclassname = a:classname
-  "let pkg = join(split(a:scalafile, "/")[5:-2], ".")
   let pkg = StarlingPackage(a:scalafile)
   "let classname = expand("%:r")
   let fullclassname = pkg . "." . a:classname
@@ -207,7 +208,7 @@ function! RunATest(scalafile, classname)
     exec ":silent r ! scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
   endif
 
-"  exec ":silent r ! scala org.testng.TestNG -listener starling.utils.SBTTestListener -testclass " . fullclassname . " | cat "
+  exec ':silent r ! scala org.scalatest.tools.Runner -p . -o -s ' . fullclassname . ' | cat '
   call OutputDateAndSwitchBuffer()
 endfunction
 
@@ -233,8 +234,10 @@ endfunction
 function! TestOrSourceFile()
   if stridx(expand("%"), "Tests.scala") == -1
     return substitute(expand("%:r"), "\/src\/", "/tests/", "") . "Tests.scala" 
+    "return substitute(expand("%:r"), "\/main\/", "/test/", "") . "Tests.scala" 
   else 
     let otherfile = substitute(expand("%:r"), "\/tests\/", "/src/", "")
+    "let otherfile = substitute(expand("%:r"), "\/test\/", "/main/", "")
     return substitute(otherfile, "Tests", "", "") . ".scala"
   endif
 endfunction
