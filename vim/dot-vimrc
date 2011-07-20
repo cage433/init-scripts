@@ -350,3 +350,5 @@ function! GetDepsFn()
 endfunction
 
 command! GetDeps call GetDepsFn()
+
+map <leader>gr :Gtags -r <C-r>=expand("<cword>")<CR><CR>
