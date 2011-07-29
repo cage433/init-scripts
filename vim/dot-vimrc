@@ -4,7 +4,7 @@ set path=.,**,,
 call pathogen#helptags()
 call pathogen#runtime_append_all_bundles() 
 let mapleader=","
-nmap <silent> <leader>sv :w $MYVIMRC<CR>:so $MYVIMRC<CR>
+nmap <silent> <leader>sv :so $MYVIMRC<CR>
 nmap <silent> <leader>se :e $MYVIMRC<CR>
 set hidden
 
@@ -17,12 +17,10 @@ set showmatch     " set show matching parenthesis
 set ignorecase    " ignore case when searching
 set smartcase     " ignore case if search pattern is all lowercase,  case-sensitive otherwise
 set smarttab      " insert tabs on the start of a line according to shiftwidth, not tabstop
-"set hlsearch      " highlight search terms
 set incsearch     " show search matches as you type
 set gdefault
 set nobackup
 set noswapfile
-"set pastetoggle=<F4>
 set nopaste
 set lazyredraw
 nnoremap ; :
@@ -67,7 +65,6 @@ set cpoptions-=m
 nmap <C-p> ?^(<CR>
 nmap <C-n> /^(<CR>
 syntax enable
-"syntax off
 filetype plugin indent on
 set autowrite
 autocmd FileType scala setlocal shiftwidth=2 tabstop=2
@@ -176,6 +173,7 @@ function! CompileThisFile()
   exec ":silent vi ~/tmp/starling_comp"
   exec ":silent normal ggdG"
   exec ":silent r ! date"
+  "echo ":silent r ! /usr/local/scala/bin/fsc -deprecation -d " . classdir . " " . scalafile . " | cat"
   exec ":silent r ! /usr/local/scala/bin/fsc -deprecation -d " . classdir . " " . scalafile . " | cat"
   call OutputDateAndSwitchBuffer()
 endfunction
@@ -200,7 +198,7 @@ function! RunATest(scalafile, classname)
   exec ":silent normal ggdG"
   exec ":silent r ! date"
   if stridx(fullclassname, "Test") == -1
-    exec ":silent r ! /usr/local/bin/scala " . fullclassname
+    exec ":silent r ! /usr/local/scala/bin/scala " . fullclassname
   else
     "echo ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
     exec ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
