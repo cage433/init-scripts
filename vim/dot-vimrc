@@ -167,7 +167,7 @@ function! CompileThisFile()
     echo "Target dir not found"
     return
   endif
-  let classdir = target_dir . "/scala_2.9.0-1/" . last_dir
+  let classdir = target_dir . "/scala-2.9.0.1/" . last_dir
   w
   call SplitScreenIfNecessary()
   exec ":silent vi ~/tmp/starling_comp"
@@ -201,7 +201,8 @@ function! RunATest(scalafile, classname)
     exec ":silent r ! /usr/local/scala/bin/scala " . fullclassname
   else
     "echo ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
-    exec ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
+    exec ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -r starling.utils.StarlingTestReporter -p . -oNCOHL -s " . fullclassname
+    "exec ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -r starling.utils.StarlingTestReporter -p . -s " . fullclassname
   endif
 
   call OutputDateAndSwitchBuffer()
