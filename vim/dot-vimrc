@@ -209,7 +209,8 @@ function! RunATest(scalafile, classname)
     exec ":silent r ! /usr/local/scala/bin/scala " . fullclassname
   else
     "echo ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
-    exec ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
+    exec ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -r starling.utils.StarlingTestReporter -p . -oNCOHL -s " . fullclassname
+    "exec ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -r starling.utils.StarlingTestReporter -p . -s " . fullclassname
   endif
 
   call OutputDateAndSwitchBuffer()
