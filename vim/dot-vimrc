@@ -328,7 +328,6 @@ map <silent> <leader>X ma:call SaveWinline()<CR>:%s/\/\/@Test/@Test<CR>'a:call R
 " map  <leader>H :tabprevious<CR>
 
 iab pfl printf("File %s, line %d\n", __FILE__, __LINE__);
-" set paste
 
 set exrc
 
@@ -350,3 +349,33 @@ endfunction
 command! GetDeps call GetDepsFn()
 
 map <leader>gr :Gtags -r <C-r>=expand("<cword>")<CR><CR>
+
+function! WritePackage()
+  let path = expand("%:h")
+  let index = stridx(path, "src/", 0)
+  if index == -1
+    let line = "package "
+  else
+    let line = "package ".substitute(strpart(path, index + 4), "/", ".", "") 
+  endif
+  exe "normal a".line."\r"
+  redraw!
+endfunction
+
+nmap <silent> <leader>sp :call WritePackage()<CR>
+
+function! WriteCaseClass()
+  let classname = expand("%:t:r")
+  exe "normal icase class ".classname."(){\r}"
+  exe "normal! k/(\r"
+  redraw!
+endfunction
+nmap <silent> <leader>sc :call WriteCaseClass()<CR>
+
+
+function! WriteTrait()
+  let classname = expand("%:t:r")
+  exe "normal itrait ".classname."{\r}"
+  redraw!
+endfunction
+nmap <silent> <leader>st :call WriteTrait()<CR>
