@@ -308,7 +308,8 @@ map <leader>o ma:r ! find_imports.rb <cword> -a<CR>`a
 map <leader>s ma:r ! find_subtypes.rb <cword><CR>`a
 
 "Put the selected import line at the top and delete any others
-map <leader>u ma?^[^i]<CR>mb:call SaveWinline()<CR>'ayy'b?^i<CR>p'b:.,$g/^import/d<CR>'b,/:call RestoreWinline()<CR>
+"map <leader>u ma?^[^i]<CR>mb:call SaveWinline()<CR>'ayy'b?^i<CR>p'b:.,$g/^import/d<CR>'b,/:call RestoreWinline()<CR>
+map <leader>u ma?^[^i]<CR>mb:call SaveWinline()<CR>'ayy'b?\(\(^i\)\\|\(^p\)\)<CR>p'b:.,$g/^import/d<CR>'b,/:call RestoreWinline()<CR>
 
 " Add first import
 map <leader>I <leader>ij<leader>u

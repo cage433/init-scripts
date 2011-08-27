@@ -13,9 +13,10 @@ def add_imports(file)
     end
   end
 end
-add_imports("#{Dir.pwd}/starling_imports")
+add_imports("#{Dir.pwd}/.maker/project_imports")
 if include_external then
-  add_imports("#{Dir.pwd}/external_imports")
+  add_imports("#{Dir.pwd}/.maker/external_imports")
+  add_imports("#{Dir.pwd}/.maker/java_imports")
 end
 
 puts $imports.uniq
