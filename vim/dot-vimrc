@@ -380,3 +380,17 @@ function! WriteTrait()
   redraw!
 endfunction
 nmap <silent> <leader>st :call WriteTrait()<CR>
+
+function! OpenApiURL(shortClass, apiType)
+  exe "silent ! open-api-url.rb ".a:shortClass." ".a:apiType
+  redraw!
+endfunction
+function! OpenScalaURL(shortClass)
+  call OpenApiURL(a:shortClass, "s")
+endfunction
+function! OpenJavaURL(shortClass)
+  call OpenApiURL(a:shortClass, "j")
+endfunction
+
+map <leader>ss :call OpenScalaURL(expand("<cword>"))<CR>
+map <leader>sj :call OpenJavaURL(expand("<cword>"))<CR>

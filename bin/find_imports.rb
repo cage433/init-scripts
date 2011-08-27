@@ -1,23 +1,22 @@
 #!/usr/bin/ruby -w
 
+$: << File.dirname(__FILE__)
+require 'utils.rb'
+
 $short_name = ARGV[0]
 
 include_external = ARGV.index("-a")
 $imports = []
 
 def add_imports(file)
-  regexp = /^#{$short_name}\s+((\w|\.)+)/
-  IO.readlines(file).each do |line|
-    if line =~ regexp
-      $imports.unshift("import #{$1}.#{$short_name}")
-    end
-  end
+  packages = find_packages($short_name, file)
+  $imports = $imports + packages.collect{|p| "import #{p}.#{$short_name}"}
 end
-add_imports("#{Dir.pwd}/.maker/project_imports")
+add_imports($project_packages)
 if include_external then
-  add_imports("#{Dir.pwd}/.maker/external_imports")
-  add_imports("#{Dir.pwd}/.maker/java_imports")
-  add_imports("#{Dir.pwd}/.maker/scala_imports")
+  add_imports($external_packages)
+  add_imports($java_packages)
+  add_imports($scala_packages)
 end
 
 puts $imports.uniq

@@ -1,5 +1,7 @@
 #!/usr/bin/ruby -w
 
+$: << File.dirname(__FILE__)
+require 'utils.rb'
 require 'find'
 
 project_classes = []
@@ -43,7 +45,7 @@ Find.find(Dir.pwd) do |file|
 end
 
 
-File.open("#{Dir.pwd}/.maker/project_imports", "w") do |f|
+File.open($project_packages, "w") do |f|
   project_classes.each do |x|
     klass, pckg = x
     f.puts("#{klass}\t#{pckg}")
@@ -71,7 +73,7 @@ end
 
 if do_external_jars then
   java_classes_jar = ["/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Classes/classes.jar", "/usr/local/jdk/jre/lib/rt.jar"].find{|f| File.exists?(f)} || raise("Can't find java classes")
-  extract_jars_to_file([java_classes_jar], "#{Dir.pwd}/.maker/java_imports")
-  extract_jars_to_file([scala_library_jar], "#{Dir.pwd}/.maker/scala_imports")
-  extract_jars_to_file($project_jars,  "#{Dir.pwd}/.maker/external_imports")
+  extract_jars_to_file([java_classes_jar], $java_packages)
+  extract_jars_to_file([scala_library_jar], $scala_packages)
+  extract_jars_to_file($project_jars,  $external_packages)
 end
