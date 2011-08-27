@@ -6,6 +6,19 @@ project_classes = []
 $project_jars=[]
 do_external_jars = ARGV.index("-e")
 
+def scala_root
+  scala_bin = `which scala`.chomp
+  if scala_bin == "" then
+    scala_root = ["/usr/local/scala", "/opt/local/scala"].find{|f| File.exits?(f)}
+  else
+    scala_root = File.expand_path("#{scala_bin}/../..")
+  end
+  scala_root || raise("Can't find scala home")
+end 
+def scala_library_jar 
+  "#{scala_root}/lib/scala-library.jar"
+end
+
 def package_name(file)
   dirs = File.dirname(file).split("/").reverse
   i = dirs.index("src")
@@ -57,13 +70,8 @@ def extract_jars_to_file(jar_files, output_file)
 end
 
 if do_external_jars then
-  java_classes_jar = if RUBY_PLATFORM.downcase.include?("darwin") then 
-    "/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Classes/classes.jar"
-  elsif RUBY_PLATFORM.downcase.include?("linux")
-    "/usr/local/jdk/jre/lib/rt.jar"
-  else
-    raise("Unrecognised platform #{RUBY_PLATFORM}")
-  end
+  java_classes_jar = ["/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Classes/classes.jar", "/usr/local/jdk/jre/lib/rt.jar"].find{|f| File.exists?(f)} || raise("Can't find java classes")
   extract_jars_to_file([java_classes_jar], "#{Dir.pwd}/.maker/java_imports")
+  extract_jars_to_file([scala_library_jar], "#{Dir.pwd}/.maker/scala_imports")
   extract_jars_to_file($project_jars,  "#{Dir.pwd}/.maker/external_imports")
 end

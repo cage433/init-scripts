@@ -17,6 +17,7 @@ add_imports("#{Dir.pwd}/.maker/project_imports")
 if include_external then
   add_imports("#{Dir.pwd}/.maker/external_imports")
   add_imports("#{Dir.pwd}/.maker/java_imports")
+  add_imports("#{Dir.pwd}/.maker/scala_imports")
 end
 
 puts $imports.uniq
