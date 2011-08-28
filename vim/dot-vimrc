@@ -173,7 +173,6 @@ function! CompileThisFile()
   exec ":silent vi ~/tmp/starling_comp"
   exec ":silent normal ggdG"
   exec ":silent r ! date"
-  "echo ":silent r ! /usr/local/scala/bin/fsc -deprecation -d " . classdir . " " . scalafile . " | cat"
   exec ":silent r ! /usr/local/scala/bin/fsc -deprecation -d " . classdir . " " . scalafile . " | cat"
   call OutputDateAndSwitchBuffer()
 endfunction
@@ -182,8 +181,8 @@ map  <leader>l :call CompileThisFile()<CR>
 
 function! StarlingPackage(scalafile)
   let path = reverse(split(a:scalafile, "/"))
-  let idx = index(path, "starling")
-  let package_path = path[1:idx]
+  let idx = index(path, "src")
+  let package_path = path[1:idx-1]
   return join(reverse(package_path), ".")
 endfunction
 
