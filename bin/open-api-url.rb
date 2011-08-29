@@ -18,7 +18,14 @@ url = if api == :java then
           else
             "http://www.scala-lang.org/api/current/index.html##{packages[0]}.#{short_name}"
           end
-result = `open #{url}`
+open_url_command = if RUBY_PLATFORM.downcase.include?("linux") then
+                     "google-chrome"
+                   else
+                     "open"
+                   end
+
+puts "#{open_url_command} #{url}"
+result = `#{open_url_command} #{url}`
 puts result
 
 

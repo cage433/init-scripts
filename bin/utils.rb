@@ -1,7 +1,11 @@
-$project_packages = "#{Dir.pwd}/.maker/project_packages"
-$external_packages = "#{Dir.pwd}/.maker/external_packages"
-$java_packages = "#{Dir.pwd}/.maker/java_packages"
-$scala_packages = "#{Dir.pwd}/.maker/scala_packages"
+dot_maker = "#{Dir.pwd}/.maker"
+Dir.mkdir(dot_maker) unless File.exists?(dot_maker)
+
+$project_packages = "#{dot_maker}/project_packages"
+$external_packages = "#{dot_maker}/external_packages"
+$java_packages = "#{dot_maker}/java_packages"
+$scala_packages = "#{dot_maker}/scala_packages"
+
 
 def find_packages(short_class, package_listing_files)
   if package_listing_files == String then

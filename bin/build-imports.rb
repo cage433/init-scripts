@@ -23,8 +23,8 @@ end
 
 def package_name(file)
   dirs = File.dirname(file).split("/").reverse
-  i = dirs.index("src")
-  raise dirs.to_s unless i
+  i = dirs.index("src") || dirs.index("tests")
+  raise dirs.join("/") unless i
   dirs[0..i-1].reverse.join(".")
 end
 
