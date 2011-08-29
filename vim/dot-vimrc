@@ -1,3 +1,8 @@
+let g:relative_compile_directory="/target/scala_2.9.0-1/"
+if filereadable(".lvimrc")
+  execute "source .lvimrc"
+endif
+
 set number        " always show line numbers
 set nocompatible
 set path=.,**,,
@@ -146,7 +151,7 @@ endfunction
 function! TargetDirectory(scalafile)
   let path = split(a:scalafile, "/")
   while ! empty(path)
-    let candidate_target = "/".join(path, "/")."/target"
+    let candidate_target = "/".join(path, "/").g:relative_compile_directory
     if isdirectory(candidate_target)
       return candidate_target
     endif
@@ -154,6 +159,7 @@ function! TargetDirectory(scalafile)
   endwhile
   return ""
 endfunction!
+
 
 function! CompileThisFile()
   let scalafile = expand("%:p")
@@ -167,7 +173,7 @@ function! CompileThisFile()
     echo "Target dir not found"
     return
   endif
-  let classdir = target_dir . "/scala_2.9.0-1/" . last_dir
+  let classdir = target_dir . last_dir
   w
   call SplitScreenIfNecessary()
   exec ":silent vi ~/tmp/starling_comp"
@@ -182,6 +188,9 @@ map  <leader>l :call CompileThisFile()<CR>
 function! StarlingPackage(scalafile)
   let path = reverse(split(a:scalafile, "/"))
   let idx = index(path, "src")
+  if idx == -1 
+    let idx = index(path, "tests")
+  endif
   let package_path = path[1:idx-1]
   return join(reverse(package_path), ".")
 endfunction
@@ -227,11 +236,9 @@ endfunction
 
 function! TestOrSourceFile()
   if stridx(expand("%"), "Tests.scala") == -1
-    return substitute(expand("%:r"), "\/src\/", "/tests/", "") . "Tests.scala" 
-    "return substitute(expand("%:r"), "\/main\/", "/test/", "") . "Tests.scala" 
+    return substitute(expand("%:r"), "src\/", "tests/", "") . "Tests.scala" 
   else 
-    let otherfile = substitute(expand("%:r"), "\/tests\/", "/src/", "")
-    "let otherfile = substitute(expand("%:r"), "\/test\/", "/main/", "")
+    let otherfile = substitute(expand("%:r"), "tests\/", "src/", "")
     return substitute(otherfile, "Tests", "", "") . ".scala"
   endif
 endfunction
@@ -353,11 +360,17 @@ map <leader>gr :Gtags -r <C-r>=expand("<cword>")<CR><CR>
 function! WritePackage()
   let path = expand("%:h")
   let index = stridx(path, "src/", 0)
-  if index == -1
-    let line = "package "
+  if index -- -1
+    let index = stridx(path, "tests/", 0)
+    if index == -1
+      let package = ""
+    else
+      let package = substitute(strpart(path, index + 6), "/", ".", "") 
+    endif
   else
-    let line = "package ".substitute(strpart(path, index + 4), "/", ".", "") 
+    let package = substitute(strpart(path, index + 4), "/", ".", "") 
   endif
+  let line = "package ".package
   exe "normal a".line."\r"
   redraw!
 endfunction
@@ -393,3 +406,5 @@ endfunction
 
 map <leader>ss :call OpenScalaURL(expand("<cword>"))<CR>
 map <leader>sj :call OpenJavaURL(expand("<cword>"))<CR>
+
+
