@@ -405,7 +405,7 @@ function! OpenJavaURL(shortClass)
   call OpenApiURL(a:shortClass, "j")
 endfunction
 
-map <leader>ss :call OpenScalaURL(expand("<cword>"))<CR>
-map <leader>sj :call OpenJavaURL(expand("<cword>"))<CR>
+map <leader>ss :silent :call OpenScalaURL(expand("<cword>"))<CR>
+map <leader>sj :silent :call OpenJavaURL(expand("<cword>"))<CR>
 
 
