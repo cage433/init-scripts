@@ -1,4 +1,5 @@
-let g:relative_compile_directory="/target/scala_2.9.0-1/"
+let g:relative_class_dir="/target/scala_2.9.0-1/classes/"
+let g:relative_test_class_dir="/target/scala_2.9.0-1/test-classes/"
 if filereadable(".lvimrc")
   execute "source .lvimrc"
 endif
@@ -148,38 +149,44 @@ function! OutputDateAndSwitchBuffer()
   exec "normal \<C-w>w"
 endfunction
 
+function! TryTargetDirectory(path, lastComponent, relativeTargetDir)
+  if index(a:path, a:lastComponent) > -1
+    call remove(a:path, index(a:path, "src"), len(a:path) - 1)
+    return "/".join(a:path, "/").a:relativeTargetDir
+  else 
+    return ""
+  endif
+endfunction
+
 function! TargetDirectory(scalafile)
   let path = split(a:scalafile, "/")
-  while ! empty(path)
-    let candidate_target = "/".join(path, "/").g:relative_compile_directory
-    if isdirectory(candidate_target)
-      return candidate_target
-    endif
-    call remove(path, -1)
-  endwhile
-  return ""
+  let dir = TryTargetDirectory(path, "src", g:relative_class_dir)
+  if dir == ""
+    let dir = TryTargetDirectory(path, "tests", g:relative_test_class_dir)
+  endif
+  if dir == ""
+    let dir = TryTargetDirectory(path, "test", g:relative_test_class_dir)
+  endif
+  if dir != "" && !isdirectory(dir)
+    call mkdir(dir, "p")
+  endif
+  return dir
 endfunction!
 
 
 function! CompileThisFile()
   let scalafile = expand("%:p")
-  if stridx(scalafile, "tests") == -1
-    let last_dir = "classes/"
-  else
-    let last_dir = "test-classes/"
-  endif
   let target_dir = TargetDirectory(scalafile)
   if target_dir == ""
     echo "Target dir not found"
     return
   endif
-  let classdir = target_dir . last_dir
   w
   call SplitScreenIfNecessary()
   exec ":silent vi ~/tmp/starling_comp"
   exec ":silent normal ggdG"
   exec ":silent r ! date"
-  exec ":silent r ! /usr/local/scala/bin/fsc -sourcepath src:tests -deprecation -d " . classdir . " " . scalafile . " | cat"
+  exec ":silent r ! /usr/local/scala/bin/fsc -sourcepath src:tests -deprecation -d " . target_dir . " " . scalafile . " | cat"
   call OutputDateAndSwitchBuffer()
 endfunction
 
@@ -360,7 +367,7 @@ map <leader>gr :Gtags -r <C-r>=expand("<cword>")<CR><CR>
 function! WritePackage()
   let path = expand("%:h")
   let index = stridx(path, "src/", 0)
-  if index -- -1
+  if index == -1
     let index = stridx(path, "tests/", 0)
     if index == -1
       let package = ""
