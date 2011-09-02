@@ -11,7 +11,7 @@ do_external_jars = ARGV.index("-e")
 def scala_root
   scala_bin = `which scala`.chomp
   if scala_bin == "" then
-    scala_root = ["/usr/local/scala", "/opt/local/scala"].find{|f| File.exits?(f)}
+    scala_root = ["/usr/local/scala", "/opt/local/scala"].find{|f| File.exists?(f)}
   else
     scala_root = File.expand_path("#{scala_bin}/../..")
   end
@@ -23,7 +23,7 @@ end
 
 def package_name(file)
   dirs = File.dirname(file).split("/").reverse
-  i = dirs.index("src") || dirs.index("tests")
+  i = dirs.index("src") || dirs.index("tests")|| dirs.index("model-src")
   raise dirs.join("/") unless i
   dirs[0..i-1].reverse.join(".")
 end
@@ -33,7 +33,9 @@ def is_jar_to_extract(file)
 end
 
 Find.find(Dir.pwd) do |file|
-  if file =~ /.*\.scala$/ then
+  if FileTest.directory?(file) && file =~ /\/project/ then
+    Find.prune
+  elsif file =~ /.*\.scala$/ then
     IO.readlines(file).each do |line|
       if line =~ /\s*(class|trait|object)\s*(\w+)\s*(private)?\s*(((extends)|(with))\s+\w+\s*)*(\{|\[|\(|$)/ then
         project_classes.unshift([$2, package_name(file)])

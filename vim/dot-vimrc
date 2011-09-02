@@ -216,7 +216,8 @@ function! RunATest(scalafile, classname)
     exec ":silent r ! /usr/local/scala/bin/scala " . fullclassname
   else
     "echo ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
-    exec ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
+    exec ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -r starling.utils.StarlingTestReporter -p . -oNCOHL -s " . fullclassname
+    "exec ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -r starling.utils.StarlingTestReporter -p . -s " . fullclassname
   endif
 
   call OutputDateAndSwitchBuffer()
@@ -411,7 +412,7 @@ function! OpenJavaURL(shortClass)
   call OpenApiURL(a:shortClass, "j")
 endfunction
 
-map <leader>ss :call OpenScalaURL(expand("<cword>"))<CR>
-map <leader>sj :call OpenJavaURL(expand("<cword>"))<CR>
+map <leader>ss :silent :call OpenScalaURL(expand("<cword>"))<CR>
+map <leader>sj :silent :call OpenJavaURL(expand("<cword>"))<CR>
 
 
