@@ -1,5 +1,6 @@
 let g:relative_class_dir="/target/scala_2.9.0-1/classes/"
 let g:relative_test_class_dir="/target/scala_2.9.0-1/test-classes/"
+let g:scalatest_reporter="starling.utils.StarlingTestReporter"
 if filereadable(".lvimrc")
   execute "source .lvimrc"
 endif
@@ -151,7 +152,7 @@ endfunction
 
 function! TryTargetDirectory(path, lastComponent, relativeTargetDir)
   if index(a:path, a:lastComponent) > -1
-    call remove(a:path, index(a:path, "src"), len(a:path) - 1)
+    call remove(a:path, index(a:path, a:lastComponent), len(a:path) - 1)
     return "/".join(a:path, "/").a:relativeTargetDir
   else 
     return ""
@@ -215,9 +216,12 @@ function! RunATest(scalafile, classname)
   if stridx(fullclassname, "Test") == -1
     exec ":silent r ! /usr/local/scala/bin/scala " . fullclassname
   else
-    "echo ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -p . -oNCOHL -s " . fullclassname
-    exec ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -r starling.utils.StarlingTestReporter -p . -oNCOHL -s " . fullclassname
-    "exec ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner -r starling.utils.StarlingTestReporter -p . -s " . fullclassname
+    if g:scalatest_reporter == ""
+      let test_reporter_arg = ""
+    else
+      let test_reporter_arg =  " -r " . g:scalatest_reporter
+    endif
+    exec ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner ".test_reporter_arg." -p . -oNCOHL -s " . fullclassname
   endif
 
   call OutputDateAndSwitchBuffer()
