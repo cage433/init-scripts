@@ -5,6 +5,7 @@ if filereadable(".lvimrc")
   execute "source .lvimrc"
 endif
 
+set timeoutlen=600
 set number        " always show line numbers
 set nocompatible
 set path=.,**,,
@@ -92,9 +93,7 @@ endfunction
 
 :set gdefault
 
-inoremap jj <ESC>
-inoremap jk <ESC>o
-inoremap kj <ESC>O
+inoremap jk <ESC>
 
 set encoding=utf-8
 set scrolloff=3
