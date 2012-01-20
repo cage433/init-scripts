@@ -33,7 +33,7 @@ def is_jar_to_extract(file)
 end
 
 Find.find(Dir.pwd) do |file|
-  if FileTest.directory?(file) && file =~ /\/project/ then
+  if File.expand_path(file) == File.expand_path("project")
     Find.prune
   elsif file =~ /.*\.scala$/ then
     IO.readlines(file).each do |line|

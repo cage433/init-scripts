@@ -1,5 +1,5 @@
-let g:relative_class_dir="/target/scala_2.9.0-1/classes/"
-let g:relative_test_class_dir="/target/scala_2.9.0-1/test-classes/"
+let g:relative_class_dir="/target/scala_2.9.1/classes/"
+let g:relative_test_class_dir="/target/scala_2.9.1/test-classes/"
 let g:scalatest_reporter="starling.utils.StarlingTestReporter"
 if filereadable(".lvimrc")
   execute "source .lvimrc"
@@ -21,7 +21,7 @@ set noautoindent    " always set autoindenting on
 set copyindent    " copy the previous indentation on autoindenting
 set shiftround    " use multiple of shiftwidth when indenting with '<' and '>'
 set showmatch     " set show matching parenthesis
-set ignorecase    " ignore case when searching
+"set ignorecase    " ignore case when searching
 set smartcase     " ignore case if search pattern is all lowercase,  case-sensitive otherwise
 set smarttab      " insert tabs on the start of a line according to shiftwidth, not tabstop
 set incsearch     " show search matches as you type
@@ -75,6 +75,7 @@ syntax enable
 filetype plugin indent on
 set autowrite
 autocmd FileType scala setlocal shiftwidth=2 tabstop=2
+autocmd FileType scala ab -> →
 autocmd FileType rb setlocal shiftwidth=2 tabstop=2
 autocmd FileType c setlocal shiftwidth=4 tabstop=4
 autocmd FileType cpp setlocal shiftwidth=4 tabstop=4
@@ -92,9 +93,7 @@ endfunction
 
 :set gdefault
 
-inoremap jj <ESC>
-inoremap jk <ESC>o
-inoremap kj <ESC>O
+inoremap jk <ESC>
 
 set encoding=utf-8
 set scrolloff=3
@@ -119,7 +118,7 @@ set tags=tags;/
 "
 
 
-:set noignorecase
+":set noignorecase
 :set textwidth=0
 function! SaveWinline()
   let g:currentwinline = winline()
@@ -419,4 +418,9 @@ endfunction
 map <leader>ss :silent :call OpenScalaURL(expand("<cword>"))<CR>
 map <leader>sj :silent :call OpenJavaURL(expand("<cword>"))<CR>
 
+set makeprg=sbt/sbt\ compile
+"set efm=%E\ %#[error]\ %f:%l:\ %m,%C\ %#[error]\ %p^,%-C%.%#,%Z,
+"       \%W\ %#[warn]\ %f:%l:\ %m,%C\ %#[warn]\ %p^,%-C%.%#,%Z,
+"       \%-G%.%#
+set efm=[error]\ %f:%l:\ %m
 
