@@ -5,6 +5,7 @@ if filereadable(".lvimrc")
   execute "source .lvimrc"
 endif
 
+set timeoutlen=600
 set number        " always show line numbers
 set nocompatible
 set path=.,**,,
