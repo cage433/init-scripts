@@ -10,3 +10,7 @@ if [ ! -e $HOME/.ctags ]; then
 	echo "Creating link to .ctags "
 	ln -s $PWD/dot-ctags $HOME/.ctags
 fi
+if [ ! -e $HOME/.tmux.conf ]; then
+	echo "Creating link to .tmux.conf"
+	ln -s $PWD/dot-tmux-dot-conf $HOME/.tmux.conf
+fi
