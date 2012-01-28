@@ -296,6 +296,9 @@ imap <F5> println("Debug: <Esc>:call InsertClassName()<CR>a: " + )<Esc>i
 map <leader>t :call ToggleSourceAndTestFile()<CR>
 map <leader>T :call ToggleSourceAndTestFileOtherWindow()<CR>
 
+nnoremap <silent> <leader>f :CommandT<CR>
+nnoremap <leader><leader> <C-^>
+
 map <leader>k :call RunThisTest()<CR>
 map <leader>j :call RunLastTest()<CR>
 map <leader>J :call CompileThisFile()<CR>:call RunLastTest()<CR>
