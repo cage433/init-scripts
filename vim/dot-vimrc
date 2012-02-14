@@ -80,6 +80,7 @@ autocmd FileType scala ab -> →
 autocmd FileType rb setlocal shiftwidth=2 tabstop=2
 autocmd FileType c setlocal shiftwidth=4 tabstop=4
 autocmd FileType cpp setlocal shiftwidth=4 tabstop=4
+autocmd FileType sh noremap <leader>m :w<CR> :! % <CR>
 
 
 " Revert PWD to its original value
@@ -316,8 +317,8 @@ map <silent> <leader>c :cd %:h<CR>
 map <leader>d :call PutPwdBack()<CR>
 
 " comment and uncomment
-map <leader>m mb:.,'as/^/\/\/<CR>,/'b
-map <leader>n mb:.,'as/^\/\///g<CR>,/'b
+"map <leader>m mb:.,'as/^/\/\/<CR>,/'b
+"map <leader>n mb:.,'as/^\/\///g<CR>,/'b
 
 "show starling imports
 map <leader>i ma:r ! find_imports.rb <cword><CR>`a
@@ -428,3 +429,13 @@ set makeprg=sbt/sbt\ compile
 "       \%-G%.%#
 set efm=[error]\ %f:%l:\ %m
 
+function! RefreshCTags()
+    exec "silent ! ctags -R ."
+    redraw!
+endfunction
+command! RefreshCTags call RefreshCTags()
+map <leader>ct :silent :call RefreshCTags()<CR>
+
+set wildignore+=*.class
+
+let g:CommandTMaxHeight=5
