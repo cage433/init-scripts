@@ -184,12 +184,7 @@ function! CompileThisFile()
     return
   endif
   w
-  call SplitScreenIfNecessary()
-  exec ":silent vi ~/tmp/starling_comp"
-  exec ":silent normal ggdG"
-  exec ":silent r ! date"
-  exec ":silent r ! /usr/local/scala/bin/fsc -sourcepath src:tests -deprecation -d " . target_dir . " " . scalafile . " | cat"
-  call OutputDateAndSwitchBuffer()
+  exec "! clear; /usr/local/scala/bin/fsc -sourcepath src:tests -deprecation -d " . target_dir . " " . scalafile . " | cat | tee vim-compile-output"
 endfunction
 
 map  <leader>l :call CompileThisFile()<CR>
@@ -210,10 +205,6 @@ function! RunATest(scalafile, classname)
   let pkg = StarlingPackage(a:scalafile)
   let fullclassname = pkg . "." . a:classname
   w
-  call SplitScreenIfNecessary()
-  exec ":silent vi ~/tmp/starling_test"
-  exec ":silent normal ggdG"
-  exec ":silent r ! date"
   if stridx(fullclassname, "Test") == -1
     exec ":silent r ! /usr/local/scala/bin/scala " . fullclassname
   else
@@ -222,10 +213,10 @@ function! RunATest(scalafile, classname)
     else
       let test_reporter_arg =  " -r " . g:scalatest_reporter
     endif
-    exec ":silent r ! /usr/local/scala/bin/scala org.scalatest.tools.Runner ".test_reporter_arg." -p . -oNCOHL -s " . fullclassname
+    exec "! clear; /usr/local/scala/bin/scala org.scalatest.tools.Runner ".test_reporter_arg." -p . -oNCOHL -s " . fullclassname
   endif
 
-  call OutputDateAndSwitchBuffer()
+  "call OutputDateAndSwitchBuffer()
 endfunction
 
 function! RunThisTest() 
@@ -427,7 +418,13 @@ set makeprg=sbt/sbt\ compile
 "set efm=%E\ %#[error]\ %f:%l:\ %m,%C\ %#[error]\ %p^,%-C%.%#,%Z,
 "       \%W\ %#[warn]\ %f:%l:\ %m,%C\ %#[warn]\ %p^,%-C%.%#,%Z,
 "       \%-G%.%#
-set efm=[error]\ %f:%l:\ %m
+"set efm=[error]\ %f:%l:\ %m
+set efm=%f:%l:\ error%m
+nnoremap <leader>ee :cfile vim-compile-output<CR>
+nnoremap <leader>en :cn<CR>
+nnoremap <leader>ep :cp<CR>
+
+
 
 function! RefreshCTags()
     exec "silent ! ctags -R ."
