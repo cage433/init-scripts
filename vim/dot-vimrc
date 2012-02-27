@@ -206,7 +206,7 @@ function! RunATest(scalafile, classname)
   let fullclassname = pkg . "." . a:classname
   w
   if stridx(fullclassname, "Test") == -1
-    exec ":silent r ! /usr/local/scala/bin/scala " . fullclassname
+    exec "! clear; /usr/local/scala/bin/scala " . fullclassname
   else
     if g:scalatest_reporter == ""
       let test_reporter_arg = ""
