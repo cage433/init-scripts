@@ -77,6 +77,7 @@ filetype plugin indent on
 set autowrite
 autocmd FileType scala setlocal shiftwidth=2 tabstop=2
 autocmd FileType scala ab -> →
+autocmd FileType scala ab => ⇒
 autocmd FileType rb setlocal shiftwidth=2 tabstop=2
 autocmd FileType c setlocal shiftwidth=4 tabstop=4
 autocmd FileType cpp setlocal shiftwidth=4 tabstop=4
@@ -184,7 +185,7 @@ function! CompileThisFile()
     return
   endif
   w
-  exec "! clear; /usr/local/scala/bin/fsc -sourcepath src:tests -deprecation -d " . target_dir . " " . scalafile . " | cat | tee vim-compile-output"
+  exec "! clear; time /usr/local/scala/bin/fsc -sourcepath src:tests -deprecation -d " . target_dir . " " . scalafile . " | cat | tee vim-compile-output"
 endfunction
 
 map  <leader>l :call CompileThisFile()<CR>
@@ -436,3 +437,22 @@ map <leader>ct :silent :call RefreshCTags()<CR>
 set wildignore+=*.class
 
 let g:CommandTMaxHeight=5
+set ruler
+set rulerformat=%55(%{strftime('%a\ %b\ %e\ %I:%M\ %p')}\ %5l,%-6(%c%V%)\ %P%)
+
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" MULTIPURPOSE TAB KEY
+" Indent if we're at the beginning of a line. Else, do completion.
+" Taken from https://github.com/garybernhardt/dotfiles
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! InsertTabWrapper()
+    let col = col('.') - 1
+    if !col || getline('.')[col - 1] !~ '\k'
+        return "\<tab>"
+    else
+        return "\<c-p>"
+    endif
+endfunction
+inoremap <tab> <c-r>=InsertTabWrapper()<cr>
+inoremap <s-tab> <c-n>
