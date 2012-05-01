@@ -262,12 +262,10 @@ endfunction
 
 function! TidyScalaImports()
   let scalafile = expand("%")
-  "exec ":silent ~/tidy-imports.rb ".shellescape(expand("%"))
   exec ":%d"
-  exec ":silent r ! ".shellescape(expand("~/bin/tidy-imports.rb"))." ".shellescape(expand("%:p"))
+  exec ":silent r ! ".shellescape("tidy-imports.rb")." ".shellescape(expand("%:p"))
   exec ":normal ggdd"
   exec ":w"
-  "system("~/tidy-imports.rb ".shellescape(expand("%")))
 endfunction
 
 function! SwitchNumbering()
