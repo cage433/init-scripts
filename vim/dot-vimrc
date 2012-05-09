@@ -371,10 +371,10 @@ function! WritePackage()
     if index == -1
       let package = ""
     else
-      let package = substitute(strpart(path, index + 6), "/", ".", "") 
+      let package = substitute(strpart(path, index + 6), "/", ".", "g") 
     endif
   else
-    let package = substitute(strpart(path, index + 4), "/", ".", "") 
+    let package = substitute(strpart(path, index + 4), "/", ".", "g") 
   endif
   let line = "package ".package
   exe "normal a".line."\r"
