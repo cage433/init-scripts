@@ -1,5 +1,7 @@
-let g:relative_class_dir="/target/scala_2.9.1/classes/"
-let g:relative_test_class_dir="/target/scala_2.9.1/test-classes/"
+"let g:relative_class_dir="/target/scala_2.9.1/classes/"
+"let g:relative_class_dir="/target/scala_2.9.1/classes/"
+let g:relative_test_class_dir="/test-classes/"
+let g:relative_test_class_dir="/test-classes/"
 let g:scalatest_reporter="starling.utils.StarlingTestReporter"
 if filereadable(".lvimrc")
   execute "source .lvimrc"
@@ -373,10 +375,10 @@ function! WritePackage()
     if index == -1
       let package = ""
     else
-      let package = substitute(strpart(path, index + 6), "/", ".", "") 
+      let package = substitute(strpart(path, index + 6), "/", ".", "g") 
     endif
   else
-    let package = substitute(strpart(path, index + 4), "/", ".", "") 
+    let package = substitute(strpart(path, index + 4), "/", ".", "g") 
   endif
   let line = "package ".package
   exe "normal a".line."\r"
