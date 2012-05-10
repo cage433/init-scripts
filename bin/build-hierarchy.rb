@@ -15,9 +15,9 @@ end
 Find.find(Dir.pwd) do |file|
   if file =~ /\.scala$/ then
     file_text = IO.readlines(file, nil)[0]
-    file_text.scan(/class\s+([A-Z]\w*)([^{]*)\{/).each do |match|
-      sub_class = match[0]
-      match[1].scan(/((extends)|(with))\s+([A-Z]\w*)/).each do |submatch|
+    file_text.scan(/((class)|(object))\s+([A-Z]\w*)([^{]*)\{/).each do |match|
+      sub_class = match[3]
+      match[4].scan(/((extends)|(with))\s+([A-Z]\w*)/).each do |submatch|
         super_class = submatch[3]
         add_to_map(super_to_sub, super_class, sub_class)
         add_to_map(sub_to_super, sub_class, super_class)

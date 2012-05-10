@@ -264,12 +264,10 @@ endfunction
 
 function! TidyScalaImports()
   let scalafile = expand("%")
-  "exec ":silent ~/tidy-imports.rb ".shellescape(expand("%"))
   exec ":%d"
-  exec ":silent r ! ".shellescape(expand("~/bin/tidy-imports.rb"))." ".shellescape(expand("%:p"))
+  exec ":silent r ! ".shellescape("tidy-imports.rb")." ".shellescape(expand("%:p"))
   exec ":normal ggdd"
   exec ":w"
-  "system("~/tidy-imports.rb ".shellescape(expand("%")))
 endfunction
 
 function! SwitchNumbering()
@@ -457,4 +455,18 @@ function! InsertTabWrapper()
     endif
 endfunction
 inoremap <tab> <c-r>=InsertTabWrapper()<cr>
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" RENAME CURRENT FILE
+" Taken from https://github.com/garybernhardt/dotfiles
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! RenameFile()
+    let old_name = expand('%')
+    let new_name = input('New file name: ', expand('%'), 'file')
+    if new_name != '' && new_name != old_name
+        exec ':saveas ' . new_name
+        exec ':silent !rm ' . old_name
+        redraw!
+    endif
+endfunction
+map <leader>n :call RenameFile()<cr>
 inoremap <s-tab> <c-n>
