@@ -333,9 +333,12 @@ map <leader>p ?extends<CR>w<C-]>
 " Wipe buffer without deleting window
 map <leader>z :BW<CR>
 
-"Comment out all tests except this
+"Comment out all testng tests except this
 map <leader>x :call SaveWinline()<CR>ma?@Test<CR>mb:0,-1s/@Test/\/\/@Test/e<CR>'b:+1,$s/@Test/\/\/@Test/e<CR>'a:call RestoreWinline()<CR>,/
 map <silent> <leader>X ma:call SaveWinline()<CR>:%s/\/\/@Test/@Test<CR>'a:call RestoreWinline()<CR>,/
+"Comment out all scalatest tests except this
+map <leader>r :call SaveWinline()<CR>ma?test(<CR>mb:0,-1s/test(/ignore(/e<CR>'b:+1,$s/test(/ignore(/e<CR>'a:call RestoreWinline()<CR>,/
+map <silent> <leader>R ma:call SaveWinline()<CR>:%s/ignore(/test(<CR>'a:call RestoreWinline()<CR>,/
 
 "Switch between tabs
 " map  <leader>L :tabnext<CR>
@@ -362,7 +365,10 @@ endfunction
 
 command! GetDeps call GetDepsFn()
 
+"let g:ackprg="ack-grep --type=scala -H --nocolor --nogroup --column"
+let g:ackprg="ack-grep -H --nocolor --nogroup --column"
 map <leader>gr :Gtags -r <C-r>=expand("<cword>")<CR><CR>
+map <leader>ar :Ack -r <C-r>=expand("<cword>")<CR><CR>
 
 function! WritePackage()
   let path = expand("%:h")
