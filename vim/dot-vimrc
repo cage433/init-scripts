@@ -110,7 +110,6 @@ set wildmode=list:longest
 set visualbell
 set cursorline
 set ttyfast
-set ruler
 set backspace=indent,eol,start
 "set laststatus=
 "set relativenumber
@@ -470,3 +469,5 @@ function! RenameFile()
 endfunction
 map <leader>n :call RenameFile()<cr>
 inoremap <s-tab> <c-n>
+
+
