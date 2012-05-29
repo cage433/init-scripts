@@ -1,5 +1,3 @@
-"let g:relative_class_dir="/target/scala_2.9.1/classes/"
-"let g:relative_class_dir="/target/scala_2.9.1/classes/"
 let g:relative_test_class_dir="/test-classes/"
 let g:relative_test_class_dir="/test-classes/"
 let g:scalatest_reporter="starling.utils.StarlingTestReporter"
@@ -7,12 +5,14 @@ if filereadable(".lvimrc")
   execute "source .lvimrc"
 endif
 
+
 set timeoutlen=600
 set number        " always show line numbers
 set nocompatible
 set path=.,**,,
 call pathogen#helptags()
 call pathogen#runtime_append_all_bundles() 
+let g:ackprg="ack-grep\\ -H\\ --nocolor\\ --nogroup"
 let mapleader=","
 nmap <silent> <leader>sv :so $MYVIMRC<CR>
 nmap <silent> <leader>se :e $MYVIMRC<CR>

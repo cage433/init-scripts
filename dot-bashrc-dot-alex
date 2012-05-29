@@ -1,0 +1,59 @@
+export EDITOR=vim
+export CAGE=alex@cage433.vm.bytemark.co.uk
+export PATH=$PATH:$HOME/repos/init-scripts/bin
+
+alias cage='ssh $CAGE'
+alias cl=clear
+alias ll='ls -ltr'
+alias run-test='java org.testng.TestNG -listener starling.utils.TestListener -testclass '
+alias starling='export JAVA_OPTS="-XX:MaxPermSize=1000m -Xss528m -Xmx9000m -Dprops.location=./props.conf -javaagent:lib/jrebel/jrebel.jar -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005" && scala_ -Yrepl-sync -i ./launcher/src/starling/repl/ReplHelper.scala'
+export CAGE=cage433.vm.bytemark.co.uk
+alias cage='ssh -p 443 $CAGE'
+alias st='git status'
+alias ta='tmux attach'
+alias tc='tmux clear-history'
+alias scala_='/usr/local/scala/bin/scala'
+alias fsc_='/usr/local/scala/bin/fsc'
+alias ack-scala="ack-grep --type=scala "
+alias resyn='killall synergys && synergys -c ~/synergy.conf'
+
+
+
+# Wraps a completion function
+# make-completion-wrapper <actual completion function> <name of new func.>
+#                         <command name> <list supplied arguments>
+# eg.
+# 	alias agi='apt-get install'
+# 	make-completion-wrapper _apt_get _apt_get_install apt-get install
+# defines a function called _apt_get_install (that's $2) that will complete
+# the 'agi' alias. (complete -F _apt_get_install agi)
+#
+
+function make-completion-wrapper () {
+	local function_name="$2"
+	local arg_count=$(($#-3))
+	local comp_function_name="$1"
+	shift 2
+	local function="
+function $function_name {
+	((COMP_CWORD+=$arg_count))
+	COMP_WORDS=( "$@" \${COMP_WORDS[@]:1} )
+	"$comp_function_name"
+	return 0
+}"
+	eval "$function"
+}
+
+alias gb='git branch'
+make-completion-wrapper _git_branch _gb git branch
+complete -o filenames -F _git_branch gb
+
+alias gc='git checkout'
+make-completion-wrapper _git_checkout _gb git checkout
+complete -o filenames -F _git_checkout gc
+
+alias g='git'
+make-completion-wrapper _git _gb git checkout
+complete -o filenames -F _git g
+
+complete -o default -o nospace -F _git g
