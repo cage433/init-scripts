@@ -12,7 +12,7 @@ set nocompatible
 set path=.,**,,
 call pathogen#helptags()
 call pathogen#runtime_append_all_bundles() 
-let g:ackprg="ack-grep\\ -H\\ --nocolor\\ --nogroup"
+let g:ackprg="ack-grep -H --nocolor --nogroup --column"
 let mapleader=","
 nmap <silent> <leader>sv :so $MYVIMRC<CR>
 nmap <silent> <leader>se :e $MYVIMRC<CR>
