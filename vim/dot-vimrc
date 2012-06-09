@@ -205,7 +205,7 @@ function! RunATest(scalafile, classname)
   let g:lastclassname = a:classname
   let pkg = StarlingPackage(a:scalafile)
   let fullclassname = pkg . "." . a:classname
-  w
+  "w
   if stridx(fullclassname, "Test") == -1
     exec "! clear; /usr/local/scala/bin/scala " . fullclassname
   else
