@@ -1,9 +1,10 @@
-let g:relative_class_dir="/target/scala_2.9.1/classes/"
-let g:relative_test_class_dir="/target/scala_2.9.1/test-classes/"
+let g:relative_test_class_dir="/test-classes/"
+let g:relative_test_class_dir="/test-classes/"
 let g:scalatest_reporter="starling.utils.StarlingTestReporter"
 if filereadable(".lvimrc")
   execute "source .lvimrc"
 endif
+
 
 set timeoutlen=600
 set number        " always show line numbers
@@ -11,6 +12,7 @@ set nocompatible
 set path=.,**,,
 call pathogen#helptags()
 call pathogen#runtime_append_all_bundles() 
+let g:ackprg="ack-grep\\ -H\\ --nocolor\\ --nogroup"
 let mapleader=","
 nmap <silent> <leader>sv :so $MYVIMRC<CR>
 nmap <silent> <leader>se :e $MYVIMRC<CR>
@@ -81,7 +83,7 @@ autocmd FileType scala ab => ⇒
 autocmd FileType rb setlocal shiftwidth=2 tabstop=2
 autocmd FileType c setlocal shiftwidth=4 tabstop=4
 autocmd FileType cpp setlocal shiftwidth=4 tabstop=4
-autocmd FileType sh noremap <leader>m :w<CR> :! % <CR>
+autocmd FileType sh noremap <leader>m :w<CR> :! . % <CR>
 
 
 " Revert PWD to its original value
@@ -108,7 +110,6 @@ set wildmode=list:longest
 set visualbell
 set cursorline
 set ttyfast
-set ruler
 set backspace=indent,eol,start
 "set laststatus=
 "set relativenumber
@@ -474,3 +475,5 @@ function! RenameFile()
 endfunction
 map <leader>n :call RenameFile()<cr>
 inoremap <s-tab> <c-n>
+
+

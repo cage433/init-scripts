@@ -1,10 +1,10 @@
-dot_maker = "#{Dir.pwd}/.maker"
-Dir.mkdir(dot_maker) unless File.exists?(dot_maker)
+dot_maker_dot_vim = "#{Dir.pwd}/.maker.vim"
+Dir.mkdir(dot_maker_dot_vim) unless File.exists?(dot_maker_dot_vim)
 
-$project_packages = "#{dot_maker}/project_packages"
-$external_packages = "#{dot_maker}/external_packages"
-$java_packages = "#{dot_maker}/java_packages"
-$scala_packages = "#{dot_maker}/scala_packages"
+$project_packages = "#{dot_maker_dot_vim}/project_packages"
+$external_packages = "#{dot_maker_dot_vim}/external_packages"
+$java_packages = "#{dot_maker_dot_vim}/java_packages"
+$scala_packages = "#{dot_maker_dot_vim}/scala_packages"
 
 
 def find_packages(short_class, package_listing_files)
