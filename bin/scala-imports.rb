@@ -98,7 +98,7 @@ def find_project_jar_files
     if File.expand_path(file) == File.expand_path("project") \
       || File.expand_path(file) == File.expand_path("maker.jar") \
       || File.basename(file) == ".maker" \
-      || File.basename(file) == "modulejar" \
+      || File.basename(file) == "modulejarcache" \
       || file =~ /sources/
       Find.prune
     elsif file =~ /\.jar$/
