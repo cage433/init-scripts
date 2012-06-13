@@ -206,7 +206,7 @@ function! RunATest(scalafile, classname)
   let g:lastclassname = a:classname
   let pkg = StarlingPackage(a:scalafile)
   let fullclassname = pkg . "." . a:classname
-  w
+  "w
   if stridx(fullclassname, "Test") == -1
     exec "! clear; /usr/local/scala/bin/scala " . fullclassname
   else
@@ -312,10 +312,10 @@ map <leader>d :call PutPwdBack()<CR>
 "map <leader>n mb:.,'as/^\/\///g<CR>,/'b
 
 "show starling imports
-map <leader>i ma:r ! find_imports.rb <cword><CR>`a
+map <leader>i ma:r ! scala-imports.rb -p <cword><CR>`a
 
-" show all imports
-map <leader>o ma:r ! find_imports.rb <cword> -a<CR>`a
+" show external imports
+map <leader>o ma:r ! scala-imports.rb -e <cword><CR>`a
 
 "Show sub classes
 map <leader>s ma:r ! find_subtypes.rb <cword><CR>`a
