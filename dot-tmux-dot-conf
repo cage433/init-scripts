@@ -1,5 +1,7 @@
 # act like vim
 setw -g mode-keys vi
+bind-key -ct vi-edit up history-up
+bind-key -ct vi-edit down history-down
 bind-key h select-pane -L
 bind-key j select-pane -D
 bind-key k select-pane -U
