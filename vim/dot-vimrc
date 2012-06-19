@@ -37,10 +37,11 @@ nnoremap ; :
 nnoremap \ ;
 vnoremap ; :
 vnoremap \ ;
-map <C-h> <C-w>h
-map <C-j> <C-w>j
-map <C-k> <C-w>k
-map <C-l> <C-w>l
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
+nnoremap <leader>a :cope 8<CR><C-w>k
 nmap <silent> ,/ :nohlsearch<CR>
 nmap j gj
 nmap k gk
@@ -70,6 +71,7 @@ map <silent> <F3> :call BufferList()<CR>
 map <silent> <F6> :NERDTreeToggle<CR>
 map <silent> <F1> <ESC>
 imap <silent> <F1> <ESC>
+inoremap jk <ESC>
 set showmatch
 set cpoptions-=m
 nmap <C-p> ?^(<CR>
@@ -140,7 +142,7 @@ function! RestoreWinline()
 endfunction
 
 function! SplitScreenIfNecessary()
-  if winnr() == 1
+  if winnr("$") == 1
     exec ":silent only"
     exec ":vs"
   endif
@@ -231,14 +233,22 @@ function! RunLastTest()
 endfunction
 
 function! ToggleSourceAndTestFile()
-  exec ":vi " . TestOrSourceFile()
+  let otherfile = TestOrSourceFile()
+  if filereadable(otherfile)
+    exec ":vi " . otherfile
+  else
+    echo "File " . otherfile . " does not exist"
+  endif
 endfunction
-
 
 function! ToggleSourceAndTestFileOtherWindow()
   let otherfile = TestOrSourceFile()
-  call SplitScreenIfNecessary()
-  exec ":vi " . otherfile
+  if filereadable(otherfile)
+    call SplitScreenIfNecessary()
+    exec ":vi " . otherfile
+  else
+    echo "File " . otherfile . " does not exist"
+  endif
 endfunction
 
 function! TestOrSourceFile()
@@ -249,6 +259,35 @@ function! TestOrSourceFile()
     return substitute(otherfile, "Tests", "", "") . ".scala"
   endif
 endfunction
+
+function! ToggleRepo()
+  if exists('g:otherRepo')
+    let otherfile = OtherRepoFile()
+    if filereadable(otherfile)
+      if winnr("$") == 1
+        exec ":vi " . otherfile
+      else
+        exec "normal \<C-w>w"
+        exec ":vi " . otherfile
+      endif
+    else
+      echo "File " . otherfile . " does not exist"
+    endif
+  else
+    echo "Not configured to switch repos"
+  endif
+endfunction
+
+function! OtherRepoFile()
+  let relFile = expand("%")
+  if stridx(relFile, g:otherRepo) == -1
+    return g:otherRepo . relFile
+  else
+    return strpart(relFile, strlen(g:otherRepo))
+  endif
+endfunction
+
+map <leader>M :call ToggleRepo()<CR>
 
 function! OpenTagInOtherWindow()
   let tag = expand("<cword>")
@@ -349,24 +388,6 @@ iab pfl printf("File %s, line %d\n", __FILE__, __LINE__);
 
 set exrc
 
-function! ExtractJars()
-	silent! g/\[INFO]/d
-	silent! s/\:/\r/
-"	silent! %s/\(\.\|\w\|\/\|-\)\+\//
-endfunction
-
-map <leader>q :call ExtractJars()<CR>
-
-function! GetDepsFn()
-  silent! g!/dependency/d
-  silent! g!/trafigura/d
-  silent! %s/.\+class /
-  silent! %s/'.\+$/
-endfunction
-
-command! GetDeps call GetDepsFn()
-
-"let g:ackprg="ack-grep --type=scala -H --nocolor --nogroup --column"
 let g:ackprg="ack-grep -H --nocolor --nogroup --column"
 map <leader>gr :Gtags -r <C-r>=expand("<cword>")<CR><CR>
 map <leader>ar :Ack -r <C-r>=expand("<cword>")<CR><CR>
@@ -421,13 +442,8 @@ endfunction
 map <leader>ss :silent :call OpenScalaURL(expand("<cword>"))<CR>
 map <leader>sj :silent :call OpenJavaURL(expand("<cword>"))<CR>
 
-set makeprg=sbt/sbt\ compile
-"set efm=%E\ %#[error]\ %f:%l:\ %m,%C\ %#[error]\ %p^,%-C%.%#,%Z,
-"       \%W\ %#[warn]\ %f:%l:\ %m,%C\ %#[warn]\ %p^,%-C%.%#,%Z,
-"       \%-G%.%#
-"set efm=[error]\ %f:%l:\ %m
 set efm=%f:%l:\ error%m
-nnoremap <leader>ee :cfile vim-compile-output<CR>
+nnoremap <leader>ee :cfile vim-compile-output<CR>:copen 8<CR>
 nnoremap <leader>en :cn<CR>
 nnoremap <leader>ep :cp<CR>
 
