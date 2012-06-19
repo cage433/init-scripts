@@ -76,7 +76,7 @@ set showmatch
 set cpoptions-=m
 nmap <C-p> ?^(<CR>
 nmap <C-n> /^(<CR>
-"syntax enable
+syntax enable
 "syntax off
 filetype plugin indent on
 set autowrite
@@ -279,11 +279,12 @@ function! ToggleRepo()
 endfunction
 
 function! OtherRepoFile()
-  let relFile = expand("%")
-  if stridx(relFile, g:otherRepo) == -1
-    return g:otherRepo . relFile
+  let absCurrentFile = expand("%:p")
+  if stridx(absCurrentFile, g:otherRepo) == -1
+    let relCurrentFileWithLeadingSlash = strpart(absCurrentFile, strlen(getcwd()))
+    return g:otherRepo . relCurrentFileWithLeadingSlash
   else
-    return strpart(relFile, strlen(g:otherRepo))
+    return strpart(absCurrentFile, strlen(g:otherRepo) + 1)
   endif
 endfunction
 
