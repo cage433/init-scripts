@@ -41,7 +41,7 @@ nnoremap <C-h> <C-w>h
 nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-l> <C-w>l
-nnoremap <leader>a :cope 8<CR><C-w>k
+nnoremap <leader>a :cope <CR><C-w>k
 nmap <silent> ,/ :nohlsearch<CR>
 nmap j gj
 nmap k gk
@@ -255,21 +255,19 @@ function! TestOrSourceFile()
   if stridx(expand("%"), "Tests.scala") == -1
     return substitute(expand("%:r"), "src\/", "tests/", "") . "Tests.scala" 
   else 
-    let otherfile = substitute(expand("%:r"), "tests\/", "src/", "")
-    return substitute(otherfile, "Tests", "", "") . ".scala"
+    let otherfile = substitute(expand("%"), "tests\/", "src/", "")
+    return substitute(otherfile, "Tests\\.", ".", "")
   endif
 endfunction
 
-function! ToggleRepo()
+function! ToggleRepo(useSplitIfExists)
   if exists('g:otherRepo')
     let otherfile = OtherRepoFile()
     if filereadable(otherfile)
-      if winnr("$") == 1
-        exec ":vi " . otherfile
-      else
+      if winnr("$") > 1 && a:useSplitIfExists
         exec "normal \<C-w>w"
-        exec ":vi " . otherfile
       endif
+      exec ":vi " . otherfile
     else
       echo "File " . otherfile . " does not exist"
     endif
@@ -288,7 +286,8 @@ function! OtherRepoFile()
   endif
 endfunction
 
-map <leader>M :call ToggleRepo()<CR>
+map <leader>M :call ToggleRepo(0)<CR>
+map <leader>N :call ToggleRepo(1)<CR>
 
 function! OpenTagInOtherWindow()
   let tag = expand("<cword>")
@@ -444,7 +443,7 @@ map <leader>ss :silent :call OpenScalaURL(expand("<cword>"))<CR>
 map <leader>sj :silent :call OpenJavaURL(expand("<cword>"))<CR>
 
 set efm=%f:%l:\ error%m
-nnoremap <leader>ee :cfile vim-compile-output<CR>:copen 8<CR>
+nnoremap <leader>ee :cfile vim-compile-output<CR>:copen<CR><CR>
 nnoremap <leader>en :cn<CR>
 nnoremap <leader>ep :cp<CR>
 
