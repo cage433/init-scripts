@@ -12,7 +12,6 @@ set nocompatible
 set path=.,**,,
 call pathogen#helptags()
 call pathogen#runtime_append_all_bundles() 
-let g:ackprg="ack-grep -H --nocolor --nogroup --column"
 let mapleader=","
 nmap <silent> <leader>sv :so $MYVIMRC<CR>
 nmap <silent> <leader>se :e $MYVIMRC<CR>
@@ -74,7 +73,7 @@ set showmatch
 set cpoptions-=m
 nmap <C-p> ?^(<CR>
 nmap <C-n> /^(<CR>
-"syntax enable
+syntax enable
 "syntax off
 filetype plugin indent on
 set autowrite
@@ -478,3 +477,4 @@ map <leader>n :call RenameFile()<cr>
 inoremap <s-tab> <c-n>
 
 
+let g:ackprg="ack-grep -H --nocolor --nogroup --column"
