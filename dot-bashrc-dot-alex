@@ -57,3 +57,6 @@ make-completion-wrapper _git _gb git checkout
 complete -o filenames -F _git g
 
 complete -o default -o nospace -F _git g
+
+[[ -s $HOME/.tmuxinator/scripts/tmuxinator ]] && source $HOME/.tmuxinator/scripts/tmuxinator
+
