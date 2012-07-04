@@ -1,0 +1,22 @@
+# ~/.tmuxinator/Starling.yml
+# you can make as many tabs as you wish...
+
+project_name: Starling
+project_root: ~/repos
+socket_name: foo # Not needed.  Remove to use default socket
+tabs:
+  - maker2: 
+      layout: main-vertical
+      panes:
+        - cd maker2 && vim
+        - cd maker2 && ./bin/maker.sh
+  - maker: 
+      layout: main-vertical
+      panes:
+        - cd maker && vim
+        - cd maker && ../maker2/bin/maker.sh -z -j 
+  - starling: 
+      layout: main-vertical
+      panes:
+        - cd dev/services/starling && vim
+        - cd dev/services/starling && ~/repos/maker/bin/maker.sh -z -j -p maker/Starling.scala
