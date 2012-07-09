@@ -387,7 +387,7 @@ iab pfl printf("File %s, line %d\n", __FILE__, __LINE__);
 
 set exrc
 
-let g:ackprg="ack-grep -H --nocolor --nogroup --column"
+"let g:ackprg="ack-grep -H --nocolor --nogroup --column"
 map <leader>gr :Gtags -r <C-r>=expand("<cword>")<CR><CR>
 map <leader>ar :Ack -r <C-r>=expand("<cword>")<CR><CR>
 
@@ -491,6 +491,5 @@ function! RenameFile()
 endfunction
 map <leader>n :call RenameFile()<cr>
 inoremap <s-tab> <c-n>
-
 
 let g:ackprg="ack-grep -H --nocolor --nogroup --column"
