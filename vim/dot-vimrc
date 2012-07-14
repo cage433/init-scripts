@@ -329,8 +329,8 @@ map <F9> :call SwitchNumbering()<CR>
 map <leader>Q :call TidyScalaImports()<CR>
 imap <F5> println("Debug: <Esc>:call InsertClassName()<CR>a: " + )<Esc>i
 
-map <leader>t :call ToggleSourceAndTestFile()<CR>
-map <leader>T :call ToggleSourceAndTestFileOtherWindow()<CR>
+map <silent><leader>t :call ToggleSourceAndTestFile()<CR>
+map <silent><leader>T :call ToggleSourceAndTestFileOtherWindow()<CR>
 
 nnoremap <silent> <leader>f :CommandT<CR>
 nnoremap <leader><leader> <C-^>
