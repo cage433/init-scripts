@@ -217,7 +217,7 @@ function! RunATest(scalafile, classname)
     else
       let test_reporter_arg =  " -r " . g:scalatest_reporter
     endif
-    exec "! clear; /usr/local/scala/bin/scala org.scalatest.tools.Runner ".test_reporter_arg." -p . -oNCOHL -s " . fullclassname
+    exec "! clear; /usr/local/scala/bin/scala org.scalatest.tools.Runner ".test_reporter_arg." -R . -oNCOHL -s " . fullclassname
   endif
 
   "call OutputDateAndSwitchBuffer()
@@ -327,7 +327,6 @@ imap <F5> println("Debug: <Esc>:call InsertClassName()<CR>a: " + )<Esc>i
 map <leader>t :call ToggleSourceAndTestFile()<CR>
 map <leader>T :call ToggleSourceAndTestFileOtherWindow()<CR>
 
-nnoremap <silent> <leader>f :CommandT<CR>
 nnoremap <leader><leader> <C-^>
 
 map <leader>k :call RunThisTest()<CR>
@@ -345,10 +344,6 @@ map <silent> <leader>c :cd %:h<CR>
 
 " And put it back
 map <leader>d :call PutPwdBack()<CR>
-
-" comment and uncomment
-"map <leader>m mb:.,'as/^/\/\/<CR>,/'b
-"map <leader>n mb:.,'as/^\/\///g<CR>,/'b
 
 "show starling imports
 map <leader>i ma:r ! scala-imports.rb -p <cword><CR>`a
@@ -494,3 +489,7 @@ inoremap <s-tab> <c-n>
 
 
 let g:ackprg="ack-grep -H --nocolor --nogroup --column"
+
+set runtimepath^=~/.vim/bundle/ctrlp.vim
+let g:ctrlp_map = ',f'
+let g:ctrlp_working_path_mode = 2
