@@ -25,5 +25,5 @@ fi
 if [ ! -e $HOME/.tmuxinator/Starling.yml ]; then
 	echo "Creating link to .tmuxinator/Starling.yml"
   mkdir -p ~/.tmuxinator
-	ln -s $PWD/Starling.mp $HOME/.tmuxinator/Starling.yml
+	ln -s $PWD/Starling.yml $HOME/.tmuxinator/Starling.yml
 fi
