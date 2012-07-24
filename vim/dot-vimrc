@@ -1,6 +1,7 @@
 let g:relative_test_class_dir="/test-classes/"
 let g:relative_test_class_dir="/test-classes/"
 let g:scalatest_reporter="starling.utils.StarlingTestReporter"
+let g:orientation="portrait"
 if filereadable(".lvimrc")
   execute "source .lvimrc"
 endif
@@ -13,7 +14,8 @@ set path=.,**,,
 call pathogen#helptags()
 call pathogen#runtime_append_all_bundles() 
 let mapleader=","
-nmap <silent> <leader>sv :so $MYVIMRC<CR>
+
+nmap <silent> <leader>sv :source $MYVIMRC<CR>
 nmap <silent> <leader>se :e $MYVIMRC<CR>
 set hidden
 
@@ -48,7 +50,11 @@ nmap k gk
 map <F2> :set hlsearch!<CR>
 function! SplitOrOnly()
   if winnr("$") == 1
-    exec ":vs"
+    if g:orientation == "portrait"
+      exec ":split"
+    else
+      exec ":vsplit"
+    end
   else
     exec ":only"
   endif
@@ -215,7 +221,7 @@ function! RunATest(scalafile, classname)
     if g:scalatest_reporter == ""
       let test_reporter_arg = ""
     else
-      let test_reporter_arg =  " -r " . g:scalatest_reporter
+      let test_reporter_arg =  " -C " . g:scalatest_reporter
     endif
     exec "! clear; /usr/local/scala/bin/scala org.scalatest.tools.Runner ".test_reporter_arg." -R . -oNCOHL -s " . fullclassname
   endif
@@ -497,3 +503,5 @@ let g:ackprg="ack-grep -H --nocolor --nogroup --column"
 set runtimepath^=~/.vim/bundle/ctrlp.vim
 let g:ctrlp_map = ',f'
 let g:ctrlp_working_path_mode = 2
+
+set ignorecase
