@@ -82,7 +82,15 @@ set cpoptions-=m
 nmap <C-p> ?^(<CR>
 nmap <C-n> /^(<CR>
 syntax enable
-"syntax off
+function! ToggleSyntax()
+  if exists("g:syntax_on") 
+   syntax off 
+ else 
+   syntax enable 
+ endif 
+endfunction
+noremap <F7> :call ToggleSyntax()<CR>
+
 filetype plugin indent on
 set autowrite
 autocmd FileType scala setlocal shiftwidth=2 tabstop=2
@@ -503,5 +511,7 @@ let g:ackprg="ack-grep -H --nocolor --nogroup --column"
 set runtimepath^=~/.vim/bundle/ctrlp.vim
 let g:ctrlp_map = ',f'
 let g:ctrlp_working_path_mode = 0
+let g:ctrlp_by_filename = 1
+let g:ctrlp_dotfiles = 0
 
 set smartcase
