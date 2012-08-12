@@ -35,9 +35,9 @@ set noswapfile
 set nopaste
 set lazyredraw
 nnoremap ; :
-nnoremap \ ;
+nnoremap <leader>m ;
 vnoremap ; :
-vnoremap \ ;
+vnoremap <leader>m ;
 nnoremap <C-h> <C-w>h
 nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
@@ -520,3 +520,19 @@ let g:ctrlp_by_filename = 1
 let g:ctrlp_dotfiles = 0
 
 set smartcase
+
+
+
+"""""""""""""""""""""""""
+" vim-slime
+""""""""""""""""""""""""
+let g:slime_target = "tmux"
+let g:slime_paste_file = tempname()
+
+"""""""""""""""""""""""
+" paredit
+""""""""""""""""""""""
+
+let g:paredit_leader='\'
+let g:paredit_shortmaps=1
+let g:slimv_leader = '\'
