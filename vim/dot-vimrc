@@ -21,7 +21,7 @@ set hidden
 
 set wrap        
 set backspace=indent,eol,start " allow backspacing over everything in insert mode
-set noautoindent    " always set autoindenting on
+set autoindent    " always set autoindenting on
 set copyindent    " copy the previous indentation on autoindenting
 set shiftround    " use multiple of shiftwidth when indenting with '<' and '>'
 set showmatch     " set show matching parenthesis
@@ -35,9 +35,9 @@ set noswapfile
 set nopaste
 set lazyredraw
 nnoremap ; :
-nnoremap \ ;
+nnoremap <leader>m ;
 vnoremap ; :
-vnoremap \ ;
+vnoremap <leader>m ;
 nnoremap <C-h> <C-w>h
 nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
@@ -85,6 +85,8 @@ syntax enable
 function! ToggleSyntax()
   if exists("g:syntax_on") 
    syntax off 
+"set nohlsearch
+"set t_Co=0
  else 
    syntax enable 
  endif 
@@ -92,6 +94,7 @@ endfunction
 noremap <F7> :call ToggleSyntax()<CR>
 
 filetype plugin indent on
+syntax on
 set autowrite
 autocmd FileType scala setlocal shiftwidth=2 tabstop=2
 autocmd FileType scala ab -> →
@@ -100,6 +103,8 @@ autocmd FileType rb setlocal shiftwidth=2 tabstop=2
 autocmd FileType c setlocal shiftwidth=4 tabstop=4
 autocmd FileType cpp setlocal shiftwidth=4 tabstop=4
 autocmd FileType sh noremap <leader>m :w<CR> :! . % <CR>
+autocmd FileType lisp set iskeyword+=-
+autocmd FileType clojure set iskeyword+=-
 
 
 " Revert PWD to its original value
@@ -224,14 +229,14 @@ function! RunATest(scalafile, classname)
   let fullclassname = pkg . "." . a:classname
   "w
   if stridx(fullclassname, "Test") == -1
-    exec "! clear; /usr/local/scala/bin/scala " . fullclassname
+    exec "! clear; /usr/local/scala/bin/scala $JAVA_OPTS " . fullclassname
   else
     if g:scalatest_reporter == ""
       let test_reporter_arg = ""
     else
       let test_reporter_arg =  " -C " . g:scalatest_reporter
     endif
-    exec "! clear; /usr/local/scala/bin/scala org.scalatest.tools.Runner ".test_reporter_arg." -R . -oNCOHL -s " . fullclassname
+    exec "! clear; /usr/local/scala/bin/scala $JAVA_OPTS org.scalatest.tools.Runner ".test_reporter_arg." -R . -oNCOHL -s " . fullclassname
   endif
 
   "call OutputDateAndSwitchBuffer()
@@ -525,3 +530,19 @@ augroup BWCCreateDir
     au!
     autocmd BufWritePre * if expand("<afile>")!~#'^\w\+:/' && !isdirectory(expand("%:h")) | execute "silent! !mkdir -p ".shellescape(expand('%:h'), 1) | redraw! | endif
 augroup END
+
+
+
+"""""""""""""""""""""""""
+" vim-slime
+""""""""""""""""""""""""
+let g:slime_target = "tmux"
+let g:slime_paste_file = tempname()
+
+"""""""""""""""""""""""
+" paredit
+""""""""""""""""""""""
+
+let g:paredit_leader='\'
+let g:paredit_shortmaps=1
+let g:slimv_leader = '\'
