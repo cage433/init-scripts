@@ -1,7 +1,7 @@
 let g:relative_test_class_dir="/test-classes/"
 let g:relative_test_class_dir="/test-classes/"
 let g:scalatest_reporter="starling.utils.StarlingTestReporter"
-let g:orientation="portrait"
+let g:orientation="landscape"
 if filereadable(".lvimrc")
   execute "source .lvimrc"
 endif
@@ -513,5 +513,15 @@ let g:ctrlp_map = ',f'
 let g:ctrlp_working_path_mode = 0
 let g:ctrlp_by_filename = 1
 let g:ctrlp_dotfiles = 0
+set wildignore+=*.xml,*.jar
 
 set smartcase
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" CREATE PARENT DIRECTORIES ON SAVE
+" taken from http://stackoverflow.com/questions/4292733/vim-creating-parent-directories-on-save
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+augroup BWCCreateDir
+    au!
+    autocmd BufWritePre * if expand("<afile>")!~#'^\w\+:/' && !isdirectory(expand("%:h")) | execute "silent! !mkdir -p ".shellescape(expand('%:h'), 1) | redraw! | endif
+augroup END
