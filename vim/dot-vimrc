@@ -379,7 +379,6 @@ map <leader>o ma:r ! scala-imports.rb -e <cword><CR>`a
 map <leader>s ma:r ! find_subtypes.rb <cword><CR>`a
 
 "Put the selected import line at the top and delete any others
-"map <leader>u ma?^[^i]<CR>mb:call SaveWinline()<CR>'ayy'b?^i<CR>p'b:.,$g/^import/d<CR>'b,/:call RestoreWinline()<CR>
 map <leader>u ma?^[^i]<CR>mb:call SaveWinline()<CR>'ayy'b?\(\(^i\)\\|\(^p\)\)<CR>p'b:.,$g/^import/d<CR>'b,/:call RestoreWinline()<CR>
 
 " Add first import
@@ -511,7 +510,7 @@ endfunction
 map <leader>n :call RenameFile()<cr>
 inoremap <s-tab> <c-n>
 
-let g:ackprg="ack-grep -H --nocolor --nogroup --column"
+let g:ackprg="ack-grep --type=scala -H --nocolor --nogroup --column"
 
 set runtimepath^=~/.vim/bundle/ctrlp.vim
 let g:ctrlp_map = ',f'
