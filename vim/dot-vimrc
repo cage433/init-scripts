@@ -253,15 +253,9 @@ endfunction
 function! ToggleSourceAndTestFile()
   let otherfile = TestOrSourceFile()
   if (CreateSourceDirectory(otherfile))
-    exec ":vi " . otherfile
-  endif
-endfunction
-
-function! ToggleSourceAndTestFileOtherWindow()
-  let otherfile = TestOrSourceFile()
-  if (CreateSourceDirectory(otherfile))
-    call SplitScreenIfNecessary()
-    exec ":vi " . otherfile
+    if filereadable(otherfile) || input("Create file ".otherfile."? [y/N] ") == 'y'
+      exec ":vi " . otherfile
+    endif
   endif
 endfunction
 
@@ -276,7 +270,7 @@ endfunction
 
 function! CreateSourceDirectory(sourceFile)
   let dir = fnamemodify(a:sourceFile, ":h")
-  if !isdirectory(dir) && input("Make directory ".dir."? [y/N]") == 'y'
+  if !isdirectory(dir) && input("Make directory ".dir."? [y/N] ") == 'y'
     execute ':silent !mkdir -p '.dir
   endif
   return isdirectory(dir)
@@ -349,7 +343,6 @@ map <leader>Q :call TidyScalaImports()<CR>
 imap <F5> println("Debug: <Esc>:call InsertClassName()<CR>a: " + )<Esc>i
 
 map <silent><leader>t :call ToggleSourceAndTestFile()<CR>
-map <silent><leader>T :call ToggleSourceAndTestFileOtherWindow()<CR>
 
 nnoremap <leader><leader> <C-^>
 
