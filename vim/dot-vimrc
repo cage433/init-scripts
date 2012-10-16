@@ -326,6 +326,12 @@ function! TidyScalaImports()
   exec ":w"
 endfunction
 
+command! R !./%
+function! ExecCurrentBuffer()
+  exec ":! ./%"
+endfunction
+map <leader>L :call ExecCurrentBuffer()<CR>
+
 function! SwitchNumbering()
   if &relativenumber
     set norelativenumber
