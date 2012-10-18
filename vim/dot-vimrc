@@ -230,7 +230,7 @@ function! RunATest(scalafile, classname)
   let fullclassname = pkg . "." . a:classname
   "w
   if (match(getline(1), '^\#!') == 0)
-    :!./%
+    :! clear;./%
   elseif stridx(fullclassname, "Test") == -1
     exec "! clear; /usr/local/scala/bin/scala $JAVA_OPTS " . fullclassname
   else
