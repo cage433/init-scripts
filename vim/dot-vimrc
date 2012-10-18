@@ -223,12 +223,15 @@ function! StarlingPackage(scalafile)
 endfunction
 
 function! RunATest(scalafile, classname)
+  echo "Trying to run test"
   let g:lasttestfile = a:scalafile
   let g:lastclassname = a:classname
   let pkg = StarlingPackage(a:scalafile)
   let fullclassname = pkg . "." . a:classname
   "w
-  if stridx(fullclassname, "Test") == -1
+  if (match(getline(1), '^\#!') == 0)
+    :!./%
+  elseif stridx(fullclassname, "Test") == -1
     exec "! clear; /usr/local/scala/bin/scala $JAVA_OPTS " . fullclassname
   else
     if g:scalatest_reporter == ""
