@@ -1,7 +1,7 @@
 let g:relative_test_class_dir="/test-classes/"
-let g:relative_test_class_dir="/test-classes/"
-let g:scalatest_reporter="starling.utils.StarlingTestReporter"
+let g:scalatest_reporter=""
 let g:orientation="portrait"
+let g:show_test_exceptions=0
 if filereadable(".lvimrc")
   execute "source .lvimrc"
 endif
@@ -222,6 +222,11 @@ function! StarlingPackage(scalafile)
   return join(reverse(package_path), ".")
 endfunction
 
+function! ToggleTestExceptions()
+  let g:show_test_exceptions = !g:show_test_exceptions
+endfunction
+map <leader>sx :call ToggleTestExceptions()<CR>
+
 function! RunATest(scalafile, classname)
   echo "Trying to run test"
   let g:lasttestfile = a:scalafile
@@ -239,7 +244,13 @@ function! RunATest(scalafile, classname)
     else
       let test_reporter_arg =  " -C " . g:scalatest_reporter
     endif
-    exec "! clear; /usr/local/scala/bin/scala $JAVA_OPTS org.scalatest.tools.Runner ".test_reporter_arg." -R . -oNCOHL -s " . fullclassname
+    if g:show_test_exceptions
+      let test_reporter_arg = test_reporter_arg." -R . -oFNCOHL " 
+    else
+      let test_reporter_arg = test_reporter_arg." -R . -oNCOHL " 
+    endif
+
+    exec "! clear; /usr/local/scala/bin/scala $JAVA_OPTS org.scalatest.tools.Runner ".test_reporter_arg." -s " . fullclassname
   endif
 
   "call OutputDateAndSwitchBuffer()
@@ -348,6 +359,7 @@ function! SwitchNumbering()
   end
 endfunction
 map <F9> :call SwitchNumbering()<CR>
+
 map <leader>Q :call TidyScalaImports()<CR>
 imap <F5> println("Debug: <Esc>:call InsertClassName()<CR>a: " + )<Esc>i
 
@@ -549,3 +561,9 @@ let g:slime_paste_file = tempname()
 let g:paredit_leader='\'
 let g:paredit_shortmaps=1
 let g:slimv_leader = '\'
+
+
+highlight DiffAdd term=reverse cterm=bold ctermbg=green ctermfg=white 
+highlight DiffChange term=reverse cterm=bold ctermbg=cyan ctermfg=black 
+highlight DiffText term=reverse cterm=bold ctermbg=gray ctermfg=black 
+highlight DiffDelete term=reverse cterm=bold ctermbg=red ctermfg=black 
