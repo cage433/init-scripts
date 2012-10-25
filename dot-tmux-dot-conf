@@ -16,8 +16,12 @@ bind-key J resize-pane -D 5
 bind-key -n C-up resize-pane -U 5
 bind-key K resize-pane -U 5
 
+# "Send-keys is asynchronous - hence the nests tmux call
+bind-key C send-keys "clear && tmux clear-history" \; send-keys "Enter" 
+
+
 #reload
-bind r source-file ~/.tmux.conf
+bind-key r source-file ~/.tmux.conf\; display-message "Reloaded"
 
 # act like GNU screen
 unbind C-b
