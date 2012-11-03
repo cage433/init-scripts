@@ -567,3 +567,8 @@ highlight DiffAdd term=reverse cterm=bold ctermbg=green ctermfg=white
 highlight DiffChange term=reverse cterm=bold ctermbg=cyan ctermfg=black 
 highlight DiffText term=reverse cterm=bold ctermbg=gray ctermfg=black 
 highlight DiffDelete term=reverse cterm=bold ctermbg=red ctermfg=black 
+
+"vimdiff current vs git head (fugitive extension)
+nnoremap <leader>gd :Gdiff<cr> 
+"switch back to current file and closes fugitive buffer
+nnoremap <leader>gD :diffoff!<cr><c-w>h:bd<cr>
