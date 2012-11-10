@@ -22,8 +22,7 @@ if [ ! -e $HOME/.bashrc.alex ]; then
 	echo "Creating link to .bashrc.alex - Remember to source from .bashrc"
 	ln -s $PWD/dot-bashrc-dot-alex $HOME/.bashrc.alex
 fi
-if [ ! -e $HOME/.tmuxinator/Starling.yml ]; then
-	echo "Creating link to .tmuxinator/Starling.yml"
-  mkdir -p ~/.tmuxinator
-	ln -s $PWD/Starling.yml $HOME/.tmuxinator/Starling.yml
+if [ ! -e $HOME/.tmuxinator ]; then
+	echo "Creating link to .tmuxinator"
+	ln -s $PWD/dot-tmuxinator $HOME/.tmuxinator
 fi
