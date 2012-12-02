@@ -34,6 +34,9 @@ set -g default-terminal "screen"
 unbind x
 bind x kill-pane 
 
+# Move to beginning of line
+bind a send-prefix
+
 # 'maximise' and 'minimise' a pane
 unbind +
 bind + new-window -d -n tmux-zoom \; swap-pane -s tmux-zoom.0 \; select-window -t tmux-zoom
