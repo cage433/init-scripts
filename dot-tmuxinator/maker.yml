@@ -1,7 +1,7 @@
 # ~/.tmuxinator/Starling.yml
 # you can make as many tabs as you wish...
 
-project_name: Maker
+project_name: maker
 project_root: ~/repos
 #socket_name: foo # Not needed.  Remove to use default socket
 tabs:
