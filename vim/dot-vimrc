@@ -102,7 +102,7 @@ autocmd FileType scala ab => ⇒
 autocmd FileType rb setlocal shiftwidth=2 tabstop=2
 autocmd FileType c setlocal shiftwidth=4 tabstop=4
 autocmd FileType cpp setlocal shiftwidth=4 tabstop=4
-autocmd FileType sh noremap <leader>m :w<CR> :! . % <CR>
+"autocmd FileType sh noremap <leader>m :w<CR> :! . % <CR>
 autocmd FileType lisp set iskeyword+=-
 autocmd FileType clojure set iskeyword+=-
 
@@ -245,12 +245,12 @@ function! RunATest(scalafile, classname)
       let test_reporter_arg =  " -C " . g:scalatest_reporter
     endif
     if g:show_test_exceptions
-      let test_reporter_arg = test_reporter_arg." -R . -oFNCOHL " 
+      let test_reporter_arg = test_reporter_arg." -R . -oFHL " 
     else
-      let test_reporter_arg = test_reporter_arg." -R . -oNCOHL " 
+      let test_reporter_arg = test_reporter_arg." -R . -oHL " 
     endif
 
-    exec "! clear; /usr/local/scala/bin/scala $JAVA_OPTS org.scalatest.tools.Runner ".test_reporter_arg." -s " . fullclassname
+    exec "! clear; /usr/local/scala/bin/scala -Dmaker.log.level=INFO $JAVA_OPTS org.scalatest.tools.Runner ".test_reporter_arg." -s " . fullclassname
   endif
 
   "call OutputDateAndSwitchBuffer()
