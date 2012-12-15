@@ -52,4 +52,4 @@ source-file ~/.tmux.local.conf
 #source-file ~/repos/tmux-colors-solarized/tmuxcolors-256.conf
 #source-file ~/repos/tmux-colors-solarized/tmuxcolors-dark.conf
 set-window-option -g window-status-current-bg blue
-
+set-window-option -g automatic-rename off
