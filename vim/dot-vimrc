@@ -250,7 +250,7 @@ function! RunATest(scalafile, classname)
       let test_reporter_arg = test_reporter_arg." -R . -oHL " 
     endif
 
-    exec "! clear; /usr/local/scala/bin/scala -Dmaker.log.level=INFO $JAVA_OPTS org.scalatest.tools.Runner ".test_reporter_arg." -s " . fullclassname
+    exec "! clear; /usr/local/scala/bin/scala -Droot-level=WARN -Dlogback.configurationFile=logback.xml $JAVA_OPTS org.scalatest.tools.Runner ".test_reporter_arg." -s " . fullclassname
   endif
 
   "call OutputDateAndSwitchBuffer()

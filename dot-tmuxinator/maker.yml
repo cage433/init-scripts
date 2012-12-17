@@ -5,7 +5,8 @@ project_name: maker
 project_root: ~/repos
 #socket_name: foo # Not needed.  Remove to use default socket
 tabs:
-  - maker2: cd ~/repos/maker2 && ./bin/maker.sh
-  - maker2-vim: cd ~/repos/maker2 && vim
-  - maker: cd ~/repos/maker && ../maker2/bin/maker.sh -z -j
-  - maker-vim: cd ~/repos/maker && vim
+  - maker2: cd maker2 && ./bin/maker.sh
+  - maker2-vim: cd maker2 && if [ -e maker-classpath.sh ]; then source maker-classpath.sh; fi && vim
+  - zsh: cd 
+  - maker: cd maker && ../maker2/bin/maker.sh -z -j
+  - maker-vim: cd maker && if [ -e maker-classpath.sh ]; then source maker-classpath.sh; fi && vim

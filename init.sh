@@ -26,3 +26,8 @@ if [ ! -e $HOME/.tmuxinator ]; then
 	echo "Creating link to .tmuxinator"
 	ln -s $PWD/dot-tmuxinator $HOME/.tmuxinator
 fi
+
+if [ ! -e $HOME/.zshrc ]; then
+	echo "Creating link to .zshrc"
+	ln -s $PWD/dot-zshrc $HOME/.zshrc
+fi
