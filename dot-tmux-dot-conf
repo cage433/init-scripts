@@ -1,5 +1,6 @@
 # act like vim
-set-option -g default-shell /usr/bin/zsh
+#set-option -g default-shell /usr/bin/zsh
+set-option -g default-shell /bin/bash
 setw -g mode-keys vi
 bind-key -ct vi-edit up history-up
 bind-key -ct vi-edit down history-down
