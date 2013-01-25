@@ -6,20 +6,31 @@ require 'optparse'
 require 'find'
 require 'fileutils'
 
-options = {}
+$cmd = nil
+$short_class = nil
 
 optparse = OptionParser.new do |opts|
   opts.on("-c", "--clean", "Clean import listings") do 
-      options[:clean] = true
+      $cmd = :clean
   end
   opts.on("-u", "--update", "Update import listings") do 
-      options[:update] = true
+      $cmd = :update
   end
   opts.on("-p", "--project-imports klass", "Output project import(s) for klass") do |klass|
-      options[:project_class] = klass
+      $cmd = :output_project_imports
+      $short_class = klass
   end
   opts.on("-e", "--external-imports klass", "Find external imports(s) for klass") do |klass|
-      options[:external_class] = klass
+      $cmd = :output_external_imports
+      $short_class = klass
+  end
+  opts.on("-j", "--open-java-doc klass", "Open java doc page for klass") do |klass|
+      $cmd = :open_java_doc
+      $short_class = klass
+  end
+  opts.on("-s", "--open-scala-doc klass", "Open scala doc page for klass") do |klass|
+      $cmd = :open_scala_doc
+      $short_class = klass
   end
   opts.on("-h", "--help", "Show this message") do 
     puts "\n#{optparse}"
@@ -35,9 +46,6 @@ Dir.mkdir(dot_maker_dot_vim) unless File.exists?(dot_maker_dot_vim)
 $project_packages_file = "#{dot_maker_dot_vim}/project_packages"
 $external_packages_file = "#{dot_maker_dot_vim}/external_packages"
 
-if options[:clean]
-  FileUtils.rm_rf([$external_packages_file, $project_packages_file])
-end
 
 
 # process project source code
@@ -84,16 +92,31 @@ def read_stored_external_packages
   end
 end
 
-def find_project_jar_files
-  scala_root = ENV["SCALA_HOME"] || (raise "SCALA_HOME not set")
-  project_jars = ["#{scala_root}/lib/scala-library.jar", "#{scala_root}/lib/scala-compiler.jar"]
+def read_packages_file(file_name)
+  (IO.readlines(file_name) rescue []).collect do
+    |line|
+      line.chomp.split("\t")
+  end
+end
 
+$java_jar = 
   if RUBY_PLATFORM.downcase.include?("linux")
     java_home = ENV["JAVA_HOME"] || (raise "JAVA_HOME not set")
-    project_jars << "#{java_home}/jre/lib/rt.jar"
+    "#{java_home}/jre/lib/rt.jar"
   elsif RUBY_PLATFORM.downcase.include?("darwin")
-    project_jars << "/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Classes/classes.jar"
+    "/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Classes/classes.jar"
   end
+
+$scala_jars = 
+  begin
+    scala_root = ENV["SCALA_HOME"] || (raise "SCALA_HOME not set")
+    ["#{scala_root}/lib/scala-library.jar", "#{scala_root}/lib/scala-compiler.jar"]
+  end
+
+def project_jars 
+  jars = $scala_jars
+  jars << $java_jar
+
   Find.find(Dir.pwd) do |file|
     if File.expand_path(file) == File.expand_path("project") \
       || File.expand_path(file) == File.expand_path("maker.jar") \
@@ -102,20 +125,18 @@ def find_project_jar_files
       || file =~ /sources/
       Find.prune
     elsif file =~ /\.jar$/
-      project_jars << file
+      jars << file
     end
   end
-  project_jars
+  jars
 end
 
 def write_external_packages
 
-  external_packages = read_stored_external_packages
+  external_packages = read_packages_file($external_packages_file)
   jars_already_processed = external_packages.collect{ |jar, _, _| jar}.uniq
 
-  project_jar_files = find_project_jar_files
-
-  jar_files_to_add = project_jar_files.select{|jar| ! jars_already_processed.include?(File.basename(jar))}
+  jar_files_to_add = project_jars.select{|jar| ! jars_already_processed.include?(File.basename(jar))}
 
   jar_files_to_add.each do |jar|
     puts "Processing #{jar}"
@@ -133,7 +154,7 @@ def write_external_packages
   external_packages = external_packages.uniq
 
   # Remove any jars that aren't in project
-  project_jar_names = project_jar_files.collect{|jar_file| File.basename(jar_file)}
+  project_jar_names = project_jars.collect{|jar_file| File.basename(jar_file)}
   external_packages = external_packages.select{ |jar, _, _|
     project_jar_names.include?(jar)
   }
@@ -145,27 +166,53 @@ def write_external_packages
   end
 end
 
-if options[:update]
+def display_url(url)
+  `DISPLAY=:\"0.0\" google-chrome #{url}`
+end
+
+case $cmd
+when :clean
+  FileUtils.rm_rf([$external_packages_file, $project_packages_file])
+
+when :update
   write_project_packages
   write_external_packages
-end
 
-klass = options[:external_class]
-if klass
-  read_stored_external_packages.each { 
+when :output_external_imports
+  read_packages_file($external_packages_file).each{
     |_, pckg, klass_| 
-      if klass == klass_
-        puts "import #{pckg}.#{klass}"
+      if klass_ == $short_class
+        puts "import #{pckg}.#{$short_class}"
       end
   }
-end
 
-klass = options[:project_class]
-if klass
-  (IO.readlines($project_packages_file) rescue []).each { |line|
-    klass_, pckg = line.chomp.split("\t")
-    if klass_ == klass
-      puts "import #{pckg}.#{klass}"
+when :output_project_imports
+  read_packages_file($project_packages_file).each{
+    |klass_, pckg|
+    #klass_, pckg = line.chomp.split("\t")
+    if klass_ == $short_class
+      puts "import #{pckg}.#{$short_class}"
     end
   }
+
+when :open_java_doc
+  read_packages_file($external_packages_file).select{
+    |jar, _, klass|
+      File.basename($java_jar) == jar && klass == $short_class
+  }.take(1).each{
+    |_, pckg, _|
+      display_url("http://docs.oracle.com/javase/6/docs/api/#{pckg.gsub(".", "/")}/#{$short_class}.html")
+  }
+
+when :open_scala_doc
+  scala_jar_basenames = $scala_jars.collect{ |jar| File.basename(jar) }
+  read_packages_file($external_packages_file).select{
+    |jar, _, klass|
+      scala_jar_basenames.include?(jar) && klass == $short_class
+  }.take(1).each{
+    |_, pckg, _|
+
+      display_url("http://www.scala-lang.org/api/current/#{pckg.gsub(".", "/")}/#{$short_class}.html")
+  }
 end
+

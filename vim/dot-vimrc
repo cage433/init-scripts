@@ -369,7 +369,6 @@ nnoremap <leader><leader> <C-^>
 
 map <leader>k :call RunThisTest()<CR>
 map <leader>j :call RunLastTest()<CR>
-map <leader>J :call CompileThisFile()<CR>:call RunLastTest()<CR>
 
 map <leader>w :call OpenTagInOtherWindow()<CR>,/
 
@@ -388,6 +387,12 @@ map <leader>i ma:r ! scala-imports.rb -p <cword><CR>`a
 
 " show external imports
 map <leader>o ma:r ! scala-imports.rb -e <cword><CR>`a
+
+" show java doc
+map <leader>J ma:r ! scala-imports.rb -j <cword><CR>`a
+"
+" show scala doc
+map <leader>S ma:r ! scala-imports.rb -s <cword><CR>`a
 
 "Show sub classes
 map <leader>s ma:r ! find_subtypes.rb <cword><CR>`a
