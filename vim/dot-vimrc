@@ -1,6 +1,6 @@
 let g:relative_test_class_dir="/test-classes/"
 let g:scalatest_reporter=""
-let g:orientation="portrait"
+let g:orientation="landscape"
 let g:show_test_exceptions=0
 if filereadable(".lvimrc")
   execute "source .lvimrc"
@@ -50,10 +50,10 @@ nmap k gk
 map <F2> :set hlsearch!<CR>
 function! SplitOrOnly()
   if winnr("$") == 1
-    if g:orientation == "portrait"
-      exec ":split"
-    else
+    if g:orientation == "landscape"
       exec ":vsplit"
+    else
+      exec ":split"
     end
   else
     exec ":only"
