@@ -531,7 +531,7 @@ endfunction
 map <leader>n :call RenameFile()<cr>
 inoremap <s-tab> <c-n>
 
-let g:ackprg="ack-grep --type=scala -H --nocolor --nogroup --column"
+let g:ackprg="ack-grep --type=noxml -H --nocolor --nogroup --column"
 
 set runtimepath^=~/.vim/bundle/ctrlp.vim
 let g:ctrlp_map = ',f'

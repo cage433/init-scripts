@@ -39,6 +39,7 @@ source $ZSH/oh-my-zsh.sh
 # Customize to your needs...
 export PATH=/home/alex/repos/init-scripts/bin/:/home/alex/bin/:/usr/local/jdk/bin/:/opt/clojure-contrib/launchers/bash:/opt/leiningen/:/usr/local/racket/bin/:/usr/local/bin/:/usr/bin/:/bin/
 export PATH=$PATH:/usr/local/scala/bin/
+export PATH=$PATH:/usr/games
 
 export CAGE=cage433.vm.bytemark.co.uk
 alias cage='ssh $CAGE'

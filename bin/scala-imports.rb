@@ -120,7 +120,6 @@ def project_jars
   Find.find(Dir.pwd) do |file|
     if File.expand_path(file) == File.expand_path("project") \
       || File.expand_path(file) == File.expand_path("maker.jar") \
-      || File.basename(file) == ".maker" \
       || File.basename(file) == "modulejarcache" \
       || file =~ /sources/
       Find.prune
@@ -160,7 +159,7 @@ def write_external_packages
   }
 
   File.open($external_packages_file, "w") do |f|
-    external_packages.each do |jar, pckg, klass|
+    external_packages.uniq.each do |jar, pckg, klass|
       f.puts("#{File.basename(jar)}\t#{pckg}\t#{klass}")
     end 
   end
