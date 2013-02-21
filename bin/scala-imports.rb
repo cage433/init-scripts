@@ -120,7 +120,6 @@ def project_jars
   Find.find(Dir.pwd) do |file|
     if File.expand_path(file) == File.expand_path("project") \
       || File.expand_path(file) == File.expand_path("maker.jar") \
-      || File.basename(file) == ".maker" \
       || File.basename(file) == "modulejarcache" \
       || file =~ /sources/
       Find.prune
@@ -179,12 +178,17 @@ when :update
   write_external_packages
 
 when :output_external_imports
+  lines = []
   read_packages_file($external_packages_file).each{
     |_, pckg, klass_| 
       if klass_ == $short_class
-        puts "import #{pckg}.#{$short_class}"
+        lines << "import #{pckg}.#{$short_class}"
       end
   }
+  lines.uniq.sort.each { |line|
+    puts line
+  }
+  
 
 when :output_project_imports
   read_packages_file($project_packages_file).each{
