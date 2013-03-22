@@ -46,7 +46,7 @@ nnoremap <leader>a :cope <CR><C-w>k
 nmap <silent> ,/ :nohlsearch<CR>
 nmap j gj
 nmap k gk
-
+nnoremap <M-l> :vertical resize +5<CR>
 map <F2> :set hlsearch!<CR>
 function! SplitOrOnly()
   if winnr("$") == 1
@@ -73,7 +73,6 @@ endfunction
 map <silent> <F4> :call TogglePaste()<CR>
 
 map <silent> <F3> :call BufferList()<CR>
-map <silent> <F6> :NERDTreeToggle<CR>
 map <silent> <F1> <ESC>
 imap <silent> <F1> <ESC>
 inoremap jk <ESC>
@@ -119,7 +118,6 @@ endfunction
 
 :set gdefault
 
-inoremap jk <ESC>
 
 set encoding=utf-8
 set scrolloff=3
@@ -132,18 +130,10 @@ set visualbell
 set cursorline
 set ttyfast
 set backspace=indent,eol,start
-"set laststatus=
-"set relativenumber
-"set undofile
 
 "Search recursively for tags file
 set tags=tags;/
 
-" CD to the current files directory
-"
-
-
-":set noignorecase
 :set textwidth=0
 function! SaveWinline()
   let g:currentwinline = winline()
@@ -198,19 +188,6 @@ function! TargetDirectory(scalafile)
   return dir
 endfunction!
 
-
-function! CompileThisFile()
-  let scalafile = expand("%:p")
-  let target_dir = TargetDirectory(scalafile)
-  if target_dir == ""
-    echo "Target dir not found"
-    return
-  endif
-  w
-  exec "! clear; time /usr/local/scala/bin/fsc -sourcepath src:tests -deprecation -d " . target_dir . " " . scalafile . " | cat | tee vim-compile-output"
-endfunction
-
-map  <leader>l :call CompileThisFile()<CR>
 
 function! StarlingPackage(scalafile)
   let path = reverse(split(a:scalafile, "/"))
@@ -364,7 +341,9 @@ map <F9> :call SwitchNumbering()<CR>
 map <leader>Q :call TidyScalaImports()<CR>
 imap <F5> println("Debug: <Esc>:call InsertClassName()<CR>a: " + )<Esc>i
 
-map <silent><leader>t :call ToggleSourceAndTestFile()<CR>
+map <F6> :CtrlPClearAllCaches<CR>
+
+map <silent><leader>tt :call ToggleSourceAndTestFile()<CR>
 
 nnoremap <leader><leader> <C-^>
 
@@ -384,10 +363,10 @@ map <silent> <leader>c :cd %:h<CR>
 map <leader>d :call PutPwdBack()<CR>
 
 "show starling imports
-map <leader>i ma:r ! scala-imports.rb -p <cword><CR>`a
+map <leader>ii ma:r ! scala-imports.rb -p <cword><CR>`a
 
 " show external imports
-map <leader>o ma:r ! scala-imports.rb -e <cword><CR>`a
+map <leader>io ma:r ! scala-imports.rb -e <cword><CR>`a
 
 " show java doc
 map <leader>J ma:r ! scala-imports.rb -j <cword><CR>`a
@@ -399,7 +378,7 @@ map <leader>S ma:r ! scala-imports.rb -s <cword><CR>`a
 map <leader>s ma:r ! find_subtypes.rb <cword><CR>`a
 
 "Put the selected import line at the top and delete any others
-map <leader>u ma?^[^i]<CR>mb:call SaveWinline()<CR>'ayy'b?\(\(^i\)\\|\(^p\)\)<CR>p'b:.,$g/^import/d<CR>'b,/:call RestoreWinline()<CR>
+map <leader>iu ma?^[^i]<CR>mb:call SaveWinline()<CR>'ayy'b?\(\(^i\)\\|\(^p\)\)<CR>p'b:.,$g/^import/d<CR>'b,/:call RestoreWinline()<CR>
 
 " Add first import
 map <leader>I <leader>ij<leader>u
@@ -411,21 +390,16 @@ map <leader>p ?extends<CR>w<C-]>
 map <leader>z :BW<CR>
 
 "Comment out all testng tests except this
-map <leader>x :call SaveWinline()<CR>ma?@Test<CR>mb:0,-1s/@Test/\/\/@Test/e<CR>'b:+1,$s/@Test/\/\/@Test/e<CR>'a:call RestoreWinline()<CR>,/
-map <silent> <leader>X ma:call SaveWinline()<CR>:%s/\/\/@Test/@Test<CR>'a:call RestoreWinline()<CR>,/
+map <leader>tx :call SaveWinline()<CR>ma?@Test<CR>mb:0,-1s/@Test/\/\/@Test/e<CR>'b:+1,$s/@Test/\/\/@Test/e<CR>'a:call RestoreWinline()<CR>,/
+map <silent> <leader>tX ma:call SaveWinline()<CR>:%s/\/\/@Test/@Test<CR>'a:call RestoreWinline()<CR>,/
 "Comment out all scalatest tests except this
-map <leader>r :call SaveWinline()<CR>ma?test(<CR>mb:0,-1s/test(/ignore(/e<CR>'b:+1,$s/test(/ignore(/e<CR>'a:call RestoreWinline()<CR>,/
-map <silent> <leader>R ma:call SaveWinline()<CR>:%s/ignore(/test(<CR>'a:call RestoreWinline()<CR>,/
-
-"Switch between tabs
-" map  <leader>L :tabnext<CR>
-" map  <leader>H :tabprevious<CR>
+map <leader>tr :call SaveWinline()<CR>ma?ignore(<CR>mb:0,-1s/ignore(/ignore(/e<CR>'b:+1,$s/ignore(/ignore(/e<CR>'a:call RestoreWinline()<CR>,/
+map <silent> <leader>tR ma:call SaveWinline()<CR>:%s/ignore(/test(<CR>'a:call RestoreWinline()<CR>,/
 
 iab pfl printf("File %s, line %d\n", __FILE__, __LINE__);
 
 set exrc
 
-"let g:ackprg="ack-grep -H --nocolor --nogroup --column"
 map <leader>gr :Gtags -r <C-r>=expand("<cword>")<CR><CR>
 map <leader>ar :Ack -r <C-r>=expand("<cword>")<CR><CR>
 
@@ -481,7 +455,8 @@ endfunction
 map <leader>ss :silent :call OpenScalaURL(expand("<cword>"))<CR>
 map <leader>sj :silent :call OpenJavaURL(expand("<cword>"))<CR>
 
-set efm=[error]\ %f:%l:%m
+"set efm=[error]\ %f:%l:%m
+set efm=%f:%l:\ error:%m
 nnoremap <leader>ee :cfile vim-compile-output<CR>:copen<CR><CR>
 nnoremap <leader>en :cn<CR>
 nnoremap <leader>ep :cp<CR>
@@ -539,6 +514,7 @@ let g:ctrlp_map = ',f'
 let g:ctrlp_working_path_mode = 0
 let g:ctrlp_by_filename = 1
 let g:ctrlp_dotfiles = 0
+let g:ctrlp_custom_ignore = '\.git$\|\.xml$'
 set wildignore+=*.jar
 
 set smartcase
@@ -582,3 +558,4 @@ set t_Co=16
 set background=dark
 let g:solarized_termtrans=1
 colorscheme solarized
+
