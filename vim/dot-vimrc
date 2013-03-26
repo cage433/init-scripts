@@ -463,12 +463,12 @@ nnoremap <leader>ep :cp<CR>
 
 
 
-function! RefreshCTags()
-    exec "silent ! ctags -R ."
+function! RefreshTags()
+    exec "silent ! scala-tags.sh"
     redraw!
 endfunction
-command! RefreshCTags call RefreshCTags()
-map <leader>ct :silent :call RefreshCTags()<CR>
+command! RefreshCTags call RefreshTags()
+map <leader>ct :silent :call RefreshTags()<CR>
 
 set wildignore+=*.class
 
