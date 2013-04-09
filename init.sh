@@ -31,3 +31,8 @@ if [ ! -e $HOME/.zshrc ]; then
 	echo "Creating link to .zshrc"
 	ln -s $PWD/dot-zshrc $HOME/.zshrc
 fi
+
+if [ ! -e $HOME/.gitconfig ]; then
+	echo "Creating link to .gitconfig"
+	ln -s $PWD/dot-gitconfig $HOME/.gitconfig
+fi
