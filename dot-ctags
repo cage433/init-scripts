@@ -1,6 +1,8 @@
 --langdef=scala
 --langmap=scala:.scala
 --regex-scala=/^[ \t]*(final)?[ \t]*class[ \t]+([a-zA-Z0-9_]+)/\2/c,classes/
+--regex-scala=/^[ \t]*(private)?[ \t]*class[ \t]+([a-zA-Z0-9_]+)/\2/c,privateclasses/
+--regex-scala=/^[ \t]*(private)?[ \t]*object[ \t]+([a-zA-Z0-9_]+)/\2/c,privateobjects/
 --regex-scala=/^[ \t]*abstract[ \t]+class[ \t]+([a-zA-Z0-9_]+)/\1/c,abstractclasses/
 --regex-scala=/^[ \t]*(final)?[ \t]*case[ \t]*class[ \t]+([a-zA-Z0-9_]+)/\2/c,caseclasses/
 --regex-scala=/^[ \t]*(final)?[ \t]*case[ \t]*object[ \t]+([a-zA-Z0-9_]+)/\2/c,caseobjects/
