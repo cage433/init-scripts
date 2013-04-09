@@ -46,7 +46,7 @@ alias cage='ssh $CAGE'
 alias ta='tmux attach'
 alias ack-scala='ack-grep --type=scala'
 
-source $HOME/.xinitrc
+#source $HOME/.xinitrc
 export SCALA_HOME=/usr/local/scala/
 export JAVA_HOME=/usr/local/jdk/
 export JREBEL_HOME=/usr/local/jrebel/

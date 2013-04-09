@@ -1,7 +1,8 @@
 # act like vim
-#set-option -g default-shell /usr/bin/zsh
-set-option -g default-shell /bin/bash
+set-option -g default-shell /usr/bin/zsh
+#set-option -g default-shell /bin/bash
 setw -g mode-keys vi
+set -g base-index 1
 bind-key -ct vi-edit up history-up
 bind-key -ct vi-edit down history-down
 bind-key h select-pane -L
