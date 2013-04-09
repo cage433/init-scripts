@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-find . -name '*.scala' | gtags -i -f -
-find . -name '*.scala' | ctags -R -L -
+find . | egrep '\.((scala)|(java))$' | gtags -i -f -
+find . | egrep '\.((scala)|(java))$' | ctags -R -L -
 
 
