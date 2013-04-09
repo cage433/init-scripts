@@ -393,7 +393,7 @@ map <leader>z :BW<CR>
 map <leader>tx :call SaveWinline()<CR>ma?@Test<CR>mb:0,-1s/@Test/\/\/@Test/e<CR>'b:+1,$s/@Test/\/\/@Test/e<CR>'a:call RestoreWinline()<CR>,/
 map <silent> <leader>tX ma:call SaveWinline()<CR>:%s/\/\/@Test/@Test<CR>'a:call RestoreWinline()<CR>,/
 "Comment out all scalatest tests except this
-map <leader>tr :call SaveWinline()<CR>ma?ignore(<CR>mb:0,-1s/ignore(/ignore(/e<CR>'b:+1,$s/ignore(/ignore(/e<CR>'a:call RestoreWinline()<CR>,/
+map <leader>tr :call SaveWinline()<CR>ma?test(<CR>mb:0,-1s/test(/ignore(/e<CR>'b:+1,$s/test(/ignore(/e<CR>'a:call RestoreWinline()<CR>,/
 map <silent> <leader>tR ma:call SaveWinline()<CR>:%s/ignore(/test(<CR>'a:call RestoreWinline()<CR>,/
 
 iab pfl printf("File %s, line %d\n", __FILE__, __LINE__);
