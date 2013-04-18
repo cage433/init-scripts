@@ -374,6 +374,9 @@ map <leader>J ma:r ! scala-imports.rb -j <cword><CR>`a
 " show scala doc
 map <leader>S ma:r ! scala-imports.rb -s <cword><CR>`a
 
+"Show lisp doc
+map <leader>L ma: ! ide/links.rb <cword><CR>`a
+
 "Show sub classes
 map <leader>s ma:r ! find_subtypes.rb <cword><CR>`a
 
