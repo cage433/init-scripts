@@ -1,5 +1,6 @@
 # act like vim
 set-option -g default-shell /usr/bin/zsh
+set-option -g display-time 1200
 #set-option -g default-shell /bin/bash
 setw -g mode-keys vi
 set -g base-index 1
@@ -62,3 +63,4 @@ setw -g window-status-current-fg white
 
 set-window-option -g window-status-current-bg blue
 set-window-option -g automatic-rename off
+source ~/repos/tmux-colors-solarized/tmuxcolors-dark.conf

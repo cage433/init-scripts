@@ -51,3 +51,7 @@ export SCALA_HOME=/usr/local/scala/
 export JAVA_HOME=/usr/local/jdk/
 export JREBEL_HOME=/usr/local/jrebel/
 export DISABLE_AUTO_TITLE=true
+alias tmux="tmux -2"
+alias irb="rlwrap irb"
+alias racket="rlwrap racket"
+alias sbcl="rlwrap sbcl"
