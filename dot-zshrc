@@ -55,3 +55,4 @@ alias tmux="tmux -2"
 alias irb="rlwrap irb"
 alias racket="rlwrap racket"
 alias sbcl="rlwrap sbcl"
+export EDITOR=vim
