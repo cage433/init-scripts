@@ -1,0 +1,20 @@
+snippet df=
+	def ${1:Name}(${2:Var} : ${3:Type}) = {
+		${4:Body}
+	}
+snippet df
+	def ${1:Name}(${2:Var} : ${3:Type}){
+		${4:Body}
+	}
+snippet pck
+	package `StarlingPackage(expand("%"))`
+snippet ccls
+	case class `expand("%:t:r")`(${1:Name} : ${2:Type}){
+	}
+snippet tcls
+	import org.scalatest.FreeSpec
+
+	class `expand("%:t:r")` extends FreeSpec {
+		"${1:Test}" in {
+		}
+	}
