@@ -2,6 +2,7 @@ let g:relative_test_class_dir="/test-classes/"
 let g:scalatest_reporter=""
 let g:orientation="landscape"
 let g:show_test_exceptions=0
+let g:dark_view=1
 if filereadable(".lvimrc")
   execute "source .lvimrc"
 endif
@@ -73,6 +74,25 @@ function! TogglePaste()
 endfunction
 map <silent> <F4> :call TogglePaste()<CR>
 
+function! ToggleLightDark()
+  let g:dark_view = !g:dark_view
+  if g:dark_view
+    exec ":silent ! ~/repos/guake-colors-solarized/set_light.sh grey"
+    exec ":silent ! tmux set-option -g status-bg white"
+    exec ":silent ! tmux set-option -g status-fg black"
+    exec ":silent ! tmux set-option window-status-current-fg black"
+    set background=light
+  else
+    exec ":silent ! ~/repos/guake-colors-solarized/set_dark.sh grey"
+    exec ":silent ! tmux set-option -g status-bg black"
+    exec ":silent ! tmux set-option -g status-fg white"
+    exec ":silent ! tmux set-option window-status-current-fg white"
+    set background=dark
+  endif
+endfunction
+
+map <silent> <F8> :call ToggleLightDark()<CR>
+map <silent> <F4> :call TogglePaste()<CR>
 map <silent> <F3> :call BufferList()<CR>
 map <silent> <F1> <ESC>
 imap <silent> <F1> <ESC>
@@ -97,8 +117,6 @@ filetype plugin indent on
 syntax on
 set autowrite
 autocmd FileType scala setlocal shiftwidth=2 tabstop=2
-autocmd FileType scala ab -> →
-autocmd FileType scala ab => ⇒
 autocmd FileType rb setlocal shiftwidth=2 tabstop=2
 autocmd FileType c setlocal shiftwidth=4 tabstop=4
 autocmd FileType cpp setlocal shiftwidth=4 tabstop=4
@@ -475,6 +493,7 @@ command! RefreshCTags call RefreshTags()
 map <leader>ct :silent :call RefreshTags()<CR>
 
 set wildignore+=*.class
+set wildignore+=*.fasl
 
 let g:CommandTMaxHeight=5
 set ruler
@@ -518,7 +537,7 @@ let g:ctrlp_map = ',f'
 let g:ctrlp_working_path_mode = 0
 let g:ctrlp_by_filename = 1
 let g:ctrlp_dotfiles = 0
-let g:ctrlp_custom_ignore = '\.git$\|\.xml$'
+let g:ctrlp_custom_ignore = '\.git$\|\.xml$|\.fasl$'
 set wildignore+=*.jar
 
 set smartcase
@@ -562,4 +581,5 @@ set t_Co=16
 set background=dark
 let g:solarized_termtrans=1
 colorscheme solarized
-
+"set background=light
+set background=dark

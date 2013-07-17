@@ -6,9 +6,18 @@
 [merge]
 	conflictstyle = diff3
 	stat = true
+  tool=threesome
+[mergetool "threesome"]
+  cmd = "vim -f $BASE $LOCAL $REMOTE $MERGED -c 'ThreesomeInit'"
+  trustExitCode = true
 [diff]
+	conflictstyle = diff3
 	renames = copies
 	mnemonicprefix = true
+  tool=vimdiff
+[difftool "threesome"]
+  cmd = "vim -f $BASE $LOCAL $REMOTE $MERGED -c 'ThreesomeInit'"
+  trustExitCode = true
 [branch]
 	autosetupmerge = true
 [push]

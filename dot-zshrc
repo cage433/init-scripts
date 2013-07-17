@@ -56,3 +56,5 @@ alias irb="rlwrap irb"
 alias racket="rlwrap racket"
 alias sbcl="rlwrap sbcl"
 export EDITOR=vim
+alias traf-tunnel='ssh -f -N -q -L 5051:localhost:5051 $CAGE'
+alias traf='ssh -p 5051 localhost'
