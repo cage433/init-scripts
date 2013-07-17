@@ -4,20 +4,21 @@
 [receive]
 	denyNonFastForwards = true
 [merge]
-	conflictstyle = diff3
+  conflictstyle = diff3
 	stat = true
-  tool=threesome
+  tool = threesome
+#  tool = bash
 [mergetool "threesome"]
   cmd = "vim -f $BASE $LOCAL $REMOTE $MERGED -c 'ThreesomeInit'"
+  trustExitCode = true
+[mergetool "bash"]
+  cmd = "export BASE=$BASE && /bin/bash"
   trustExitCode = true
 [diff]
 	conflictstyle = diff3
 	renames = copies
 	mnemonicprefix = true
   tool=vimdiff
-[difftool "threesome"]
-  cmd = "vim -f $BASE $LOCAL $REMOTE $MERGED -c 'ThreesomeInit'"
-  trustExitCode = true
 [branch]
 	autosetupmerge = true
 [push]
@@ -36,3 +37,6 @@
 	default = current
 [color]
 	ui = auto
+[difftool]
+	prompt = false
+
