@@ -40,6 +40,7 @@ source $ZSH/oh-my-zsh.sh
 export PATH=/home/alex/repos/init-scripts/bin/:/home/alex/bin/:/usr/local/jdk/bin/:/opt/clojure-contrib/launchers/bash:/opt/leiningen/:/usr/local/racket/bin/:/usr/local/bin/:/usr/bin/:/bin/
 export PATH=$PATH:/usr/local/scala/bin/
 export PATH=$PATH:/usr/games
+export PATH=$PATH:$HOME/squirrel-sql-3.5.0/
 
 export CAGE=cage433.vm.bytemark.co.uk
 alias cage='ssh $CAGE'
@@ -58,3 +59,4 @@ alias sbcl="rlwrap sbcl"
 export EDITOR=vim
 alias traf-tunnel='ssh -f -N -q -L 5051:localhost:5051 $CAGE'
 alias traf='ssh -p 5051 localhost'
+alias ls='ls --color=never'
