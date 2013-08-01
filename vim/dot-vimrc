@@ -581,6 +581,6 @@ set background=dark
 let g:solarized_termtrans=1
 colorscheme solarized
 "set background=light
-set background=dark
 set ttimeout
 set ttimeoutlen=100
+set nocursorline
