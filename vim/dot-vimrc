@@ -35,6 +35,18 @@ set nobackup
 set noswapfile
 set nopaste
 set lazyredraw
+
+function! ChangeWindowSize(delta)
+  if g:orientation == "landscape"
+    exec ":vertical resize ". a:delta
+  else
+    exec ":resize ". a:delta
+    echo "foo" . a:delta
+  end
+endfunction
+
+nnoremap + :call ChangeWindowSize("+1")
+nnoremap - :call ChangeWindowSize("-1")
 nnoremap ; :
 nnoremap <leader>m ;
 vnoremap ; :
@@ -175,7 +187,11 @@ endfunction
 function! SplitScreenIfNecessary()
   if winnr("$") == 1
     exec ":silent only"
-    exec ":vs"
+    if g:orientation == "landscape"
+      exec ":vsplit"
+    else
+      exec ":split"
+    end
   endif
   exec "normal \<C-w>w"
 endfunction

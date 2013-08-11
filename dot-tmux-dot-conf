@@ -45,7 +45,6 @@ bind + new-window -d -n tmux-zoom \; swap-pane -s tmux-zoom.0 \; select-window -
 unbind -
 bind - last-window \; swap-pane -s tmux-zoom.0 \; kill-window -t tmux-zoom
 
-set -g status-bg red
 set -g status on
 bind-key b set-option status
 
@@ -57,10 +56,10 @@ set -g status-bg black
 set -g status-fg white
 set -g status-left ‘#[fg=green]#H’
 set -g pane-active-border-fg yellow
-setw -g window-status-current-bg blue
+setw -g window-status-current-bg black
 setw -g window-status-current-fg white
 
-set-window-option -g window-status-current-bg blue
+set-window-option -g window-status-current-bg yellow
 set-window-option -g automatic-rename off
 set-window-option -g xterm-keys on
 
