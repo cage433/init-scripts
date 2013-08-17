@@ -2,8 +2,8 @@ let g:relative_test_class_dir="/test-classes/"
 let g:orientation="landscape"
 let g:show_test_exceptions=0
 let g:dark_view=1
-if filereadable(".lvimrc")
-  execute "source .lvimrc"
+if filereadable($HOME."/.lvimrc")
+  execute "source ".$HOME."/.lvimrc"
 endif
 
 set laststatus=2
