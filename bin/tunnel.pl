@@ -3,13 +3,12 @@
 use strict;
 use warnings;
 
-
 sub connect2
 {
   my ($line) = @_;
-  my ($remote_host, $remote_port, $local_host, $local_port) = split(/ /, $line);
+  my ($r_or_l, $from_port, $to_host, $to_port, $remote_host) = split(/ /, $line);
 
-  my $command="ssh -f -q -N -R $remote_port:$local_host:$local_port alex\@$remote_host";
+  my $command="ssh -f -q -N -$r_or_l $from_port:$to_host:$to_port alex\@$remote_host";
 
   print `date`;
   print("$command\n");
@@ -23,7 +22,14 @@ sub connect2
       die("Can't open tunnel - exiting");
     }
   } else {
-    print("Tunnel up\n");
+    print("Tunnel up locally\n");
+  }
+
+  my $remote_port; 
+  if ($r_or_l eq "R"){
+    $remote_port = $from_port;
+  } else {
+    $remote_port = $to_port;
   }
 
   # 2. Test tunnel by looking at "netstat" output on $remote_host
@@ -32,7 +38,7 @@ sub connect2
     my @result = `ssh -p 443 alex\@$remote_host netstat -an`;
     foreach (@result){
       if ($_ =~ /tcp.*$remote_port.*LISTEN/) {
-        print("Tunnel up on remote side\n");
+        print("Tunnel up remotely\n");
         return 0;
       }
     }
