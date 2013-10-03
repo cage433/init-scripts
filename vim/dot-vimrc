@@ -8,8 +8,7 @@ endif
 
 set laststatus=2
 
-set timeoutlen=600
-"set number        " always show line numbers
+set timeoutlen=500
 set nocompatible
 set path=.,**,,
 call pathogen#helptags()
@@ -254,12 +253,12 @@ function! RunATest(scalafile, classname)
   if (match(getline(1), '^\#!') == 0)
     :! clear;./%
   elseif stridx(fullclassname, "Test") == -1
-    exec "! clear; /usr/local/scala/bin/scala $JAVA_OPTS " . fullclassname
+    exec "! clear; /usr/local/scala/bin/scala -J-Xmx4000m -J-XX:MaxPermSize=500m -J-XX:+UseConcMarkSweepGC $JAVA_OPTS -Dlogback.configurationFile=logback.xml " . fullclassname
   else
     if g:show_test_exceptions
-      let test_reporter_arg = test_reporter_arg." -R . -oFHL " 
+      let test_reporter_arg = test_reporter_arg." -P5 -R . -oFHL " 
     else
-      let test_reporter_arg = test_reporter_arg." -R . -oHL " 
+      let test_reporter_arg = test_reporter_arg." -P5 -R . -oHL " 
     endif
 
     exec "! clear; /usr/local/jdk/bin/java $JAVA_OPTS -Xmx4000m -XX:MaxPermSize=500m -XX:+UseConcMarkSweepGC -Dmaker.home=. -Dlogback.configurationFile=logback-unit-tests.xml -Dsbt.log.format=false -Dscala.usejavacp=true org.scalatest.tools.Runner ".test_reporter_arg." -s " . fullclassname
@@ -372,7 +371,7 @@ endfunction
 map <F9> :call SwitchNumbering()<CR>
 
 map <leader>Q :call TidyScalaImports()<CR>
-imap <F5> println("Debug: <Esc>:call InsertClassName()<CR>a: " + )<Esc>i
+imap <F5> println("Debug: " + (new java.util.Date()) + " + <Esc>:call InsertClassName()<CR>a: ")<Esc>hi
 
 map <F6> :CtrlPClearAllCaches<CR>
 
@@ -598,5 +597,6 @@ let g:solarized_termtrans=1
 colorscheme solarized
 "set background=light
 set ttimeout
-set ttimeoutlen=100
+set ttimeoutlen=500
 set nocursorline
+set wildignore=*.xml,*.sql,*.html,*.jar,*.class
