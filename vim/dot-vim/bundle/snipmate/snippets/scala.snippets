@@ -12,9 +12,10 @@ snippet ccls
 	case class `expand("%:t:r")`(${1:Name} : ${2:Type}){
 	}
 snippet tcls
-	import org.scalatest.FreeSpec
+	import org.scalatest.FunSuite
 
-	class `expand("%:t:r")` extends FreeSpec {
-		"${1:Test}" in {
+	class `expand("%:t:r")` extends FunSuite {
+		test("${1:Test}"){
+			${2:Body}
 		}
 	}
