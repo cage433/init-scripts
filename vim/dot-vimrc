@@ -253,7 +253,7 @@ function! RunATest(scalafile, classname)
   if (match(getline(1), '^\#!') == 0)
     :! clear;./%
   elseif stridx(fullclassname, "Test") == -1
-    exec "! clear; /usr/local/scala/bin/scala -J-Xmx4000m -J-XX:MaxPermSize=500m -J-XX:+UseConcMarkSweepGC $JAVA_OPTS -Dlogback.configurationFile=logback.xml " . fullclassname
+    exec "! clear; /usr/local/jdk/bin/java -Xmx4000m -XX:MaxPermSize=500m -XX:+UseConcMarkSweepGC $JAVA_OPTS -classpath $CLASSPATH -Dscala.usejavacp=true -Dlogback.configurationFile=logback.xml scala.tools.nsc.MainGenericRunner " . fullclassname
   else
     if g:show_test_exceptions
       let test_reporter_arg = test_reporter_arg." -P5 -R . -oFHL " 
