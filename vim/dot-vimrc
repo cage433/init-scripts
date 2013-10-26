@@ -34,6 +34,7 @@ set nobackup
 set noswapfile
 set nopaste
 set lazyredraw
+set nomodeline
 
 function! ChangeWindowSize(delta)
   if g:orientation == "landscape"
@@ -371,7 +372,7 @@ endfunction
 map <F9> :call SwitchNumbering()<CR>
 
 map <leader>Q :call TidyScalaImports()<CR>
-imap <F5> println("Debug: " + (new java.util.Date()) + " <Esc>:call InsertClassName()<CR>a: ")<Esc>hi
+imap <F5> println("Debug: " + (new java.util.Date()) + " <Esc>:call InsertClassName()<CR>a: ")<Esc>h
 
 map <F6> :CtrlPClearAllCaches<CR>
 
@@ -424,9 +425,9 @@ map <leader>p ?extends<CR>w<C-]>
 " Wipe buffer without deleting window
 map <leader>z :BW<CR>
 
-"Comment out all testng tests except this
-map <leader>tx :call SaveWinline()<CR>ma?@Test<CR>mb:0,-1s/@Test/\/\/@Test/e<CR>'b:+1,$s/@Test/\/\/@Test/e<CR>'a:call RestoreWinline()<CR>,/
-map <silent> <leader>tX ma:call SaveWinline()<CR>:%s/\/\/@Test/@Test<CR>'a:call RestoreWinline()<CR>,/
+"Comment out all spec tests except this
+map <leader>tx :call SaveWinline()<CR>ma? in {<CR>mb:0,-1s/ in {/ ignore {/e<CR>'b:+1,$s/ in {/ ignore {/e<CR>'a:call RestoreWinline()<CR>:w<CR>,/
+map <silent> <leader>tX ma:call SaveWinline()<CR>:%s/ ignore {/ in {/<CR>'a:call RestoreWinline()<CR>,/
 "Comment out all scalatest tests except this
 map <leader>tr :call SaveWinline()<CR>ma?^  test(<CR>mb:0,-1s/^  test(/  ignore(/e<CR>'b:+1,$s/^  test(/  ignore(/e<CR>'a:call RestoreWinline()<CR>:w<CR>,/
 map <silent> <leader>tR ma:call SaveWinline()<CR>:%s/^  ignore(/  test(<CR>'a:call RestoreWinline()<CR>:w<CR>,/
