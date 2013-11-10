@@ -35,6 +35,7 @@ set noswapfile
 set nopaste
 set lazyredraw
 set nomodeline
+set fileformats+=dos
 
 function! ChangeWindowSize(delta)
   if g:orientation == "landscape"
@@ -253,7 +254,7 @@ function! RunATest(scalafile, classname)
   let test_reporter_arg=""
   if (match(getline(1), '^\#!') == 0)
     :! clear;./%
-  elseif stridx(fullclassname, "Test") == -1
+  elseif stridx(fullclassname, "Test") == -1 && stridx(fullclassname, "Spec") == -1
     exec "! clear; /usr/local/jdk/bin/java -Xmx4000m -XX:MaxPermSize=500m -XX:+UseConcMarkSweepGC $JAVA_OPTS -classpath $CLASSPATH -Dscala.usejavacp=true -Dlogback.configurationFile=logback.xml scala.tools.nsc.MainGenericRunner " . fullclassname
   else
     if g:show_test_exceptions
