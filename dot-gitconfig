@@ -22,9 +22,7 @@
 [branch]
 	autosetupmerge = true
 [push]
-	default = tracking
-[rerere]
-	enabled = true
+	default = current
 [alias]
 	s = status
 	a = add

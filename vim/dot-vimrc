@@ -263,7 +263,7 @@ function! RunATest(scalafile, classname)
       let test_reporter_arg = test_reporter_arg." -P5 -R . -oHL " 
     endif
 
-    exec "! clear; /usr/local/jdk/bin/java $JAVA_OPTS -classpath $CLASSPATH -Xmx4000m -XX:MaxPermSize=500m -XX:+UseConcMarkSweepGC -Dmaker.home=. -Dlogback.configurationFile=logback-unit-tests.xml -Dsbt.log.format=false -Dscala.usejavacp=true org.scalatest.tools.Runner ".test_reporter_arg." -s " . fullclassname
+    exec "! clear; /usr/local/jdk/bin/java $JAVA_OPTS -classpath $CLASSPATH -Xmx4000m -XX:MaxPermSize=500m -XX:+UseConcMarkSweepGC -Dmaker.home=. -Dlogback.configurationFile=logback.xml -Dsbt.log.format=false -Dscala.usejavacp=true org.scalatest.tools.Runner ".test_reporter_arg." -s " . fullclassname
   endif
 
 endfunction
