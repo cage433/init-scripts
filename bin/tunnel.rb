@@ -113,6 +113,6 @@ def process_line(line)
   end
 end
 
-IO.readlines("#{ENV["HOME"]}/.tunnels2").each do |line| 
+IO.readlines("#{ENV["HOME"]}/.tunnels").each do |line| 
   process_line line
 end
