@@ -6,6 +6,11 @@ if filereadable(".lvimrc")
   execute "source .lvimrc"
 endif
 
+augroup vimrc_autocmds
+  autocmd BufEnter * highlight OverLength ctermbg=darkgrey guibg=#592929
+  autocmd BufEnter * match OverLength /\%118v.*/
+augroup END
+
 set laststatus=2
 
 set timeoutlen=500
