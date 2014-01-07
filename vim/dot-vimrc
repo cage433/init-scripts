@@ -7,7 +7,7 @@ if filereadable(".lvimrc")
 endif
 
 augroup vimrc_autocmds
-  autocmd BufEnter * highlight OverLength ctermbg=darkgrey guibg=#592929
+  autocmd BufEnter * highlight OverLength ctermbg=darkgrey 
   autocmd BufEnter * match OverLength /\%118v.*/
 augroup END
 
@@ -201,38 +201,6 @@ function! SplitScreenIfNecessary()
   endif
   exec "normal \<C-w>w"
 endfunction
-
-function! OutputDateAndSwitchBuffer()
-  exec ":silent r ! date"
-  w
-  exec "normal gg"
-  exec "normal \<C-w>w"
-endfunction
-
-function! TryTargetDirectory(path, lastComponent, relativeTargetDir)
-  if index(a:path, a:lastComponent) > -1
-    call remove(a:path, index(a:path, a:lastComponent), len(a:path) - 1)
-    return "/".join(a:path, "/").a:relativeTargetDir
-  else 
-    return ""
-  endif
-endfunction
-
-function! TargetDirectory(scalafile)
-  let path = split(a:scalafile, "/")
-  let dir = TryTargetDirectory(path, "src", g:relative_class_dir)
-  if dir == ""
-    let dir = TryTargetDirectory(path, "tests", g:relative_test_class_dir)
-  endif
-  if dir == ""
-    let dir = TryTargetDirectory(path, "test", g:relative_test_class_dir)
-  endif
-  if dir != "" && !isdirectory(dir)
-    call mkdir(dir, "p")
-  endif
-  return dir
-endfunction!
-
 
 function! StarlingPackage(scalafile)
   let path = reverse(split(a:scalafile, "/"))
