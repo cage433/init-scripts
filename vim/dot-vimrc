@@ -228,7 +228,7 @@ function! RunATest(scalafile, classname)
   if (match(getline(1), '^\#!') == 0)
     :! clear;./%
   elseif stridx(fullclassname, "Test") == -1 && stridx(fullclassname, "Spec") == -1
-    exec "! clear; /usr/local/jdk/bin/java -Xmx4000m -XX:MaxPermSize=500m -XX:+UseConcMarkSweepGC $JAVA_OPTS -classpath $CLASSPATH -Dscala.usejavacp=true -Dlogback.configurationFile=logback.xml scala.tools.nsc.MainGenericRunner " . fullclassname
+    exec "! clear; /usr/local/jdk/bin/java -Xmx4000m -XX:MaxPermSize=500m -XX:+UseConcMarkSweepGC $JAVA_OPTS -classpath $CLASSPATH -Dscala.usejavacp=true -Dlogback.configurationFile=logback-unit-tests.xml scala.tools.nsc.MainGenericRunner " . fullclassname
   else
     if g:show_test_exceptions
       let test_reporter_arg = test_reporter_arg." -P5 -R . -oFHL " 
@@ -236,7 +236,7 @@ function! RunATest(scalafile, classname)
       let test_reporter_arg = test_reporter_arg." -P5 -R . -oHL " 
     endif
 
-    exec "! clear; /usr/local/jdk/bin/java $JAVA_OPTS -classpath $CLASSPATH -Xmx4000m -XX:MaxPermSize=500m -XX:+UseConcMarkSweepGC -Dmaker.home=. -Dmaker.test.reporter.classpath=test-reporter/target-maker/classes -Dlogback.configurationFile=logback.xml -Dsbt.log.format=false -Dscala.usejavacp=true org.scalatest.tools.Runner ".test_reporter_arg." -s " . fullclassname
+    exec "! clear; /usr/local/jdk/bin/java $JAVA_OPTS -classpath $CLASSPATH -Xmx4000m -XX:MaxPermSize=500m -XX:+UseConcMarkSweepGC -Dmaker.home=. -Dlogback.configurationFile=logback-unit-tests.xml -Dsbt.log.format=false -Dscala.usejavacp=true org.scalatest.tools.Runner ".test_reporter_arg." -s " . fullclassname
   endif
 
 endfunction
