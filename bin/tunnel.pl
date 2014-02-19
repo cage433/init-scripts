@@ -3,14 +3,10 @@
 use strict;
 use warnings;
 
-sub check_tunnel
+sub check_command_running
 {
-  my ($line) = @_;
-  my ($from_port, $to_host, $to_port) = split(/ /, $line);
+  my ($command) = @_;
 
-  my $command="ssh -f -q -N -R $from_port:$to_host:$to_port traftunnel";
-
-  print `date`;
   print("$command\n");
 
   # 1. Execute ssh command if it's not currently running
@@ -25,8 +21,18 @@ sub check_tunnel
   } else {
     print("Tunnel up locally\n");
   }
+}
 
-  # 2. Test tunnel by looking at "netstat" output on traftunnel
+
+sub check_reverse_tunnel
+{
+  my ($line) = @_;
+  my ($from_port, $to_host, $to_port) = split(/ /, $line);
+
+  my $command="ssh -f -q -N -R $from_port:$to_host:$to_port traftunnel";
+
+  check_command_running($command);
+
   my $num_tries=5;
   while ($num_tries > 0){
     my @result = `ssh -Tn traftunnel`;
@@ -53,10 +59,22 @@ sub check_tunnel
     die("Couldn't open tunnel");
   }
 }
+
 my $file = $ENV{"HOME"} . '/.tunnels';
 open my $info, $file or die "Could not open $file: $!";
 
+print("\n" . `date`);
 while(<$info>)  {   
   chomp;
-  check_tunnel($_);
+  if ( $_ =~ /^#/ || $_ !~ /./){
+    # a comment or whitespace - ignore
+    next
+  } 
+
+  if ($_ =~ /^ssh /){
+    check_command_running($_);
+  } else { 
+    check_reverse_tunnel($_);
+  }
+  print("\n");
 }
