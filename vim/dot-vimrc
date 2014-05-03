@@ -12,12 +12,13 @@ augroup vimrc_autocmds
 augroup END
 
 set laststatus=2
+let g:slimv_swank_cmd = '! xterm -e sbcl --load /usr/share/common-lisp/source/slime/start-swank.lisp &'
 
 set timeoutlen=500
 set nocompatible
 set path=.,**,,
 call pathogen#helptags()
-call pathogen#runtime_append_all_bundles() 
+call pathogen#infect() 
 let mapleader=","
 
 nmap <silent> <leader>sv :source $MYVIMRC<CR>
@@ -226,7 +227,7 @@ function! RunATest(scalafile, classname)
   "w
   let test_reporter_arg=""
   if (match(getline(1), '^\#!') == 0)
-    :! clear;%
+    :! clear;./%
   elseif stridx(fullclassname, "Test") == -1 && stridx(fullclassname, "Spec") == -1
     exec "! clear; /usr/local/jdk/bin/java -Xmx4000m -XX:MaxPermSize=500m -XX:+UseConcMarkSweepGC $JAVA_OPTS -classpath $CLASSPATH -Dscala.usejavacp=true -Dlogback.configurationFile=logback-unit-tests.xml scala.tools.nsc.MainGenericRunner " . fullclassname
   else
@@ -574,4 +575,4 @@ colorscheme solarized
 set ttimeout
 set ttimeoutlen=500
 set nocursorline
-set wildignore=*.xml,*.sql,*.html,*.jar,*.class
+set wildignore+=*.xml,*.sql,*.html,*.jar,*.class
