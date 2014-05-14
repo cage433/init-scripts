@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
-find . | egrep '\.((scala)|(java)|(lisp))$' | gtags -i -f -
+# Not using this these days
+#find . | egrep '\.((scala)|(java)|(lisp))$' | gtags -i -f -
 find . | egrep '\.((scala)|(java)|(lisp))$' | ctags -R -L -
 
 
