@@ -3,20 +3,16 @@ export CAGE=alex@cage433.vm.bytemark.co.uk
 export PATH=$PATH:$HOME/repos/init-scripts/bin
 
 alias cage='ssh $CAGE'
-alias cl=clear
 alias ll='ls -ltr'
-alias run-test='java org.testng.TestNG -listener starling.utils.TestListener -testclass '
-alias starling='export JAVA_OPTS="-XX:MaxPermSize=1000m -Xss528m -Xmx9000m -Dprops.location=./props.conf -javaagent:lib/jrebel/jrebel.jar -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005" && scala_ -Yrepl-sync -i ./launcher/src/starling/repl/ReplHelper.scala'
 export CAGE=cage433.vm.bytemark.co.uk
 alias cage='ssh -p 443 $CAGE'
 alias st='git status'
 alias ta='tmux attach'
 alias tc='tmux clear-history'
-alias scala_='/usr/local/scala/bin/scala'
-alias fsc_='/usr/local/scala/bin/fsc'
 alias ack-scala="ack-grep --type=scala "
 alias resyn='killall synergys && synergys -c ~/synergy.conf'
 
+setxkbmap -option "ctrl:nocaps"
 
 
 # Wraps a completion function
