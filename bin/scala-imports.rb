@@ -41,7 +41,7 @@ optparse.parse!
 
 
 dot_maker_dot_vim = "#{Dir.pwd}/.maker.vim"
-Dir.mkdir(dot_maker_dot_vim) unless File.exists?(dot_maker_dot_vim)
+Dir.mkdir(dot_maker_dot_vim) unless File.exist?(dot_maker_dot_vim)
 
 $project_packages_file = "#{dot_maker_dot_vim}/project_packages"
 $external_packages_file = "#{dot_maker_dot_vim}/external_packages"

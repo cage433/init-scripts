@@ -1,6 +1,7 @@
 export EDITOR=vim
 export CAGE=alex@cage433.vm.bytemark.co.uk
-export PATH=$PATH:$HOME/repos/init-scripts/bin
+export JAVA_HOME=/usr/local/jdk/
+export PATH=$PATH:$HOME/repos/init-scripts/bin:$JAVA_HOME/bin/
 
 alias cage='ssh $CAGE'
 alias ll='ls -ltr'

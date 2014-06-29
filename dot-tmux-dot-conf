@@ -64,3 +64,6 @@ set-window-option -g xterm-keys on
 
 set -g renumber-windows on
 run-shell ~/repos/init-scripts/tmux_goto_session/goto_session.tmux
+bind '"' split-window -c "#{pane_current_path}"
+bind % split-window -h -c "#{pane_current_path}"
+bind c new-window -c "#{pane_current_path}"

@@ -21,6 +21,9 @@ sudo apt-get install exuberant-ctags
 echo "Installing vim"
 sudo apt-get install vim
 
+echo "Installing curl"
+sudo apt-get install curl
+
 echo "Installing tmux dependencies"
 sudo apt-get install libevent-dev libncurses-dev pkg-config
 echo "Now build tmux from source"

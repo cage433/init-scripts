@@ -585,4 +585,4 @@ colorscheme solarized
 set ttimeout
 set ttimeoutlen=500
 set nocursorline
-set wildignore+=*.xml,*.sql,*.html,*.jar,*.class
+set wildignore+=*.xml,*.sql,*.html,*.jar,*.class,*.log,compilation-analysis-cache,tags
