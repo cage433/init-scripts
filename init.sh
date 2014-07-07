@@ -27,9 +27,9 @@ if [ ! -e $HOME/.tmuxinator ]; then
 	ln -s $PWD/dot-tmuxinator $HOME/.tmuxinator
 fi
 
-if [ ! -e $HOME/.zshrc ]; then
-	echo "Creating link to .zshrc"
-	ln -s $PWD/dot-zshrc $HOME/.zshrc
+if [ ! -e $HOME/.zshrc.alex ]; then
+	echo "Creating link to .zshrc.alex - Remember to source from .zshrc"
+	ln -s $PWD/dot-zshrc-dot-alex $HOME/.zshrc.alex
 fi
 
 if [ ! -e $HOME/.gitconfig ]; then
