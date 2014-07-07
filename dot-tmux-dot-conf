@@ -1,6 +1,6 @@
 # act like vim
 set-option -g display-time 1200
-set-option -g default-shell /bin/bash
+#set-option -g default-shell /bin/bash
 setw -g mode-keys vi
 set -g base-index 1
 bind-key -ct vi-edit up history-up

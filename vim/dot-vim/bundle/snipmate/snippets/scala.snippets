@@ -13,8 +13,9 @@ snippet ccls
 	}
 snippet tcls
 	import org.scalatest.FunSpec
+	import org.scalatest.matchers.ShouldMatchers
 
-	class `expand("%:t:r")` extends FunSpec {
+	class `expand("%:t:r")` extends FunSpec with ShouldMatchers{
 		describe("${1:Description}"){
 			it("${2:Behaviour}"){
 			}

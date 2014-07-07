@@ -1,3 +1,4 @@
 --type-set
 scala=.scala
 --nohtml
+--type=scala
