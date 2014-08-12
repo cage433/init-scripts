@@ -12,6 +12,7 @@ alias ta='tmux attach'
 alias tc='tmux clear-history'
 alias ack-scala="ack-grep --type=scala "
 alias resyn='killall synergys && synergys -c ~/synergy.conf'
+alias python'rlwrap python'
 
 setxkbmap -option "ctrl:nocaps"
 
