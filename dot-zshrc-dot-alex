@@ -32,8 +32,11 @@ alias traf='ssh -p 10300 localhost'
 alias ls='ls --color=never'
 alias ta='tmux attach -d'
 alias squirrel='$HOME/bin/squirrel/squirrel-sql.sh'
+export CAGE=cage433.vm.bytemark.co.uk
+alias sox='ssh -f -N -D 6666 alex@$CAGE'
+bindkey -v
 
-export DISABLE_AUTO_TITLE=true
+DISABLE_AUTO_TITLE=true
 case $TERM in
   screen*)
     precmd(){

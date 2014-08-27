@@ -48,7 +48,7 @@ bind - last-window \; swap-pane -s tmux-zoom.0 \; kill-window -t tmux-zoom
 set -g status on
 bind-key b set-option status
 
-set -g history-limit 10000
+set -g history-limit 50000
 
 # Set status bar
 set -g status-bg black
@@ -67,3 +67,4 @@ run-shell ~/repos/init-scripts/tmux_goto_session/goto_session.tmux
 bind '"' split-window -c "#{pane_current_path}"
 bind % split-window -h -c "#{pane_current_path}"
 bind c new-window -c "#{pane_current_path}"
+#set-option -g allow-rename off

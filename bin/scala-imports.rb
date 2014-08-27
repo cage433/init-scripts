@@ -138,7 +138,7 @@ def write_external_packages
 
   jar_files_to_add.each do |jar|
     puts "Processing #{jar}"
-    `jar tvf #{jar}`.split("\n").each do |line|
+    `$JAVA_HOME/bin/jar tvf #{jar}`.split("\n").each do |line|
       if line =~ /(\S+)\.class/ then
         file_name = $1
         pckg = File.dirname(file_name).split("/").join(".")
