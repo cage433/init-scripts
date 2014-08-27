@@ -1,5 +1,6 @@
 export EDITOR=vim
-export CAGE="alex@cage433.vm.bytemark.co.uk"
+export CAGE="cage433.vm.bytemark.co.uk"
+alias cage='ssh $CAGE'
 setxkbmap -option "ctrl:nocaps" > /dev/null 2>&1
 export PATH=$HOME/repos/init-scripts/bin/:$PATH
 export SCALA_HOME=/usr/local/scala-2.10.2
