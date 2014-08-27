@@ -1,6 +1,3 @@
-[user]
-	name = Alex.McGuire
-	email = alex.mcguire@trafigura.com
 [receive]
 	denyNonFastForwards = true
 [merge]
