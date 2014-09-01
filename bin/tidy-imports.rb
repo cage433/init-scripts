@@ -43,31 +43,33 @@ end
 
 packages = (regular_imports.keys + import_alls + import_all_in_object.keys).uniq.sort
 
-puts(all_lines[0])
-puts
-packages.each do |package|
-  if regular_imports[package] then
-    print "import #{package}"
-    importees = regular_imports[package]
-    if importees.size > 1 then
-      puts(".{#{importees.sort.join(", ")}}")
-    else
-      puts(".#{importees[0]}")
+File.open(scala_file, "w") do |f|
+  f.puts(all_lines[0])
+  f.puts
+  packages.each do |package|
+    if regular_imports[package] then
+      f.print "import #{package}"
+      importees = regular_imports[package]
+      if importees.size > 1 then
+        f.puts(".{#{importees.sort.join(", ")}}")
+      else
+        f.puts(".#{importees[0]}")
+      end
+    end
+    if import_all_in_object[package]  then
+      importees = import_all_in_object[package]
+      importees.each do |imp|
+        f.puts "import #{package}.#{imp}"
+      end
+    end
+    if import_alls.member?(package) then
+      f.puts "import #{package}._"
     end
   end
-  if import_all_in_object[package]  then
-    importees = import_all_in_object[package]
-    importees.each do |imp|
-      puts "import #{package}.#{imp}"
-    end
+  f.puts
+  all_lines[first_line_after_imports..-1].each do |line|
+    f.print(line)
   end
-  if import_alls.member?(package) then
-    puts "import #{package}._"
-  end
-end
-puts
-all_lines[first_line_after_imports..-1].each do |line|
-  print(line)
 end
 
 

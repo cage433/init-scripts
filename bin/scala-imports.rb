@@ -109,8 +109,7 @@ $java_jar =
 
 $scala_jars = 
   begin
-    scala_root = ENV["SCALA_HOME"] || (raise "SCALA_HOME not set")
-    Dir.entries("#{scala_root}/lib/").select{|f| f =~ /\.jar$/}.collect{|f| "#{scala_root}/lib/#{f}"}
+    Dir.entries("scala-libs").select{|f| f =~ /\.jar$/}.collect{|f| "scala-libs/#{f}"}
   end
 
 def project_jars 

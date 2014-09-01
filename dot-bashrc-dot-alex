@@ -58,3 +58,5 @@ complete -o default -o nospace -F _git g
 
 [[ -s $HOME/.tmuxinator/scripts/tmuxinator ]] && source $HOME/.tmuxinator/scripts/tmuxinator
 
+alias traf='ssh -p 10300 localhost'
+alias thoozaho-git='git config user.email thoozaho@gmail.com && git config user.name thoozaho'
