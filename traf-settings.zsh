@@ -2,6 +2,8 @@ alias nick='ssh nick@nick-linux'
 alias dave='ssh dave@dave-linux'
 alias stacy='ssh stacy@stacy-linux'
 alias louis='ssh louis@louis-linux'
+export RORY="rory@rory-ubuntu"
+alias rory='ssh $RORY'
 alias t306='ssh development@ttraflonrh306'
 alias d183='ssh starling_metals@dtraflocorh183'
 alias d184='ssh starling_metals@dtraflocorh184'
@@ -23,3 +25,4 @@ alias solaris='ssh -t titan@etraflocoux138.europe.trafeng.net "cd /opt/starling_
 export JAVA_HOME=/usr/local/jdk7/
 alias scla='/usr/local/scala-2.10.2/bin/scala'
 alias sng='synergys -c $HOME/synergy.conf'
+
