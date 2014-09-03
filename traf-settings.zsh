@@ -26,3 +26,7 @@ export JAVA_HOME=/usr/local/jdk7/
 alias scla='/usr/local/scala-2.10.2/bin/scala'
 alias sng='synergys -c $HOME/synergy.conf'
 
+export http_proxy=http://127.0.0.1:3128
+export https_proxy=https://localhost:3128/
+export no_proxy=localhost,127.0.0.0/8,nexus,nexus.global.trafigura.com,starlings,ghe,ghe.global.trafigura.com,ttraflocorh197,.global.trafigura.com,nexus,nexus.global.trafigura.com,starlings,ghe,ghe.global.trafigura.com,ttraflocorh197,.global.trafigura.com
+➜

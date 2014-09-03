@@ -27,8 +27,8 @@
 	l = log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'
   ll = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --numstat
 	d = diff --color-words
-[core]
-	pager = less -r
+#[core]
+#	pager = less -r
 [pull]
 	default = current
 [color]

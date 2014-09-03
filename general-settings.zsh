@@ -24,3 +24,4 @@ alias kill-tmux='tmux ls | awk "{print $1}" | sed s/:// | xargs -I{} tmux kill-s
 alias s9='export SCALA_HOME=/usr/local/scala-2.9.3/'
 alias s10='export SCALA_HOME=/usr/local/scala-2.10.2/'
 export SCALA_HOME=/usr/local/scala-2.9.3/
+alias gitp='fit --no-pager'
