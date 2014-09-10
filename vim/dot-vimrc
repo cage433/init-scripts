@@ -149,7 +149,7 @@ noremap <F7> :call ToggleSyntax()<CR>
 
 filetype plugin indent on
 set autowrite
-autocmd FileType scala setlocal shiftwidth=2 tabstop=2
+autocmd FileType scala setlocal shiftwidth=2 tabstop=2 colorcolumn=120
 autocmd FileType rb setlocal shiftwidth=2 tabstop=2
 autocmd FileType c setlocal shiftwidth=4 tabstop=4
 autocmd FileType cpp setlocal shiftwidth=4 tabstop=4
