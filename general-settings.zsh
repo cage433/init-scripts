@@ -27,3 +27,5 @@ export SCALA_HOME=/usr/local/scala-2.9.3/
 alias gitp='git --no-pager'
 alias thoozaho-git='git config user.name thoozaho && git config user.email thoozaho@gmail.com'
 alias gs='git status'
+alias tmux='TERM=xterm-256color tmux'
+alias long-lines='ack-grep --type=scala -l ".{121,}"'                                                                                                                                
