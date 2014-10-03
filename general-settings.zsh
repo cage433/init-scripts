@@ -29,3 +29,5 @@ alias thoozaho-git='git config user.name thoozaho && git config user.email thooz
 alias gs='git status'
 alias tmux='TERM=xterm-256color tmux'
 alias long-lines='ack-grep --type=scala -l ".{121,}"'                                                                                                                                
+alias ta='export TERM=screen-256color && tmux attach -d'
+alias ssh='TERM=xterm ssh'
