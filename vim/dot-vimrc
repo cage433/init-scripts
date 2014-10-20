@@ -1,4 +1,4 @@
-let g:relative_test_class_dir="/test-classes/"
+
 let hostname = substitute(system('hostname'), '\n', '', '')
 let g:current_split = ""
 if hostname == "alex-linux"
@@ -119,16 +119,16 @@ function! ToggleLightDark()
   endif
 endfunction
 
-map <silent> <F8> :call ToggleLightDark()<CR>
-map <silent> <F4> :call TogglePaste()<CR>
-map <silent> <F3> :call BufferList()<CR>
-map <silent> <F1> <ESC>
-imap <silent> <F1> <ESC>
+noremap <silent> <F8> :call ToggleLightDark()<CR>
+noremap <silent> <F4> :call TogglePaste()<CR>
+noremap <silent> <F3> :call BufferList()<CR>
+noremap <silent> <F1> <ESC>
+inoremap <silent> <F1> <ESC>
 inoremap jk <ESC>
 set showmatch
 set cpoptions-=m
-nmap <C-p> ?^(<CR>
-nmap <C-n> /^(<CR>
+nnoremap <C-p> ?^(<CR>
+nnoremap <C-n> /^(<CR>
 
 if &diff
   syntax off
@@ -226,7 +226,7 @@ endfunction
 function! ToggleTestExceptions()
   let g:show_test_exceptions = !g:show_test_exceptions
 endfunction
-map <leader>sx :call ToggleTestExceptions()<CR>
+noremap <leader>sx :call ToggleTestExceptions()<CR>
 
 function! RunATest(scalafile, classname)
   echo "Trying to run test"
@@ -327,8 +327,8 @@ function! OtherRepoFile()
   endif
 endfunction
 
-map <leader>M :call ToggleRepo(0)<CR>
-map <leader>N :call ToggleRepo(1)<CR>
+noremap <leader>M :call ToggleRepo(0)<CR>
+noremap <leader>N :call ToggleRepo(1)<CR>
 
 function! OpenTagInOtherWindow()
   let tag = expand("<cword>")
@@ -354,7 +354,7 @@ command! R !./%
 function! ExecCurrentBuffer()
   exec ":! ./%"
 endfunction
-map <leader>L :call ExecCurrentBuffer()<CR>
+noremap <leader>L :call ExecCurrentBuffer()<CR>
 
 function! SwitchNumbering()
   if &relativenumber
@@ -370,73 +370,73 @@ function! SwitchNumbering()
 endfunction
 map <F9> :call SwitchNumbering()<CR>
 
-map <leader>Q :call TidyScalaImports()<CR>
+noremap <leader>Q :call TidyScalaImports()<CR>
 imap <F5> println("Debug: " + (new java.util.Date()) + " <Esc>:call InsertClassName()<CR>a: ")<Esc>h
 
 map <F6> :CtrlPClearAllCaches<CR>
 
-map <silent><leader>tt :call ToggleSourceAndTestFile()<CR>
+noremap <silent><leader>tt :call ToggleSourceAndTestFile()<CR>
 
 nnoremap <leader><leader> <C-^>
 
-map <leader>k :call RunThisTest()<CR>
-map <leader>j :call RunLastTest()<CR>
+noremap <leader>k :call RunThisTest()<CR>
+noremap <leader>j :call RunLastTest()<CR>
 
-map <leader>w :call OpenTagInOtherWindow()<CR>,/
+noremap <leader>w :call OpenTagInOtherWindow()<CR>,/
 
 " Lisp comment/uncomment
-map <leader>; :s /^/\/\/ /<CR>
-map <leader>: :s /^\/\/ //<CR>
+noremap <leader>; :s /^/\/\/ /<CR>
+noremap <leader>: :s /^\/\/ //<CR>
 
 " Change PWD to that of the current file
-map <silent> <leader>c :cd %:h<CR>
+noremap <silent> <leader>c :cd %:h<CR>
 
 " And put it back
-map <leader>d :call PutPwdBack()<CR>
+noremap <leader>d :call PutPwdBack()<CR>
 
 "show starling imports
-map <leader>ii ma:r ! scala-imports.rb -p <cword><CR>`a
+noremap <leader>ii ma:r ! scala-imports.rb -p <cword><CR>`a
 
 " show external imports
-map <leader>io ma:r ! scala-imports.rb -e <cword><CR>`a
+noremap <leader>io ma:r ! scala-imports.rb -e <cword><CR>`a
 
 " show java doc
-map <leader>J ma:r ! scala-imports.rb -j <cword><CR>`a
+noremap <leader>J ma:r ! scala-imports.rb -j <cword><CR>`a
 "
 " show scala doc
-map <leader>S ma:r ! scala-imports.rb -s <cword><CR>`a
+noremap <leader>S ma:r ! scala-imports.rb -s <cword><CR>`a
 
 "Show lisp doc
-map <leader>L ma: ! ide/links.rb <cword><CR>`a
+noremap <leader>L ma: ! ide/links.rb <cword><CR>`a
 
 "Show sub classes
-map <leader>s ma:r ! find_subtypes.rb <cword><CR>`a
+noremap <leader>s ma:r ! find_subtypes.rb <cword><CR>`a
 
 "Put the selected import line at the top and delete any others
-map <leader>iu ma?^[^i]<CR>mb:call SaveWinline()<CR>'ayy'b?\(\(^i\)\\|\(^p\)\)<CR>p'b:.,$g/^import/d<CR>'b,/:call RestoreWinline()<CR>
+noremap <leader>iu ma?^[^i]<CR>mb:call SaveWinline()<CR>'ayy'b?\(\(^i\)\\|\(^p\)\)<CR>p'b:.,$g/^import/d<CR>'b,/:call RestoreWinline()<CR>
 
 " Add first import
-map <leader>I <leader>ij<leader>u
+noremap <leader>I <leader>ij<leader>u
 
 "jump to parent class
-map <leader>p ?extends<CR>w<C-]>
+noremap <leader>p ?extends<CR>w<C-]>
 
 " Wipe buffer without deleting window
-map <leader>z :BW<CR>
+noremap <leader>z :BW<CR>
 
 "Comment out all spec tests except this
-map <leader>tx :call SaveWinline()<CR>ma? in {<CR>mb:0,-1s/ in {/ ignore {/e<CR>'b:+1,$s/ in {/ ignore {/e<CR>'a:call RestoreWinline()<CR>:w<CR>,/
-map <silent> <leader>tX ma:call SaveWinline()<CR>:%s/ ignore {/ in {/<CR>'a:call RestoreWinline()<CR>,/
+noremap <leader>tx :call SaveWinline()<CR>ma? in {<CR>mb:0,-1s/ in {/ ignore {/e<CR>'b:+1,$s/ in {/ ignore {/e<CR>'a:call RestoreWinline()<CR>:w<CR>,/
+noremap <silent> <leader>tX ma:call SaveWinline()<CR>:%s/ ignore {/ in {/<CR>'a:call RestoreWinline()<CR>,/
 "Comment out all scalatest tests except this
-map <leader>tr :call SaveWinline()<CR>ma?^  test(<CR>mb:0,-1s/^  test(/  ignore(/e<CR>'b:+1,$s/^  test(/  ignore(/e<CR>'a:call RestoreWinline()<CR>:w<CR>,/
-map <silent> <leader>tR ma:call SaveWinline()<CR>:%s/^  ignore(/  test(<CR>'a:call RestoreWinline()<CR>:w<CR>,/
+noremap <leader>tr :call SaveWinline()<CR>ma?^  test(<CR>mb:0,-1s/^  test(/  ignore(/e<CR>'b:+1,$s/^  test(/  ignore(/e<CR>'a:call RestoreWinline()<CR>:w<CR>,/
+noremap <silent> <leader>tR ma:call SaveWinline()<CR>:%s/^  ignore(/  test(<CR>'a:call RestoreWinline()<CR>:w<CR>,/
 
 iab pfl printf("File %s, line %d\n", __FILE__, __LINE__);
 
 set exrc
 
-map <leader>gr :Gtags -r <C-r>=expand("<cword>")<CR><CR>
-map <leader>ar :Ack -r <C-r>=expand("<cword>")<CR><CR>
+noremap <leader>gr :Gtags -r <C-r>=expand("<cword>")<CR><CR>
+noremap <leader>ar :Ack -r <C-r>=expand("<cword>")<CR><CR>
 
 function! WritePackage()
   let path = expand("%:h")
@@ -487,8 +487,8 @@ function! OpenJavaURL(shortClass)
   call OpenApiURL(a:shortClass, "j")
 endfunction
 
-map <leader>ss :silent :call OpenScalaURL(expand("<cword>"))<CR>
-map <leader>sj :silent :call OpenJavaURL(expand("<cword>"))<CR>
+noremap <leader>ss :silent :call OpenScalaURL(expand("<cword>"))<CR>
+noremap <leader>sj :silent :call OpenJavaURL(expand("<cword>"))<CR>
 
 "set efm=[error]\ %f:%l:%m
 set efm=[error]\ %f:%l:%m
@@ -504,7 +504,7 @@ function! RefreshTags()
     redraw!
 endfunction
 command! RefreshCTags call RefreshTags()
-map <leader>ct :silent :call RefreshTags()<CR>
+noremap <leader>ct :silent :call RefreshTags()<CR>
 
 set wildignore+=*.class
 set wildignore+=*.fasl
@@ -541,7 +541,7 @@ function! RenameFile()
         redraw!
     endif
 endfunction
-map <leader>n :call RenameFile()<cr>
+noremap <leader>n :call RenameFile()<cr>
 inoremap <s-tab> <c-n>
 
 let g:ackprg="ack-grep --type=noxml -H --nocolor --nogroup --column"
@@ -600,3 +600,27 @@ set ttimeout
 set ttimeoutlen=500
 set nocursorline
 set wildignore+=*.xml,*.sql,*.html,*.jar,*.class,*.log,compilation-analysis-cache,tags
+"function! Colemak()
+  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " Colemak-Vim Mappings
+  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " HNEI arrows.
+    noremap n j|noremap e k|noremap i l|noremap gn gj|noremap ge gk
+  " In(s)ert. The default s/S is synonymous with cl/cc and is not very useful.
+    noremap s i|noremap S I
+  " Last search.
+    noremap k n|noremap K N
+  " BOL/EOL/Join Lines.
+    noremap l ^|noremap L $|noremap <C-l> J
+    onoremap r i
+  " End of word.
+    noremap j e|noremap J E
+    nnoremap <C-h> <C-w>h
+    nnoremap <C-n> <C-w>j
+    nnoremap <C-e> <C-w>k
+    nnoremap <C-k> <C-e>
+    nnoremap <C-i> <C-w>l
+    inoremap ii <ESC>
+"endfunction
+
+noremap <C-c> :s/^/\/\/<cr>

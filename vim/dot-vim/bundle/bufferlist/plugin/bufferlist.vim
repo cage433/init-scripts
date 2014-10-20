@@ -129,7 +129,7 @@ function! BufferList()
     put! =l:buflist
     " is there any way to NOT delete into a register? bummer...
     "norm Gdd$
-    norm GkJ
+    norm! GkJ
     while winheight(0) > line(".")
       put =l:fill
     endwhile
@@ -137,7 +137,7 @@ function! BufferList()
     let l:i = 0 | while l:i < winheight(0) | let l:i = l:i + 1
       put! =l:fill
     endwhile
-    norm 0
+    norm! 0
   endif
   setlocal nomodifiable
 
