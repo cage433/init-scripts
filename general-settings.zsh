@@ -29,6 +29,8 @@ alias thoozaho-git='git config user.name thoozaho && git config user.email thooz
 alias cage433-git='git config user.name cage433 && git config user.email cage433@gmail.com'
 alias gs='git status'
 alias tmux='TERM=xterm-256color tmux'
+alias tmuxc='TERM=xterm-256color tmux -f ~/.tmux.colemak.conf'
 alias long-lines='ack-grep --type=scala -l ".{121,}"'                                                                                                                                
 alias ta='export TERM=screen-256color && tmux attach -d'
 alias ssh='TERM=xterm ssh'
+alias vimc="vim -S $HOME/repos/init-scripts/vim/colemak.vim"

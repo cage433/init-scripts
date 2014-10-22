@@ -14,6 +14,10 @@ if [ ! -e $HOME/.tmux.conf ]; then
 	echo "Creating link to .tmux.conf"
 	ln -s $PWD/dot-tmux-dot-conf $HOME/.tmux.conf
 fi
+if [ ! -e $HOME/.tmux.colemak.conf ]; then
+	echo "Creating link to .tmux.colemak.conf"
+	ln -s $PWD/colemak/tmux.conf $HOME/.tmux.colemak.conf
+fi
 if [ ! -e $HOME/.ackrc ]; then
 	echo "Creating link to .ackrc"
 	ln -s $PWD/dot-ackrc $HOME/.ackrc
