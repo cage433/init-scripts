@@ -23,43 +23,6 @@ sub check_command_running
   }
 }
 
-
-sub check_reverse_tunnel
-{
-  my ($line) = @_;
-  my ($from_port, $to_host, $to_port) = split(/ /, $line);
-
-  my $command="ssh -f -q -N -R $from_port:$to_host:$to_port traftunnel";
-
-  check_command_running($command);
-
-  my $num_tries=5;
-  while ($num_tries > 0){
-    my @result = `ssh -Tn traftunnel`;
-    foreach (@result){
-      if ($_ =~ /tcp.*$from_port.*LISTEN/) {
-        print("Tunnel up remotely\n");
-        return 0;
-      }
-    }
-    sleep 1;
-    print "Can't find tunnel remotely - will try again\n";
-    $num_tries -= 1;
-  }
-
-  print "Killing tunnel\n";
-  system("pkill",  "-f", "-x", $command);
-  if ($? != 0){
-    die("Couldn't kill tunnel");
-  }
-
-  print "Opening new tunnel after killing\n";
-  system($command);
-  if ($? != 0){
-    die("Couldn't open tunnel");
-  }
-}
-
 my $file = $ENV{"HOME"} . '/.tunnels';
 open my $info, $file or die "Could not open $file: $!";
 
@@ -71,10 +34,6 @@ while(<$info>)  {
     next
   } 
 
-  if ($_ =~ /^ssh /){
-    check_command_running($_);
-  } else { 
-    check_reverse_tunnel($_);
-  }
+  check_command_running($_);
   print("\n");
 }
