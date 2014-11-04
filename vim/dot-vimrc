@@ -158,12 +158,6 @@ autocmd FileType lisp set iskeyword+=-
 autocmd FileType clojure set iskeyword+=-
 
 
-" Revert PWD to its original value
-let g:initialdir = getcwd()
-function! PutPwdBack()
-	exec ":cd " . g:initialdir
-endfunction
-
 :set tabstop=2
 :set shiftwidth=2
 :set expandtab
@@ -388,12 +382,6 @@ noremap <leader>w :call OpenTagInOtherWindow()<CR>,/
 noremap <leader>; :s /^/\/\/ /<CR>
 noremap <leader>: :s /^\/\/ //<CR>
 
-" Change PWD to that of the current file
-noremap <silent> <leader>c :cd %:h<CR>
-
-" And put it back
-noremap <leader>d :call PutPwdBack()<CR>
-
 "show starling imports
 noremap <leader>ii ma:r ! scala-imports.rb -p <cword><CR>`a
 
@@ -508,6 +496,8 @@ noremap <leader>ct :silent :call RefreshTags()<CR>
 
 set wildignore+=*.class
 set wildignore+=*.fasl
+set wildignore+=*/target-maker/*
+set wildignore+=*/target/*
 
 let g:CommandTMaxHeight=5
 set ruler
