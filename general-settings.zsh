@@ -42,3 +42,7 @@ leftDiff(){
   file=$1
   diff <(sed -n '/^<<<<<</,/||||||/p' $file) <(sed -n '/|||||||/,/=======/p' $file)
 }
+outerDiff(){
+  file=$1
+  diff <(sed -n '/^<<<<<</,/||||||/p' $file) <(sed -n '/=======/,/>>>>>>/p' $file)
+}
