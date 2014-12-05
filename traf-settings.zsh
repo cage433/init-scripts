@@ -30,3 +30,5 @@ alias sng='synergys -c $HOME/synergy.conf'
 export http_proxy=http://127.0.0.1:3128
 export https_proxy=https://localhost:3128/
 export no_proxy=localhost,127.0.0.0/8,nexus,nexus.global.trafigura.com,starlings,ghe,ghe.global.trafigura.com,ttraflocorh197,.global.trafigura.com,nexus,nexus.global.trafigura.com,starlings,ghe,ghe.global.trafigura.com,ttraflocorh197,.global.trafigura.com
+alias zinc='$HOME/bin/zinc/bin/zinc -Dzinc.analysis.cache.limit=50' 
+alias sbt='$HOME/bin/sbt/bin/sbt'

@@ -16,6 +16,7 @@
 	renames = copies
 	mnemonicprefix = true
   tool=vimdiff
+  renameLimit=5000
 [branch]
 	autosetupmerge = true
 	autosetuprebase = always

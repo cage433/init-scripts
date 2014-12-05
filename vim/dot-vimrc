@@ -12,6 +12,8 @@ if filereadable(".lvimrc")
   execute "source .lvimrc"
 endif
 
+" Show a border at column 118 to avoid long lines
+" TODO - restrict to scala
 augroup vimrc_autocmds
   autocmd BufEnter * highlight OverLength ctermbg=darkgrey 
   autocmd BufEnter * match OverLength /\%118v.*/
@@ -69,49 +71,44 @@ nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-l> <C-w>l
 nnoremap <leader>a :cope <CR><C-w>k
-nmap <silent> ,/ :nohlsearch<CR>
-nmap j gj
-nmap k gk
+nnoremap j gj
+nnoremap k gk
 nnoremap <M-l> :vertical resize +5<CR>
-map <F2> :set hlsearch!<CR>
+noremap <F2> :set hlsearch!<CR>
 
 function! ToggleSplit()
   if winnr("$") == 1
-      exec ":vsplit"
-      let g:current_split = "vertical"
-  else 
-    if g:current_split == "vertical"
-      exec ":only"
-      exec ":split"
-      let g:current_split = "horizontal"
+    if g:orientation == "landscape"
+      vsplit
     else
-      exec ":only"
+      split
     endif
+  else 
+    only
   endif
 endfunction
 map <silent> <F10> :call ToggleSplit()<CR>
 
 function! TogglePaste()
+  set paste!
   if &paste
-    exec ":set nopaste"
-    echo "Paste Off"
-  else
-    exec ":set paste"
     echo "Paste On"
+  else
+    echo "Paste Off"
   endif
 endfunction
-map <silent> <F4> :call TogglePaste()<CR>
+noremap <silent> <F4> :call TogglePaste()<CR>
 
 function! ToggleLightDark()
   let g:dark_view = !g:dark_view
   if g:dark_view
-    exec ":silent ! ~/repos/guake-colors-solarized/set_light.sh grey"
+    exec ":silent ! ~/repos/external/guake-colors-solarized/set_light.sh grey"
     exec ":silent ! tmux set-option -g status-bg white"
     exec ":silent ! tmux set-option -g status-fg black"
     exec ":silent ! tmux set-option window-status-current-fg black"
     set background=light
   else
-    exec ":silent ! ~/repos/guake-colors-solarized/set_dark.sh grey"
+    exec ":silent ! ~/repos/external/guake-colors-solarized/set_dark.sh grey"
     exec ":silent ! tmux set-option -g status-bg black"
     exec ":silent ! tmux set-option -g status-fg white"
     exec ":silent ! tmux set-option window-status-current-fg white"
@@ -127,8 +124,6 @@ inoremap <silent> <F1> <ESC>
 inoremap jk <ESC>
 set showmatch
 set cpoptions-=m
-nnoremap <C-p> ?^(<CR>
-nnoremap <C-n> /^(<CR>
 
 if &diff
   syntax off
@@ -137,6 +132,7 @@ else
 endif
 
 function! ToggleSyntax()
+  set syntax!
   if exists("g:syntax_on") 
    syntax off 
 "set nohlsearch
@@ -223,27 +219,30 @@ endfunction
 noremap <leader>sx :call ToggleTestExceptions()<CR>
 
 function! RunATest(scalafile, classname)
-  echo "Trying to run test"
   let g:lasttestfile = a:scalafile
   let g:lastclassname = a:classname
   let pkg = StarlingPackage(a:scalafile)
   let fullclassname = pkg . "." . a:classname
-  "w
   let test_reporter_arg=""
+  let logbackfile="logback-vim.xml"
+  if !filereadable(logbackfile)
+    let logbackfile = "$HOME/repos/init-scripts/logback-vim.xml"
+  endif
+
   if (match(getline(1), '^\#!') == 0)
     :! clear;./%
-  elseif stridx(fullclassname, "Test") >= 0 || stridx(fullclassname, "Spec") >= 0
+  elseif stridx(a:classname, "Test") >= 0 || stridx(a:classname, "Spec") >= 0
     if g:show_test_exceptions
       let test_reporter_arg = test_reporter_arg." -P5 -R . -oFHL " 
     else
       let test_reporter_arg = test_reporter_arg." -P5 -R . -oHL " 
     endif
 
-    exec "! clear; $JAVA_HOME/bin/java -classpath $CLASSPATH -Xmx4000m -XX:MaxPermSize=500m -XX:+UseConcMarkSweepGC -XX:NewRatio=3 -Dmaker.home=. -Dlog4j.configuration=config/log4j.properties -Dlogback.configurationFile=logback-vim.xml -Dmaker.test.reporter.classpath=test-reporter/target-maker/classes/ -Dsbt.log.format=false -Dscala.usejavacp=false org.scalatest.tools.Runner ".test_reporter_arg." -s " . fullclassname
+    exec "! clear; $JAVA_HOME/bin/java -classpath $CLASSPATH -Xmx4000m -XX:MaxPermSize=500m -XX:+UseConcMarkSweepGC -XX:NewRatio=3 -Dmaker.home=. -Dlog4j.configuration=config/log4j.properties -Dlogback.configurationFile=" . logbackfile . " -Dmaker.test.reporter.classpath=test-reporter/target-maker/classes/ -Dsbt.log.format=false -Dscala.usejavacp=false org.scalatest.tools.Runner ".test_reporter_arg." -s " . fullclassname
   elseif stridx(fullclassname, "Benchmark") >= 0 
-    exec "! clear; /usr/local/scala/bin/scala -cp $CLASSPATH -J-Xmx4000m -J-XX:MaxPermSize=500m -J-XX:+UseConcMarkSweepGC -Dlogback.configurationFile=logback-vim.xml -Dsbt.log.format=false -Dscala.usejavacp=false org.scalameter.Main -b " . fullclassname
+    exec "! clear; /usr/local/scala/bin/scala -cp $CLASSPATH -J-Xmx4000m -J-XX:MaxPermSize=500m -J-XX:+UseConcMarkSweepGC -Dlogback.configurationFile=" . logbackfile . " -Dsbt.log.format=false -Dscala.usejavacp=false org.scalameter.Main -b " . fullclassname
   else
-    exec "! clear; $JAVA_HOME/bin/java -Xmx4000m -XX:MaxPermSize=500m -XX:+UseConcMarkSweepGC $JAVA_OPTS -classpath $CLASSPATH -Dscala.usejavacp=true -Dlog4j.configuration=config/log4j.properties -Dlogback.configurationFile=logback-vim.xml scala.tools.nsc.MainGenericRunner " . fullclassname
+    exec "! clear; $JAVA_HOME/bin/java -Xmx4000m -XX:MaxPermSize=500m -XX:+UseConcMarkSweepGC $JAVA_OPTS -classpath $CLASSPATH -Dscala.usejavacp=true -Dlog4j.configuration=config/log4j.properties -Dlogback.configurationFile=" . logbackfile . " scala.tools.nsc.MainGenericRunner " . fullclassname
   endif
 
 endfunction
