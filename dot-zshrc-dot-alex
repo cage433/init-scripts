@@ -26,7 +26,7 @@ alias cage='ssh alex@$CAGE'
 export JAVA_HOME=/usr/local/jdk/
 export SCALA_HOME=/usr/local/scala/
 export EDITOR=vim
-setxkbmap -option "ctrl:nocaps"
+setxkbmap -option "ctrl:nocaps" > /dev/null 2>&1
 export PATH=$PATH:$SCALA_HOME/bin/:$JAVA_HOME/bin/:/sbin/:$HOME/repos/init-scripts/bin/
 alias traf='ssh -p 10300 localhost'
 alias ls='ls --color=never'
