@@ -1,4 +1,4 @@
-execute ":source $HOME/.vim/my-scripts/scala-imports.vim"
+"execute ":source $HOME/.vim/my-scripts/scala-imports.vim"
 
 let hostname = substitute(system('hostname'), '\n', '', '')
 let g:current_split = ""
