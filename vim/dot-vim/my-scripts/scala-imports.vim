@@ -53,28 +53,6 @@ function! AddImports(...)
   endfor
 
 
-"  let a:name = a:1
-"  let split_lines = map(deepcopy(matching_lines), 'split(v:val, "\t")')
-"  let classes_and_packages = sort(map(deepcopy(split_lines), '[v:val[2], v:val[1]]'), function("SortTuple"))
-"
-"  let class_column_width = max(map(deepcopy(classes_and_packages), 'strlen(v:val[0])'))
-"  let width = max(map(deepcopy(classes_and_packages), 'strlen(v:val[1]) + class_column_width')) + 5
-"
-"  let last_class = ""
-"  let lines = []
-"  for c_and_p in classes_and_packages
-"    
-"    if c_and_p[0] == last_class
-"      let class_term = ""
-"    else
-"      let class_term = c_and_p[0]
-"      let last_class = c_and_p[0]
-"    endif
-"    let line = class_term . repeat(" ", class_column_width - strlen(class_term)) . "   " . c_and_p[1]
-"    call add(lines, line)
-"  endfor
-"
-
 
   exec 'silent! ' . buffer_width . 'vne __IMPORTS__'
   setlocal noshowcmd
@@ -95,4 +73,60 @@ function! AddImports(...)
   map <silent> <buffer> <F5> :bwipeout<CR> 
 endfunction
 
-call AddImports("Resource", "List", "Set")
+function! AddClass(hash, package, classes)
+  if has_key(a:hash, a:package) && a:hash[a:package] == ["_"]
+    " do nothing - already imports entire package
+  elseif a:classes == ["_"]
+    let a:hash[a:package] = ["_"]
+  else
+    let a:hash[a:package] = extend(get(a:hash, a:package, []), a:classes)
+  endif
+endfunction
+
+function! AllImports()
+  let lines = readfile(expand('%'))
+  let import_lines = filter(lines, 'v:val =~ ''\v^import ''')
+  let imported_classes = {}
+
+  for line in import_lines
+    let l = matchlist(line, '\vimport ([a-z0-9.]+)\.(\S+)')
+    if !empty(l)
+      let classes = split(substitute(l[2], '\v\{|\}', "", "g"), '\v, *')
+      call AddClass(imported_classes, l[1], classes)
+    endif
+  endfor
+
+  return imported_classes
+endfunction
+
+function! ClassesUsed()
+  let classes ={}
+  let in_comment = 0
+  for line in readfile(expand('%'))
+    let line = substitute(line, '\v//.*$', "", "g")               " Remove '//' comments
+    let line = substitute(line, '\v/\*[^/*]*\*/', "", "g")        " Remove one line '/*...*/' comments
+    let line = substitute(line, '\v".*"', "", "g")                " Remove literal strings
+    if line =~ '\v^\s*import|^package'                            " ignore import/package lines
+
+    elseif line =~ '\v^\s*/\*'                                    " multiline comment started - ignore all till end
+      let in_comment = 1
+    elseif line =~ '\v\s*\*/'                                     " multiline comment ended
+      let in_comment = 0
+    elseif line =~ '\v\s*\*'                                      " middle of scaladoc comment - ignore
+
+    elseif line =~ '\v^\w*$'                                      " ignore whitespace
+
+    elseif ! in_comment
+      let words = split(line, '\v[^A-Za-z0-9_.]+')                " Split into words, leaving full stops
+      let words = map(copy(words), 'split(v:val, ''\.'')[0]')     " Take the left of full stop - dropping constants
+                                                                  " Like MyClass.Constant
+      for word in words                                           " Collect terms that look like classes/objects
+        if word =~ '\v^[A-Z]\w+'                              
+          let classes[word] = 1
+        endif
+      endfor
+    endif
+  endfor
+  return sort(keys(classes))
+endfunction
+" call AddImports("Resource", "List", "Set")
