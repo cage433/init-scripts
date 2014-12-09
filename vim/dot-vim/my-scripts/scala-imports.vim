@@ -73,30 +73,41 @@ function! AddImports(...)
   map <silent> <buffer> <F5> :bwipeout<CR> 
 endfunction
 
-function! AddClass(hash, package, classes)
-  if has_key(a:hash, a:package) && a:hash[a:package] == ["_"]
-    " do nothing - already imports entire package
-  elseif a:classes == ["_"]
-    let a:hash[a:package] = ["_"]
-  else
-    let a:hash[a:package] = extend(get(a:hash, a:package, []), a:classes)
-  endif
-endfunction
+"function! AddClass(hash, package, classes)
+"  if ! has_key(a:hash, a:package)
+"    let a:hash[a:package] = {}
+"  endif
+"  let package_classes = a:hash[a:package]
+"  if has_key(package_classes, "_")
+"    " do nothing - already imports entire package
+"  else
+"    for class in a:classes
+"      let package_classes[class] = 1
+"    endfor
+"  endif
+"endfunction
 
 function! AllImports()
   let lines = readfile(expand('%'))
   let import_lines = filter(lines, 'v:val =~ ''\v^import ''')
+  let imported_packages = {}
   let imported_classes = {}
 
   for line in import_lines
-    let l = matchlist(line, '\vimport ([a-z0-9.]+)\.(\S+)')
+    let l = matchlist(line, '\vimport\s+([a-z0-9.]+)\.([{}a-zA-Z0-9_, ]+)\s*$')
     if !empty(l)
       let classes = split(substitute(l[2], '\v\{|\}', "", "g"), '\v, *')
-      call AddClass(imported_classes, l[1], classes)
+      if classes == ["_"]
+        let imported_packages[l[1]] = 1
+      else
+        for class in classes
+          let imported_classes[class] = 1
+        endfor
+      endif
     endif
   endfor
 
-  return imported_classes
+  return [imported_classes, imported_packages]
 endfunction
 
 function! ClassesUsed()
@@ -119,7 +130,7 @@ function! ClassesUsed()
     elseif ! in_comment
       let words = split(line, '\v[^A-Za-z0-9_.]+')                " Split into words, leaving full stops
       let words = map(copy(words), 'split(v:val, ''\.'')[0]')     " Take the left of full stop - dropping constants
-                                                                  " Like MyClass.Constant
+                                                                  " like MyClass.Constant
       for word in words                                           " Collect terms that look like classes/objects
         if word =~ '\v^[A-Z]\w+'                              
           let classes[word] = 1
@@ -128,5 +139,41 @@ function! ClassesUsed()
     endif
   endfor
   return sort(keys(classes))
+endfunction
+
+function! ThisFilesPackage()
+  let first_line = readfile(expand('%'), '', 1)
+  let matches = matchlist(first_line, '\v^package\s+(.*)$')
+  if len(matches) >= 2
+    return matches[1]
+  else
+    return ""
+  endif
+endfunction
+
+function! ClassesToImport()
+  let [imported_classes, imported_packages] = AllImports()
+  let this_package = ThisFilesPackage()
+  let classes = ClassesUsed()
+  let to_import = {}
+  for class in classes
+    if has_key(imported_classes, class)
+      " ignore - we have this class
+    else
+      let packages = scalaimports#packages_for_class(class)
+      let needs_importing = 1
+      for package in packages
+        if has_key(imported_packages, package)  || package == this_package || package == "scala" || package == "java.lang"
+          let needs_importing = 0
+        endif
+      endfor
+      if needs_importing == 1
+        echo "Class -" . class . "-"
+        echo "Packages " . join(packages, " , ")
+        let to_import[class] = 1
+      endif
+    endif
+  endfor
+  return sort(keys(to_import))
 endfunction
 " call AddImports("Resource", "List", "Set")
