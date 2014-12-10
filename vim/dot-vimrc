@@ -1,5 +1,3 @@
-"execute ":source $HOME/.vim/my-scripts/scala-imports.vim"
-
 let hostname = substitute(system('hostname'), '\n', '', '')
 let g:current_split = ""
 if hostname == "alex-linux"
@@ -593,3 +591,16 @@ set wildignore+=*.xml,*.sql,*.html,*.jar,*.class,*.log,compilation-analysis-cach
 
 autocmd FileType ruby nnoremap <buffer> <silent> <F5> :! ruby %<CR>
 autocmd FileType vim nnoremap <buffer> <silent> <F5> :source %<CR>
+
+function! UpdateImports()
+  let classes = scalaimports#classes_in_buffer_needing_import()
+  call scalaimports#launch_import_buffer(classes)
+endfunction
+
+"function! ClassesUsed()
+"  let result = scalaimports#classes_referred_to_in_buffer()
+"  return result
+"endfunction
+
+
+

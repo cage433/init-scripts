@@ -1,4 +1,9 @@
-function! scalaimports#write_import_line(scala_file_buffer_no, import_line)
+if exists('g:ScalaImportsLoaded')
+  finish
+endif
+let g:ScalaImportsLoaded = 1
+
+function! s:write_import_line(scala_file_buffer_no, import_line)
   let imports_buffer_no = bufnr('%')
   exec ":b " . a:scala_file_buffer_no
   exec ":normal mz"
@@ -11,17 +16,8 @@ function! scalaimports#write_import_line(scala_file_buffer_no, import_line)
   exec ":b " . imports_buffer_no
 endfunction
 
-function! s:imports_map()
-  if !exists('g:scala_imports_map')
-    let g:scala_imports_map = {}
 
-    call scalaimports#update_imports_map(g:scala_imports_map, '.maker.vim/external_packages/by_class')
-    call scalaimports#update_imports_map(g:scala_imports_map, '.maker.vim/project_packages/by_class')
-  endif
-  return g:scala_imports_map
-endfunction
-
-function! scalaimports#update_imports_map(imports_map, imports_file)
+function! s:update_imports_map(imports_map, imports_file)
   if !filereadable(a:imports_file)
     echo "Rebuilding package file"
     exec ":silent ! ruby $HOME/repos/init-scripts/vim/dot-vim/my-scripts/scala-imports.rb" 
@@ -33,25 +29,34 @@ function! scalaimports#update_imports_map(imports_map, imports_file)
   endfor
 endfunction
 
+function! s:imports_map()
+  if !exists('g:scala_imports_map')
+    let g:scala_imports_map = {}
+
+    call s:update_imports_map(g:scala_imports_map, '.maker.vim/external_packages/by_class')
+    call s:update_imports_map(g:scala_imports_map, '.maker.vim/project_packages/by_class')
+  endif
+  return g:scala_imports_map
+endfunction
 
 function! s:packages_for_class(klass)
-  return get(scalaimports#imports_map(), a:klass, [])
+  return get(s:imports_map(), a:klass, [])
 endfunction
 
 function! s:longest_package_name_for_class(klass)
   return max(
   \       map(
-  \         copy(scalaimports#packages_for_class(a:klass)), 
+  \         copy(s:packages_for_class(a:klass)), 
   \         'strlen(v:val)'))
 endfunction
 
 function! s:longest_package_name(classes)
   return max( 
   \    map(copy(a:classes), 
-  \    'scalaimports#longest_package_name_for_class(v:val)'))
+  \    's:longest_package_name_for_class(v:val)'))
 endfunction 
 
-function! scalaimports#imported_classes_and_packages_in_buffer()
+function! s:imported_classes_and_packages_in_buffer()
   let lines = readfile(expand('%'))
   let import_lines = filter(lines, 'v:val =~ ''\v^import ''')
   let imported_packages = {}
@@ -74,7 +79,7 @@ function! scalaimports#imported_classes_and_packages_in_buffer()
   return [imported_classes, imported_packages]
 endfunction
 
-function! scalaimports#classes_referred_to_in_buffer()
+function! s:classes_referred_to_in_buffer()
   let classes ={}
   let in_comment = 0
   for line in readfile(expand('%'))
@@ -119,15 +124,15 @@ let s:packages_in_scope = {"scala" : 1, "java.lang" : 1}
 let s:scala_predef_classes = {"Set" : 1, "List" : 1, "Any" : 1, "Map" : 1}
 
 function! scalaimports#classes_in_buffer_needing_import()
-  let [imported_classes, imported_packages] = scalaimports#imported_classes_and_packages_in_buffer()
-  let this_package = ThisFilesPackage()
+  let [imported_classes, imported_packages] = s:imported_classes_and_packages_in_buffer()
+  let this_package = s:this_buffers_package()
   let classes = ClassesUsed()
   let to_import = {}
   for class in classes
     if has_key(imported_classes, class) || has_key(s:scala_predef_classes, class)
       " ignore - we have this class
     else
-      let packages = scalaimports#packages_for_class(class)
+      let packages = s:packages_for_class(class)
       let needs_importing = 1
       for package in packages
         if has_key(imported_packages, package)  || package == this_package || has_key(s:packages_in_scope, package)
@@ -144,14 +149,14 @@ endfunction
 
 function! AddImport()
   let i = line('.') - 1
-  call scalaimports#write_import_line(b:scala_file_buffer_no, "import ".b:packages_by_line[i].".".b:classes_by_line[i])
+  call s:write_import_line(b:scala_file_buffer_no, "import ".b:packages_by_line[i].".".b:classes_by_line[i])
 endfunction
 
 function! scalaimports#launch_import_buffer(classes)
   let scala_file_buffer_no = bufnr('%')
-  let imports_map=scalaimports#imports_map()
+  let imports_map=s:imports_map()
   let class_column_width = max(map(copy(a:classes), 'strlen(v:val)'))
-  let package_column_width = scalaimports#longest_package_name(a:classes)
+  let package_column_width = s:longest_package_name(a:classes)
   let buffer_width = class_column_width + package_column_width + 2
 
   function! Make_blank(width)
@@ -167,7 +172,7 @@ function! scalaimports#launch_import_buffer(classes)
   let packages_by_line=[]
   for class in a:classes
     let first_line = 1
-    let packages = scalaimports#packages_for_class(class)
+    let packages = s:packages_for_class(class)
     for package in packages
       if first_line == 1
         let class_term = Left_justify(class, class_column_width)
