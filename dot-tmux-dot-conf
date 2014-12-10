@@ -9,7 +9,8 @@ bind-key h select-pane -L
 bind-key j select-pane -D
 bind-key k select-pane -U
 bind-key l select-pane -R
-
+bind-key left swap-window -t -1
+bind-key right swap-window -t +1
 bind-key -n C-right resize-pane -R 5
 bind-key L resize-pane -R 5
 bind-key -n C-left resize-pane -L 5
