@@ -75,7 +75,7 @@ class Packages
       map.sort.each{
         |klass, packages|
 
-          f.puts("#{klass} #{packages.sort.join(",")}")
+          f.puts("#{klass} #{packages.uniq.sort.join(",")}")
       }
     end
   end
