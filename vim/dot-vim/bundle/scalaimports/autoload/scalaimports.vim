@@ -3,7 +3,7 @@ if exists('g:ScalaImportsLoaded')
 endif
 let g:ScalaImportsLoaded = 1
 
-function! s:write_import_line(scala_file_buffer_no, import_line)
+function! scalaimports#write_import_line(scala_file_buffer_no, import_line)
   let imports_buffer_no = bufnr('%')
   exec ":b " . a:scala_file_buffer_no
   exec ":normal mz"
@@ -17,11 +17,9 @@ function! s:write_import_line(scala_file_buffer_no, import_line)
 endfunction
 
 
-function! s:add_file_to_imports_map(imports_file)
-  if !filereadable(a:imports_file)
-    echo "Rebuilding package file"
-    silent exec ":silent ! ruby $HOME/repos/init-scripts/vim/dot-vim/my-scripts/scala-imports.rb" 
-  endif
+let s:this_script_dir = fnamemodify(resolve(expand('<sfile>:p')), ':h')
+
+function! scalaimports#add_file_to_imports_map(imports_file)
   for line in readfile(a:imports_file)
     let [class, packages] = split(line, " ")
     let packages_list = split(packages, ",")
@@ -29,39 +27,49 @@ function! s:add_file_to_imports_map(imports_file)
   endfor
 endfunction
 
-function! scalaimports#rebuild_imports_map()
+function! scalaimports#rebuild_imports_map(purge_package_file)
+  if a:purge_package_file
+    echom "Purging all"
+    silent exec ":! rm -rf .maker.vim/external_packages/"
+    silent exec ":! rm -rf .maker.vim/project_packages/"
+    redraw!
+  else
+    echom "Not purging"
+  endif
   let g:scala_imports_map = {}
-
-  call s:add_file_to_imports_map('.maker.vim/external_packages/by_class')
-  call s:add_file_to_imports_map('.maker.vim/project_packages/by_class')
+  echo "Rebuilding package file"
+  silent exec ":! ruby ".s:this_script_dir."/scala-imports.rb" 
+  redraw!
+  call scalaimports#add_file_to_imports_map('.maker.vim/external_packages/by_class')
+  call scalaimports#add_file_to_imports_map('.maker.vim/project_packages/by_class')
   :redraw!
 endfunction
 
-function! s:imports_map()
+function! scalaimports#imports_map()
   if !exists('g:scala_imports_map')
-    call scalaimports#rebuild_imports_map()
+    call scalaimports#rebuild_imports_map(0)
   endif
   return g:scala_imports_map
 endfunction
 
-function! s:packages_for_class(klass)
-  return get(s:imports_map(), a:klass, [])
+function! scalaimports#packages_for_class(klass)
+  return get(scalaimports#imports_map(), a:klass, [])
 endfunction
 
-function! s:longest_package_name_for_class(klass)
+function! scalaimports#longest_package_name_for_class(klass)
   return max(
   \       map(
-  \         copy(s:packages_for_class(a:klass)), 
+  \         copy(scalaimports#packages_for_class(a:klass)), 
   \         'strlen(v:val)'))
 endfunction
 
-function! s:longest_package_name(classes)
+function! scalaimports#longest_package_name(classes)
   return max( 
   \    map(copy(a:classes), 
-  \    's:longest_package_name_for_class(v:val)'))
+  \    'scalaimports#longest_package_name_for_class(v:val)'))
 endfunction 
 
-function! s:imported_classes_and_packages_in_buffer()
+function! scalaimports#imported_classes_and_packages_in_buffer()
   let lines = readfile(expand('%'))
   let import_lines = filter(lines, 'v:val =~ ''\v^import ''')
   let imported_packages = {}
@@ -84,7 +92,7 @@ function! s:imported_classes_and_packages_in_buffer()
   return [imported_classes, imported_packages]
 endfunction
 
-function! s:classes_referred_to_in_buffer()
+function! scalaimports#classes_referred_to_in_buffer()
   let classes ={}
   let in_comment = 0
   for line in readfile(expand('%'))
@@ -115,7 +123,7 @@ function! s:classes_referred_to_in_buffer()
   return sort(keys(classes))
 endfunction
 
-function! s:this_buffers_package()
+function! scalaimports#this_buffers_package()
   let first_line = readfile(expand('%'), '', 1)
   let matches = matchlist(first_line, '\v^package\s+(.*)$')
   if len(matches) >= 2
@@ -125,22 +133,22 @@ function! s:this_buffers_package()
   endif
 endfunction
 
-let s:packages_in_scope = {"scala" : 1, "java.lang" : 1}
-let s:scala_predef_classes = {"Set" : 1, "List" : 1, "Any" : 1, "Map" : 1}
+let g:packages_in_scope = {"scala" : 1, "java.lang" : 1}
+let g:scala_predef_classes = {"Set" : 1, "List" : 1, "Any" : 1, "Map" : 1}
 
-function! s:classes_in_buffer_needing_import()
-  let [imported_classes, imported_packages] = s:imported_classes_and_packages_in_buffer()
-  let this_package = s:this_buffers_package()
-  let classes = s:classes_referred_to_in_buffer()
+function! scalaimports#classes_in_buffer_needing_import()
+  let [imported_classes, imported_packages] = scalaimports#imported_classes_and_packages_in_buffer()
+  let this_package = scalaimports#this_buffers_package()
+  let classes = scalaimports#classes_referred_to_in_buffer()
   let to_import = {}
   for class in classes
-    if has_key(imported_classes, class) || has_key(s:scala_predef_classes, class)
+    if has_key(imported_classes, class) || has_key(g:scala_predef_classes, class)
       " ignore - we have this class
     else
-      let packages = s:packages_for_class(class)
+      let packages = scalaimports#packages_for_class(class)
       let needs_importing = 1
       for package in packages
-        if has_key(imported_packages, package)  || package == this_package || has_key(s:packages_in_scope, package)
+        if has_key(imported_packages, package)  || package == this_package || has_key(g:packages_in_scope, package)
           let needs_importing = 0
         endif
       endfor
@@ -153,7 +161,7 @@ function! s:classes_in_buffer_needing_import()
 endfunction
 
 function! scalaimports#add_import_line(import_line)
-  let imports_buffer_no = bufnr('%')
+  let current_buffer = bufnr('%')
   echo b:scala_file_buffer_no
   exec ":b " . b:scala_file_buffer_no
   exec ":normal mz"
@@ -163,7 +171,8 @@ function! scalaimports#add_import_line(import_line)
   put =a:import_line
   exec ":normal `z"
   call RestoreWinline()
-  exec ":b " . imports_buffer_no
+  exec ":w"
+  exec ":b " . current_buffer
 endfunction
 
 function! scalaimports#import_chosen_class()
@@ -174,16 +183,19 @@ endfunction
 
 function! scalaimports#import_chosen_package()
   let i = line('.') - 1
-  let import_line="import ".b:packages_by_line[i]."_"
+  let import_line="import ".b:packages_by_line[i]."._"
   call scalaimports#add_import_line(import_line)
+  exec ":bw"
+  call scalaimports#launch_import_buffer()
 endfunction
 
 function! scalaimports#launch_import_buffer()
-  let classes = s:classes_in_buffer_needing_import()
+  let classes = scalaimports#classes_in_buffer_needing_import()
   let scala_file_buffer_no = bufnr('%')
-  let imports_map=s:imports_map()
+  let b:scala_file_buffer_no = scala_file_buffer_no
+  let imports_map=scalaimports#imports_map()
   let class_column_width = max(map(copy(classes), 'strlen(v:val)'))
-  let package_column_width = s:longest_package_name(classes)
+  let package_column_width = scalaimports#longest_package_name(classes)
   let buffer_width = class_column_width + package_column_width + 2
 
   function! Make_blank(width)
@@ -197,25 +209,35 @@ function! scalaimports#launch_import_buffer()
   let lines = []
   let classes_by_line=[]
   let packages_by_line=[]
+  let imports_occurred = 0
   for class in classes
     let first_line = 1
-    let packages = s:packages_for_class(class)
-    for package in packages
-      if first_line == 1
-        let class_term = Left_justify(class, class_column_width)
-      else
-        let class_term = Make_blank(class_column_width)
-      endif
-      call add(classes_by_line, class)
-      call add(packages_by_line, package)
-      call add(lines, class_term . " " . package . " ")
-      let first_line = 0
-    endfor
+    let packages = scalaimports#packages_for_class(class)
+    if len(packages) == 1
+      silent call scalaimports#add_import_line("import ".packages[0].".".class)
+      let imports_occurred = 1
+    else
+      for package in packages
+        if first_line == 1
+          let class_term = Left_justify(class, class_column_width)
+        else
+          let class_term = Make_blank(class_column_width)
+        endif
+        call add(classes_by_line, class)
+        call add(packages_by_line, package)
+        call add(lines, class_term . " " . package . " ")
+        let first_line = 0
+        let imports_occurred = 1
+      endfor
+    endif
 
   endfor
 
-  if empty(lines)
+  if ! imports_occurred
     echo "No imports required"
+  endif
+
+  if empty(lines)
     return
   endif
 
