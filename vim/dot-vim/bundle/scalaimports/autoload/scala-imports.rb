@@ -23,6 +23,10 @@ class Packages
     raise "This should be overriden"
   end
 
+  def files_per_thread()
+    raise "This should be overriden"
+  end
+
   def stale_files()
     raise "This should be overriden"
   end
@@ -92,7 +96,6 @@ class Packages
     return if (new_files.empty?)
     #puts("Processing #{new_files.size} file(s)")
 
-    files_per_thread = 5
     queue = Queue.new
     threads = new_files.each_slice(files_per_thread).collect{ |slice|
       Thread.new{
@@ -133,6 +136,9 @@ class ProjectPackages < Packages
     @packages.keys.select{|file| ! File.exists?(file)}
   end
 
+  def files_per_thread
+    3000
+  end
   def files_to_add()
     source_files = Dir.glob("*/src/**/*.scala") + Dir.glob("*/tests/**/*.scala") 
     if File.exists?(packages_by_file_file)
@@ -200,6 +206,9 @@ class ExternalPackages < Packages
     @packages.keys.select{|jar_file, _| !project_jar_basenames.include?(File.basename(jar_file))}
   end
 
+  def files_per_thread
+    10
+  end
   def files_to_add()
     jar_basenames = @packages.keys.collect{|jar_file| File.basename(jar_file)}
     jars = project_jar_files.select{
@@ -235,7 +244,7 @@ class ExternalPackages < Packages
   end
 end
 
-ProjectPackages.new().sync_with_project
+#ProjectPackages.new().sync_with_project
 ExternalPackages.new().sync_with_project
 
 
