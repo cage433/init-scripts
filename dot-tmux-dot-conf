@@ -40,12 +40,6 @@ bind x kill-pane
 # Move to beginning of line
 bind a send-prefix
 
-# 'maximise' and 'minimise' a pane
-unbind +
-bind + new-window -d -n tmux-zoom \; swap-pane -s tmux-zoom.0 \; select-window -t tmux-zoom
-unbind -
-bind - last-window \; swap-pane -s tmux-zoom.0 \; kill-window -t tmux-zoom
-
 set -g status on
 bind-key b set-option status
 
@@ -68,4 +62,3 @@ run-shell ~/repos/init-scripts/tmux_goto_session/goto_session.tmux
 bind '"' split-window -c "#{pane_current_path}"
 bind % split-window -h -c "#{pane_current_path}"
 bind c new-window -c "#{pane_current_path}"
-#set-option -g allow-rename off
