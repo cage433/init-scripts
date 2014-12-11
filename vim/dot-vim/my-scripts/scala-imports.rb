@@ -141,13 +141,17 @@ class ProjectPackages < Packages
       last_time = Time.new(0)
     end
 
-    source_files.select{|file|
+    files = source_files.select{|file|
       if ! @packages.include?(file)
         true
       else
         File.mtime(file) > last_time
       end
     }
+    if files.size > 10
+      puts "Processing #{files.size} scala files"
+    end
+    files
   end
 
   def process_file(source_file)
@@ -198,10 +202,14 @@ class ExternalPackages < Packages
 
   def files_to_add()
     jar_basenames = @packages.keys.collect{|jar_file| File.basename(jar_file)}
-    project_jar_files.select{
+    jars = project_jar_files.select{
       |jar_file| 
         ! jar_basenames.include?(File.basename(jar_file))
     }
+    if jars.size > 10
+      puts "Processing #{jars.size} jars"
+    end
+    jars
   end
 
   def process_file(jar_file)

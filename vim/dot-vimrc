@@ -592,10 +592,8 @@ set wildignore+=*.xml,*.sql,*.html,*.jar,*.class,*.log,compilation-analysis-cach
 autocmd FileType ruby nnoremap <buffer> <silent> <F5> :! ruby %<CR>
 autocmd FileType vim nnoremap <buffer> <silent> <F5> :source %<CR>
 
-function! UpdateImports()
-  let classes = scalaimports#classes_in_buffer_needing_import()
-  call scalaimports#launch_import_buffer(classes)
-endfunction
+autocmd FileType scala nnoremap <buffer> <silent> <F5> :call scalaimports#launch_import_buffer()<CR>
+autocmd FileType scala nnoremap <buffer> <silent> <C-F5> :call scalaimports#rebuild_imports_map()<CR>
 
 "function! ClassesUsed()
 "  let result = scalaimports#classes_referred_to_in_buffer()
