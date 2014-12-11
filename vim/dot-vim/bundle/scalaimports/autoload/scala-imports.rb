@@ -244,7 +244,7 @@ class ExternalPackages < Packages
   end
 end
 
-#ProjectPackages.new().sync_with_project
+ProjectPackages.new().sync_with_project
 ExternalPackages.new().sync_with_project
 
 
