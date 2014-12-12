@@ -87,14 +87,12 @@ class Packages
   def remove_old_files()
     old_files = stale_files()
     return if old_files.empty?
-    #puts("Deleting #{old_files.size} file(s)")
     old_files.each{|jar_file| @packages.delete(jar_file)}
   end
 
   def add_missing_files()
     new_files = files_to_add()
     return if (new_files.empty?)
-    #puts("Processing #{new_files.size} file(s)")
 
     queue = Queue.new
     threads = new_files.each_slice(files_per_thread).collect{ |slice|
@@ -140,7 +138,7 @@ class ProjectPackages < Packages
     3000
   end
   def files_to_add()
-    source_files = Dir.glob("*/src/**/*.scala") + Dir.glob("*/tests/**/*.scala") 
+    source_files = Dir.glob("*/src/**/[A-Z]*.scala") + Dir.glob("*/tests/**/[A-Z]*.scala") 
     if File.exists?(packages_by_file_file)
       last_time = File.mtime(packages_by_file_file)
     else
@@ -160,11 +158,21 @@ class ProjectPackages < Packages
     files
   end
 
+  def find_package(file)
+    # Just read the first lines to search for `package`
+    lines = File.foreach(file).first(20)
+    lines.find_index{|line| 
+      if line =~ /^package\s+([A-Za-z0-9.]+)$/
+        return $1
+      end
+    }
+    nil
+  end
   def process_file(source_file)
     project_classes = []
+    package = find_package(source_file)
     lines = IO.readlines(source_file)
-    if !lines.empty? && lines[0] =~ /^package\s+([a-z0-9.]+).*$/
-      package = $1
+    if !lines.empty? && package
 
       lines.each do |line|
         if line =~ /\s*(class|trait|object)\s+([A-Z]\w+)/ then

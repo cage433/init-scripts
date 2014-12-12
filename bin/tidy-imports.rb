@@ -50,7 +50,10 @@ File.open(scala_file, "w") do |f|
     if regular_imports[package] then
       f.print "import #{package}"
       importees = regular_imports[package]
-      if importees.size > 1 then
+      puts importees
+      if importees.size > 4 || importees.join("").size > 100 then
+        f.puts("._")
+      elsif importees.size > 1 then
         f.puts(".{#{importees.sort.join(", ")}}")
       else
         f.puts(".#{importees[0]}")

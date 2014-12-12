@@ -1,22 +1,3 @@
-if exists('g:ScalaImportsLoaded')
-  finish
-endif
-let g:ScalaImportsLoaded = 1
-
-function! scalaimports#write_import_line(scala_file_buffer_no, import_line)
-  let imports_buffer_no = bufnr('%')
-  exec ":b " . a:scala_file_buffer_no
-  exec ":normal mz"
-  call SaveWinline()
-  silent exec "normal! G?^import\\|^package\<cr>"
-  :normal "j"
-  put =a:import_line
-  exec ":normal `z"
-  call RestoreWinline()
-  exec ":b " . imports_buffer_no
-endfunction
-
-
 let s:this_script_dir = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 
 function! scalaimports#add_file_to_imports_map(imports_file)
@@ -29,12 +10,9 @@ endfunction
 
 function! scalaimports#rebuild_imports_map(purge_package_file)
   if a:purge_package_file
-    echom "Purging all"
     silent exec ":! rm -rf .maker.vim/external_packages/"
     silent exec ":! rm -rf .maker.vim/project_packages/"
     redraw!
-  else
-    echom "Not purging"
   endif
   let g:scala_imports_map = {}
   echo "Rebuilding package file"
@@ -162,7 +140,6 @@ endfunction
 
 function! scalaimports#add_import_line(import_line)
   let current_buffer = bufnr('%')
-  echo b:scala_file_buffer_no
   exec ":b " . b:scala_file_buffer_no
   exec ":normal mz"
   call SaveWinline()
@@ -176,26 +153,45 @@ function! scalaimports#add_import_line(import_line)
 endfunction
 
 function! scalaimports#import_chosen_class()
-  let i = line('.') - 1
+  let imports_buffer_line = line('.')
+  let i = imports_buffer_line - 1
   let import_line="import ".b:packages_by_line[i].".".b:classes_by_line[i]
   call scalaimports#add_import_line(import_line)
+  " Close and redraw the import buffer
+  exec ":bw"
+  silent call scalaimports#launch_import_buffer(imports_buffer_line)
 endfunction
 
 function! scalaimports#import_chosen_package()
-  let i = line('.') - 1
+  let imports_buffer_line = line('.')
+  let i = imports_buffer_line - 1
   let import_line="import ".b:packages_by_line[i]."._"
   call scalaimports#add_import_line(import_line)
+  " Close and redraw the import buffer
   exec ":bw"
-  call scalaimports#launch_import_buffer()
+  silent call scalaimports#launch_import_buffer(imports_buffer_line)
 endfunction
 
-function! scalaimports#launch_import_buffer()
+function! scalaimports#launch_import_buffer(line_number)
   let classes = scalaimports#classes_in_buffer_needing_import()
   let scala_file_buffer_no = bufnr('%')
   let b:scala_file_buffer_no = scala_file_buffer_no
-  let imports_map=scalaimports#imports_map()
-  let class_column_width = max(map(copy(classes), 'strlen(v:val)'))
-  let package_column_width = scalaimports#longest_package_name(classes)
+
+  let packages_for_class = {}
+  for class in classes
+    let packages = scalaimports#packages_for_class(class)
+    let packages_for_class[class] = packages
+  endfor
+
+  let imports_occurred = 0
+  for [class, packages] in items(filter(copy(packages_for_class), 'len(v:val) == 1'))
+    silent call scalaimports#add_import_line("import ".packages[0].".".class)
+    let imports_occurred = 1
+  endfor
+
+  let multi_package_classes = filter(copy(packages_for_class), 'len(v:val) > 1')
+  let class_column_width = max(map(copy(keys(multi_package_classes)), 'strlen(v:val)'))
+  let package_column_width = scalaimports#longest_package_name(keys(multi_package_classes))
   let buffer_width = class_column_width + package_column_width + 2
 
   function! Make_blank(width)
@@ -209,28 +205,20 @@ function! scalaimports#launch_import_buffer()
   let lines = []
   let classes_by_line=[]
   let packages_by_line=[]
-  let imports_occurred = 0
-  for class in classes
+  for [class, packages] in items(multi_package_classes)
     let first_line = 1
-    let packages = scalaimports#packages_for_class(class)
-    if len(packages) == 1
-      silent call scalaimports#add_import_line("import ".packages[0].".".class)
+    for package in packages
+      if first_line == 1
+        let class_term = Left_justify(class, class_column_width)
+      else
+        let class_term = Make_blank(class_column_width)
+      endif
+      call add(classes_by_line, class)
+      call add(packages_by_line, package)
+      call add(lines, class_term . " " . package . " ")
+      let first_line = 0
       let imports_occurred = 1
-    else
-      for package in packages
-        if first_line == 1
-          let class_term = Left_justify(class, class_column_width)
-        else
-          let class_term = Make_blank(class_column_width)
-        endif
-        call add(classes_by_line, class)
-        call add(packages_by_line, package)
-        call add(lines, class_term . " " . package . " ")
-        let first_line = 0
-        let imports_occurred = 1
-      endfor
-    endif
-
+    endfor
   endfor
 
   if ! imports_occurred
@@ -243,7 +231,7 @@ function! scalaimports#launch_import_buffer()
 
 
 
-  exec 'silent! ' . buffer_width . 'vne __IMPORTS__'
+  exec 'silent! ' . buffer_width . 'vnew __IMPORTS__'
   let b:scala_file_buffer_no = scala_file_buffer_no
   let b:classes_by_line = classes_by_line
   let b:packages_by_line = packages_by_line
@@ -257,8 +245,9 @@ function! scalaimports#launch_import_buffer()
   setlocal modifiable
   silent put! =lines
 
-  " trim last line and move to top
-  norm! GkJgg0
+  " trim last line and move to line number
+  norm! GkJ
+  silent exec ":normal ".a:line_number."G0"
 
   setlocal nomodifiable
 
