@@ -34,7 +34,8 @@ vim_plugins = [
   "git@github.com:garbas/vim-snipmate",
   "git@github.com:xolox/vim-misc",
   "git@github.com:xolox/vim-reload",
-  "git@github.com:vim-scripts/ZoomWin"
+  "git@github.com:vim-scripts/ZoomWin",
+  "git@github.com:cage433/cage433-vim-utils"
 ]
 
 Dir.chdir("#{home}/.vim/bundle"){
