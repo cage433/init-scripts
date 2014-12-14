@@ -1,0 +1,157 @@
+" Returns a dict describing the imports as they are in 
+" a scala file - which must be the current buffer
+"
+" These can have more imports added, and be written back to the file
+
+source "/home/alex/repos/init-scripts/vim/dot-vim/bundle/scalaimports/autoload/scalaimports/state.vim"
+let s:import_regex='\v^import\s+([a-zA-Z0-9.]+)\.([a-zA-Z0-9_\{} \t,]+)\s*$'
+let s:package_regex='\v^package\s+(.*)$'
+
+function! scalaimports#file#parse_import_text(import_text)
+  let match = matchlist(a:import_text, s:import_regex)
+  if empty(match)
+    return match
+  else
+    let package = match[1]
+    let classes = split(substitute(match[2], '\v\s|\{|}', "", "g"), ",")
+    return [package, classes]
+  endif
+endfunction
+
+function! scalaimports#file#imports_state()
+  let packages = []
+
+  let classes_for_package = {}
+
+  let import_lines = filter(
+    \ cage433utils#lines_in_current_buffer(),
+    \ "v:val =~ '".s:import_regex."'")
+
+  for [package, classes] in map(import_lines, 'scalaimports#file#parse_import_text(v:val)')
+    if has_key(classes_for_package, package)
+      let classes_for_package[package] += classes
+      let classes_ = classes_for_package[package]
+      if cage433utils#list_contains(classes_, "_")
+          \ || len(classes_) > 4
+          \ || strlen(join(classes_), "") + strlen(package) > 80
+        let classes_for_package[package] = ["_"]
+      endif
+      if ! cage433utils#list_contains(packages, package)
+        let packages += package
+      endif
+    endif
+  endfor
+  let dict = {}
+  let dict.classes_for_package = classes_for_package
+  let dict.packages = packages
+  let dict.scala_file_package = scalaimports#file#scala_package()
+  let dict.scala_file_buffer_name = bufname('%')
+
+  let classes_to_import = []
+  for class in scalaimports#file#classes_mentioned()
+    if ! scalaimports#state#already_imported(dict, class)
+      call add(classes_to_import, class)
+    endif
+  endfor
+
+  let dict.classes_and_packages_to_import = []
+  for class in classes_to_import
+    for package in scalaimports#project#packages_for_class(class)
+      call add(dict.classes_and_packages_to_import, [class, package])
+    endfor
+  endfor
+  return dict
+endfunction
+
+function! scalaimports#file#scala_package()
+  let package_line = cage433utils#find(
+    \ cage433utils#lines_in_current_buffer(),
+    \ "_ =~ '".s:package_regex."'")
+  if empty(package_line)
+    throw "No package for buffer ".bufname('%')
+  endif
+
+  return matchlist(package_line[0], s:package_regex)[1]
+endfunction
+
+function! scalaimports#file#imports_range()
+  let lines = cage433utils#lines_in_current_buffer()
+  let idx_of_first_line = cage433utils#index_of(lines, "_ =~ '".s:import_regex."'")
+  if idx_of_first_line == -1 " No imports
+    return []
+  else
+    let idx_of_last_line = cage433utils#index_of(lines, "_ =~ '".s:import_regex."'", 0)
+    " line numbers are 1 based
+    return [idx_of_first_line + 1, idx_of_last_line + 1]
+  endif
+endfunction
+
+function! scalaimports#file#replace_import_lines(import_state)
+  let saved_buffer_name = bufname("")
+  call cage433utils#jump_to_buffer_window(a:import_state.scala_file_buffer_name)
+  let import_range = scalaimports#file#imports_range()
+
+  let line_to_write = empty(import_range) ? 3 : import_range[0]
+  " delete all import lines
+  call SaveWinline()
+  let current_line_no = line('.')
+  let cursor_below_imports = !empty(import_range) && current_line_no > import_range[1]
+  if cursor_below_imports
+    exec ":normal mz"
+  endif
+  exec ":g/".s:import_regex."/d"
+  exec ":normal ".line_to_write."G"
+  put! =scalaimports#state#import_lines(a:import_state)
+
+  if cursor_below_imports
+    exec ":normal `z"
+  else
+    exec ":normal ".current_line_no."G"
+  endif
+  call RestoreWinline()
+  call cage433utils#jump_to_buffer_window(saved_buffer_name)
+endfunction
+
+function! scalaimports#file#classes_mentioned()
+  let classes ={}
+  let in_comment = 0
+  for line in cage433utils#lines_in_current_buffer()
+    let line = substitute(line, '\v//.*$', "", "g")               " Remove '//' comments
+    let line = substitute(line, '\v/\*[^/*]*\*/', "", "g")        " Remove one line '/*...*/' comments
+    let line = substitute(line, '\v".*"', "", "g")                " Remove literal strings
+    if line =~ '\v^\s*import|^package'                            " ignore import/package lines
+
+    elseif line =~ '\v^\s*/\*'                                    " multiline comment started - ignore all till end
+      let in_comment = 1
+    elseif line =~ '\v\s*\*/'                                     " multiline comment ended
+      let in_comment = 0
+    elseif line =~ '\v\s*\*'                                      " middle of scaladoc comment - ignore
+
+    elseif line =~ '\v^\s*$'                                      " ignore whitespace
+
+    elseif ! in_comment
+      let words = split(line, '\v[^A-Za-z0-9_.]+')                " Split into words, leaving full stops
+      let words = map(copy(words), 'split(v:val, ''\.'')[0]')     " Take the left of full stop - dropping constants
+                                                                  " like MyClass.Constant
+      for word in words                                           " Collect terms that look like classes/objects
+        if word =~ '\v^[A-Z]\w+'                              
+          let classes[word] = 1
+        endif
+      endfor
+    endif
+  endfor
+  return sort(keys(classes))
+endfunction
+
+function! scalaimports#file#unambiguous_imports()
+  let import_state = scalaimports#file#imports_state()
+  let unambiguous = []
+  for class in scalaimports#file#classes_mentioned()
+    let packages = scalaimports#project#packages_for_class(class)
+    if len(packages) == 1 && !scalaimports#state#already_imported(import_state, class) 
+      call add(unambiguous, [packages[0], class])
+    endif
+  endfor
+  return unambiguous
+endfunction
+

@@ -592,7 +592,7 @@ set wildignore+=*.xml,*.sql,*.html,*.jar,*.class,*.log,compilation-analysis-cach
 autocmd FileType ruby nnoremap <buffer> <silent> <F5> :! ruby %<CR>
 autocmd FileType vim nnoremap <buffer> <silent> <F5> :source %<CR>
 
-autocmd FileType scala nnoremap <buffer> <silent> <F5> :call scalaimports#launch_import_buffer(1)<CR>
+autocmd FileType scala nnoremap <buffer> <silent> <F5> :call scalaimports#buffer#create()<CR>
 " Update imports map file and in memory
 autocmd FileType scala nnoremap <buffer> <silent> <leader>sr :call scalaimports#rebuild_imports_map(0)<CR>
 " Purge imports map file and rebuild
