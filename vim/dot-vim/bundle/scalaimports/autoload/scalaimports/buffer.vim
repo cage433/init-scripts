@@ -7,12 +7,16 @@ function! scalaimports#buffer#update_unambiguous_imports()
 endfunction
 
 function! scalaimports#buffer#create()
-  call scalaimports#buffer#update_unambiguous_imports()
+  silent! call scalaimports#buffer#update_unambiguous_imports()
   let import_state = scalaimports#file#imports_state()  
-  let buffer_width = cage433utils#sum(scalaimports#buffer#column_widths(import_state)) + 5
+  if empty(import_state.classes_to_import)
+    echo "No more imports"
+    return
+  endif
 
-  exec 'silent! ' . buffer_width . 'vnew __IMPORTS__'
+  exec 'silent! vnew __IMPORTS__'
   let b:import_state = import_state
+  let b:line_number = 1
   setlocal noshowcmd
   setlocal noswapfile
   setlocal buftype=nofile
@@ -23,14 +27,15 @@ function! scalaimports#buffer#create()
   call scalaimports#buffer#redraw()
 
   function! Chosen_package()
-    return b:import_state.classes_and_packages_to_import[line('.') - 1][0]
+    return b:potential_imports[line('.') - 1][1]
   endfunction
   function! Chosen_class()
-    return b:import_state.classes_and_packages_to_import[line('.') - 1][1]
+    return b:potential_imports[line('.') - 1][0]
   endfunction
   function! Add_chosen(package, class) 
-    call scalaimports#state#add_import(b:import_state, package, class)
+    let b:import_state = scalaimports#state#add_import(b:import_state, a:package, a:class)
     call scalaimports#file#replace_import_lines(b:import_state)
+    let b:line_number = line('.')
     call scalaimports#buffer#redraw()
   endfunction
 
@@ -41,34 +46,51 @@ function! scalaimports#buffer#create()
 endfunction
 
 function! scalaimports#buffer#column_widths(import_state)
-  let class_column_width = max(map(a:import_state.classes_and_packages_to_import, 'strlen(v:val[0])'))
-  let package_column_width = max(map(a:import_state.classes_and_packages_to_import, 'strlen(v:val[1])'))
+  let class_column_width = max(map(copy(b:potential_imports), 'strlen(v:val[0])'))
+  let package_column_width = max(map(copy(b:potential_imports), 'strlen(v:val[1])'))
 
   return [class_column_width, package_column_width]
 endfunction
 
+function! scalaimports#buffer#update_potential_imports()
+  let b:potential_imports = []
+  for class in b:import_state.classes_to_import
+    for package in scalaimports#project#packages_for_class(class)
+      call add(b:potential_imports, [class, package])
+    endfor
+  endfor
+endfunction
+
 function! scalaimports#buffer#redraw()
   setlocal modifiable
+  call scalaimports#buffer#update_potential_imports()
   let [class_column_width, package_column_width] = scalaimports#buffer#column_widths(b:import_state)
+  let buffer_width = class_column_width + package_column_width + 5
+  exec ":vertical resize ".buffer_width
   let blank_class = repeat(" ", class_column_width)
-  function! Left_justify(str)
-    return str + repeat(" ", class_column_width - strlen(str))
+  function! Left_justify(column_width, str)
+    return a:str . repeat(" ", a:column_width - strlen(a:str))
   endfunction
   exec ':normal! ggdG'
   let last_class = ""
   let lines = []
-  for [class, package] in b:import_state.classes_and_packages_to_import
+  for [class, package] in b:potential_imports
     if class == last_class
       let class_term = blank_class
     else
-      let class_term = Left_justify(class, class_column_width)
+      let class_term = Left_justify(class_column_width, class)
     endif
     call add(lines, class_term . " " . package . " ")
     let last_class = class
   endfor
-  silent put! =lines
+  if empty(lines)
+    exec ":bw"
+  else
+    silent put! =lines
 
-  " trim last line and move to line number
-  norm! GkJ
-  setlocal nomodifiable
+    " trim last line and move to line number
+    norm! GkJ
+    exec "norm! ".b:line_number."G0"
+    setlocal nomodifiable
+  endif
 endfunction

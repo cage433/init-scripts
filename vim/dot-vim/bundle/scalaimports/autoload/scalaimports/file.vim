@@ -30,15 +30,17 @@ function! scalaimports#file#imports_state()
   for [package, classes] in map(import_lines, 'scalaimports#file#parse_import_text(v:val)')
     if has_key(classes_for_package, package)
       let classes_for_package[package] += classes
-      let classes_ = classes_for_package[package]
-      if cage433utils#list_contains(classes_, "_")
-          \ || len(classes_) > 4
-          \ || strlen(join(classes_), "") + strlen(package) > 80
-        let classes_for_package[package] = ["_"]
-      endif
-      if ! cage433utils#list_contains(packages, package)
-        let packages += package
-      endif
+    else
+      let classes_for_package[package] = classes
+    endif
+    let classes_ = classes_for_package[package]
+    if cage433utils#list_contains(classes_, "_")
+        \ || len(classes_) >= 4
+        \ || strlen(join(classes_, "")) + strlen(package) > 80
+      let classes_for_package[package] = ["_"]
+    endif
+    if ! cage433utils#list_contains(packages, package)
+      call add(packages, package)
     endif
   endfor
   let dict = {}
@@ -47,19 +49,14 @@ function! scalaimports#file#imports_state()
   let dict.scala_file_package = scalaimports#file#scala_package()
   let dict.scala_file_buffer_name = bufname('%')
 
-  let classes_to_import = []
+  let dict.classes_to_import = []
   for class in scalaimports#file#classes_mentioned()
     if ! scalaimports#state#already_imported(dict, class)
-      call add(classes_to_import, class)
+        \ && ! empty(scalaimports#project#packages_for_class(class))
+      call add(dict.classes_to_import, class)
     endif
   endfor
 
-  let dict.classes_and_packages_to_import = []
-  for class in classes_to_import
-    for package in scalaimports#project#packages_for_class(class)
-      call add(dict.classes_and_packages_to_import, [class, package])
-    endfor
-  endfor
   return dict
 endfunction
 

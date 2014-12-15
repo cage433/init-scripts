@@ -22,21 +22,29 @@ endfunction
 
 function! scalaimports#state#add_import(state, package, class) 
   let classes_ = get(a:state.classes_for_package, a:package, [])
-  if len(classes_) >= 4
-      \ || strlen(join(classes_), "") + strlen(a:package) > 80
-      \ || a:class == "_"
-    let a:state.classes_for_package[a:package] = ["_"]
-  else
-    let a:state.classes_for_package[a:package] = add(classes_, a:class)
+  if ! cage433utils#list_contains(classes_, a:class)
+    call add(classes_, a:class)
+    if len(classes_) >= 4
+        \ || strlen(join(classes_, "")) + strlen(a:package) > 80
+        \ || cage433utils#list_contains(classes_, "_")
+        \ || a:class == "_"
+      let a:state.classes_for_package[a:package] = ["_"]
+    else
+      let a:state.classes_for_package[a:package] = classes_
+    endif
   endif
   if ! cage433utils#list_contains(a:state.packages, a:package)
     let a:state.packages += [a:package]
   endif
-  if (class == "_")
-    filter(a:state.classes_and_packages_to_import, 'v:val[1] == '.a:package)
-  else
-    filter(a:state.classes_and_packages_to_import, 'v:val[0] == '.a:class)
-  endif
+  let filtered_classes_to_import = []
+  for class in a:state.classes_to_import
+    if ! scalaimports#state#already_imported(a:state, class)
+          \ && ! empty(scalaimports#project#packages_for_class(class))
+      call add(filtered_classes_to_import, class)
+    endif
+  endfor
+  let a:state.classes_to_import = filtered_classes_to_import
+  return a:state
 endfunction
 
 function! scalaimports#state#add_imports(state, package_class_pairs) 
