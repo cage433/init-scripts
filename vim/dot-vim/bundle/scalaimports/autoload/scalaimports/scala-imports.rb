@@ -6,6 +6,7 @@ require 'fileutils'
 require 'optparse'
 
 dot_maker_dot_vim = "#{Dir.pwd}/.maker.vim"
+puts dot_maker_dot_vim
 
 $project_packages_file = "#{dot_maker_dot_vim}/project_packages"
 
@@ -50,18 +51,18 @@ class Packages
 
   def load_from_file()
     # `file` can be a source file or jar
-    @packages = Hash.new{ |hash, file| hash[file] = {}}
+    @packages = Hash.new{ |hash, file| hash[file] = [] }
     (IO.readlines(packages_by_file_file) rescue []).each do
       |line|
         file, klass, package = line.chomp.split("\t")
-        @packages[file][klass] = package
+        @packages[file] << [package, klass]
     end
   end
 
   def write_to_file()
     File.open(packages_by_file_file, "w") do |f|
-      @packages.each do |file, package_map|
-        package_map.each do |klass, package|
+      @packages.each do |file, package_class_pairs|
+        package_class_pairs.each do |package, klass|
           f.puts("#{file}\t#{klass}\t#{package}")
         end
       end
@@ -69,11 +70,11 @@ class Packages
   end
 
   def write_class_packages_to_file()
-    map = Hash.new{|hash, key| hash[key] = []}
-    @packages.each{ |file, packages| 
-      packages.each{ |klass, package|
-        map[klass] << package
-      }
+    map = Hash.new{|hash, klass| hash[klass] = []}
+    @packages.each{ |file, package_class_pairs| 
+      package_class_pairs.each do |package, klass|
+          map[klass] << package
+      end
     }
     File.open(packages_for_class_file, "w") do |f|
       map.sort.each{

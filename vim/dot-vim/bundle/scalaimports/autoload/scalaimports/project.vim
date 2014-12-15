@@ -18,7 +18,7 @@ function! scalaimports#project#rebuild_imports_map(purge_package_file)
   endif
   let s:scala_imports_map = {}
   echo "Rebuilding package file"
-  silent exec ":! ruby ".s:this_script_dir."/scala-imports.rb" 
+  exec ":! ruby ".s:this_script_dir."/scala-imports.rb" 
   redraw!
   let s:external_imports_map = scalaimports#project#build_imports_map('.maker.vim/external_packages/by_class')
   let s:source_imports_map = scalaimports#project#build_imports_map('.maker.vim/project_packages/by_class')
