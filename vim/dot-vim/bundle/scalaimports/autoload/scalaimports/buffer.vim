@@ -13,7 +13,7 @@ function! scalaimports#buffer#create()
     return
   endif
   let import_state = scalaimports#file#imports_state()  
-  silent! call scalaimports#buffer#update_unambiguous_imports(import_state)
+  silent call scalaimports#buffer#update_unambiguous_imports(import_state)
   if empty(import_state.classes_to_import)
     echo "No more imports"
     return
@@ -48,6 +48,8 @@ function! scalaimports#buffer#create()
   map <silent> <buffer> <F5> :bwipeout<CR> 
   map <silent> <buffer> <CR> :silent! call Add_chosen(Chosen_package(), Chosen_class())<CR>
   map <silent> <buffer> p :silent! call Add_chosen(Chosen_package(), "_")<CR>
+  map <silent> <buffer> J :call search('\v^\w', "W")<CR>
+  map <silent> <buffer> K :call search('\v^\w', "bW")<CR>
 
 endfunction
 

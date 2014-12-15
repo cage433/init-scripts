@@ -606,3 +606,11 @@ autocmd FileType scala nnoremap <buffer> <silent> <leader>sR :call scalaimports#
 
 
 nnoremap <leader>sa :source $HOME/.vim/bundle/scalaimports/autoload/scalaimports.vim<CR>
+
+let g:scalaimports_known_classes = {
+      \ "Quantity" : "starling.quantity", 
+      \ "UOM" : "starling.quantity",
+      \ "Ordered" : "scala.math",
+      \ "Numeric" : "scala.math",
+      \ "BigDecimal" : "scala.math"
+      \}

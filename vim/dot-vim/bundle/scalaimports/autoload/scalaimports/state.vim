@@ -90,6 +90,11 @@ endfunction
 function! scalaimports#state#unambiguous_imports(import_state)
   let unambiguous = []
   for class in a:import_state.classes_to_import
+    " If the user's list of known classes includes this then use it
+    if exists('g:scalaimports_known_classes') && has_key(g:scalaimports_known_classes, class)
+      call add(unambiguous, [g:scalaimports_known_classes[class], class])
+      continue
+    endif
     " If we have a unique package in source then use that
     " otherwise see if we have a unique package across the project
     let packages = scalaimports#project#source_packages_for_class(class)
