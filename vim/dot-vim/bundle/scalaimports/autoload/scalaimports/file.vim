@@ -3,7 +3,6 @@
 "
 " These can have more imports added, and be written back to the file
 
-"source "/home/alex/repos/init-scripts/vim/dot-vim/bundle/scalaimports/autoload/scalaimports/state.vim"
 let s:import_regex='\v^import\s+([a-zA-Z0-9.]+)\.([a-zA-Z0-9_\{} \t,]+)\s*$'
 let s:package_regex='\v^package\s+(.*)$'
 
@@ -94,16 +93,16 @@ function! scalaimports#file#replace_import_lines(import_state)
   let current_line_no = line('.')
   let cursor_below_imports = !empty(import_range) && current_line_no > import_range[1]
   if cursor_below_imports
-    exec ":normal mz"
+    exec ":normal! mz"
   endif
   exec ":g/".s:import_regex."/d"
-  exec ":normal ".line_to_write."G"
+  exec ":normal! ".line_to_write."G"
   put! =scalaimports#state#import_lines(a:import_state)
 
   if cursor_below_imports
-    exec ":normal `z"
+    exec ":normal! `z"
   else
-    exec ":normal ".current_line_no."G"
+    exec ":normal! ".current_line_no."G"
   endif
   call RestoreWinline()
   exec ":w"
@@ -139,16 +138,5 @@ function! scalaimports#file#classes_mentioned()
     endif
   endfor
   return sort(keys(classes))
-endfunction
-
-function! scalaimports#file#unambiguous_imports(import_state)
-  let unambiguous = []
-  for class in scalaimports#file#classes_mentioned()
-    let packages = scalaimports#project#packages_for_class(class)
-    if len(packages) == 1 && !scalaimports#state#already_imported(a:import_state, class) 
-      call add(unambiguous, [packages[0], class])
-    endif
-  endfor
-  return unambiguous
 endfunction
 

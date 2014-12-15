@@ -1,18 +1,19 @@
-function! scalaimports#buffer#update_unambiguous_imports()
-  let import_state = scalaimports#file#imports_state()
-  let unambiguous_imports = scalaimports#file#unambiguous_imports(import_state)
+function! scalaimports#buffer#update_unambiguous_imports(import_state)
+
+  let unambiguous_imports = scalaimports#state#unambiguous_imports(a:import_state)
   if ! empty(unambiguous_imports )
-    echo "Adding unambiguous"
-    for [package, class] in unambiguous_imports
-      call scalaimports#state#add_import(import_state, package, class)
-    endfor
-    call scalaimports#file#replace_import_lines(import_state)
+    call scalaimports#state#add_imports(a:import_state, unambiguous_imports)
+    call scalaimports#file#replace_import_lines(a:import_state)
   endif
 endfunction
 
 function! scalaimports#buffer#create()
-  silent! call scalaimports#buffer#update_unambiguous_imports()
+  if bufexists(bufnr("__IMPORTS__"))
+    exec ':' . bufnr("__IMPORTS__") . 'bwipeout'
+    return
+  endif
   let import_state = scalaimports#file#imports_state()  
+  silent! call scalaimports#buffer#update_unambiguous_imports(import_state)
   if empty(import_state.classes_to_import)
     echo "No more imports"
     return
@@ -24,7 +25,7 @@ function! scalaimports#buffer#create()
   setlocal noshowcmd
   setlocal noswapfile
   setlocal buftype=nofile
-  "setlocal bufhidden=delete
+  setlocal bufhidden=delete
   setlocal nobuflisted
   setlocal nowrap
   setlocal nonumber
@@ -37,8 +38,9 @@ function! scalaimports#buffer#create()
     return b:potential_imports[line('.') - 1][0]
   endfunction
   function! Add_chosen(package, class) 
-    let b:import_state = scalaimports#state#add_import(b:import_state, a:package, a:class)
-    call scalaimports#file#replace_import_lines(b:import_state)
+    " Call to add_import modifies b:import_state in place
+    silent! call scalaimports#state#add_import(b:import_state, a:package, a:class)
+    silent! call scalaimports#file#replace_import_lines(b:import_state)
     let b:line_number = line('.')
     call scalaimports#buffer#redraw()
   endfunction
@@ -72,18 +74,11 @@ function! scalaimports#buffer#redraw()
   let buffer_width = class_column_width + package_column_width + 5
   exec ":vertical resize ".buffer_width
   let blank_class = repeat(" ", class_column_width)
-  function! Left_justify(column_width, str)
-    return a:str . repeat(" ", a:column_width - strlen(a:str))
-  endfunction
   exec ':normal! ggdG'
   let last_class = ""
   let lines = []
   for [class, package] in b:potential_imports
-    if class == last_class
-      let class_term = blank_class
-    else
-      let class_term = Left_justify(class_column_width, class)
-    endif
+    let class_term = class == last_class ? blank_class : cage433utils#left_justify(class, class_column_width)
     call add(lines, class_term . " " . package . " ")
     let last_class = class
   endfor

@@ -20,7 +20,9 @@ function! scalaimports#state#already_imported(state, class)
   return 0
 endfunction
 
-function! scalaimports#state#add_import(state, package, class) 
+" Note that this modifies `state`
+" After its execution `state` may not be consistent until
+function! scalaimports#state#add_single_import(state, package, class) 
   let classes_ = get(a:state.classes_for_package, a:package, [])
   if ! cage433utils#list_contains(classes_, a:class)
     call add(classes_, a:class)
@@ -36,6 +38,9 @@ function! scalaimports#state#add_import(state, package, class)
   if ! cage433utils#list_contains(a:state.packages, a:package)
     let a:state.packages += [a:package]
   endif
+endfunction
+
+function! scalaimports#state#update_classes_to_import(state)
   let filtered_classes_to_import = []
   for class in a:state.classes_to_import
     if ! scalaimports#state#already_imported(a:state, class)
@@ -44,13 +49,19 @@ function! scalaimports#state#add_import(state, package, class)
     endif
   endfor
   let a:state.classes_to_import = filtered_classes_to_import
-  return a:state
+endfunction
+
+" Note that this modifies `state`
+function! scalaimports#state#add_import(state, package, class) 
+  call scalaimports#state#add_single_import(a:state, a:package, a:class) 
+  call scalaimports#state#update_classes_to_import(a:state)
 endfunction
 
 function! scalaimports#state#add_imports(state, package_class_pairs) 
   for [package, class] in a:package_class_pairs
-    scalaimports#state#add_import(a:state, package, class)
+    call scalaimports#state#add_single_import(a:state, package, class)
   endfor
+  call scalaimports#state#update_classes_to_import(a:state)
 endfunction
 
 function! scalaimports#state#import_lines(state) 
@@ -68,18 +79,15 @@ function! scalaimports#state#import_lines(state)
   return lines
 endfunction
 
-
-function! scalaimports#state#sync_files(state) dict
-  let line_no = line('.')
-  call SaveWinline()
-  call cage433utils#jump_to_buffer_window(a:state.scala_file_buffer_name)
-  call scalaimports#file#replace_import_lines(a:state.ToImportLines())
-  call cage433utils#jump_to_buffer_window(a:state.import_buffer_name)
-  setlocal modifiable
-  call ":normal! ggdG"
-  silent put!=a:state.ToBufferLines()
-  exec ":normal! ".line_no."G0"
-  call RestoreWinline()
+function! scalaimports#state#unambiguous_imports(import_state)
+  let unambiguous = []
+  for class in a:import_state.classes_to_import
+    let packages = scalaimports#project#packages_for_class(class)
+    if len(packages) == 1 && !scalaimports#state#already_imported(a:import_state, class) 
+      call add(unambiguous, [packages[0], class])
+    endif
+  endfor
+  return unambiguous
 endfunction
 
 
