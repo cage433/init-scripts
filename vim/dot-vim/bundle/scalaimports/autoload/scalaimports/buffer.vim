@@ -1,9 +1,13 @@
 function! scalaimports#buffer#update_unambiguous_imports()
   let import_state = scalaimports#file#imports_state()
-  for [package, class] in scalaimports#file#unambiguous_imports()
-    call scalaimports#state#add_import(import_state, package, class)
-  endfor
-  call scalaimports#file#replace_import_lines(import_state)
+  let unambiguous_imports = scalaimports#file#unambiguous_imports(import_state)
+  if ! empty(unambiguous_imports )
+    echo "Adding unambiguous"
+    for [package, class] in unambiguous_imports
+      call scalaimports#state#add_import(import_state, package, class)
+    endfor
+    call scalaimports#file#replace_import_lines(import_state)
+  endif
 endfunction
 
 function! scalaimports#buffer#create()

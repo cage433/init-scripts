@@ -3,7 +3,7 @@
 "
 " These can have more imports added, and be written back to the file
 
-source "/home/alex/repos/init-scripts/vim/dot-vim/bundle/scalaimports/autoload/scalaimports/state.vim"
+"source "/home/alex/repos/init-scripts/vim/dot-vim/bundle/scalaimports/autoload/scalaimports/state.vim"
 let s:import_regex='\v^import\s+([a-zA-Z0-9.]+)\.([a-zA-Z0-9_\{} \t,]+)\s*$'
 let s:package_regex='\v^package\s+(.*)$'
 
@@ -106,6 +106,7 @@ function! scalaimports#file#replace_import_lines(import_state)
     exec ":normal ".current_line_no."G"
   endif
   call RestoreWinline()
+  exec ":w"
   call cage433utils#jump_to_buffer_window(saved_buffer_name)
 endfunction
 
@@ -140,12 +141,11 @@ function! scalaimports#file#classes_mentioned()
   return sort(keys(classes))
 endfunction
 
-function! scalaimports#file#unambiguous_imports()
-  let import_state = scalaimports#file#imports_state()
+function! scalaimports#file#unambiguous_imports(import_state)
   let unambiguous = []
   for class in scalaimports#file#classes_mentioned()
     let packages = scalaimports#project#packages_for_class(class)
-    if len(packages) == 1 && !scalaimports#state#already_imported(import_state, class) 
+    if len(packages) == 1 && !scalaimports#state#already_imported(a:import_state, class) 
       call add(unambiguous, [packages[0], class])
     endif
   endfor
