@@ -16,22 +16,14 @@ endfunction
 function! scalaimports#file#imports_state()
   let state = {}
   let state.packages = []
-  let state.classes_for_package = {}
+  let state.importees_for_package = {}
   let import_lines = filter(
     \ cage433utils#lines_in_current_buffer(),
     \ "v:val =~ '".s:import_regex."'")
 
   for [package, classes] in map(import_lines, 'scalaimports#file#parse_import_text(v:val)')
-    let state.classes_for_package[package] = get(state.classes_for_package, package, []) + classes
-    let classes_ = state.classes_for_package[package]
-    if cage433utils#list_contains(classes_, "_")
-        \ || len(classes_) >= 4
-        \ || strlen(join(classes_, "")) + strlen(package) > 80
-      let state.classes_for_package[package] = ["_"]
-    endif
-    if ! cage433utils#list_contains(state.packages, package)
-      call add(state.packages, package)
-    endif
+    let classes_set = cage433utils#list_to_set(classes)
+    call scalaimports#state#extend_imports_for_package(state, package, classes_set)
   endfor
   let state.scala_file_package = scalaimports#file#scala_package()
   let state.scala_file_buffer_name = bufname('%')
