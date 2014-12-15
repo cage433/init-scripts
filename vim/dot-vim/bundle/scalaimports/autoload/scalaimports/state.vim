@@ -82,7 +82,12 @@ endfunction
 function! scalaimports#state#unambiguous_imports(import_state)
   let unambiguous = []
   for class in a:import_state.classes_to_import
+    " If we have a unique package in source then use that
+    " otherwise see if we have a unique package across the project
+    let packages = scalaimports#project#source_packages_for_class(class)
+    if empty(packages)
     let packages = scalaimports#project#packages_for_class(class)
+    endif
     if len(packages) == 1 && !scalaimports#state#already_imported(a:import_state, class) 
       call add(unambiguous, [packages[0], class])
     endif

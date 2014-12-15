@@ -8,55 +8,43 @@ let s:package_regex='\v^package\s+(.*)$'
 
 function! scalaimports#file#parse_import_text(import_text)
   let match = matchlist(a:import_text, s:import_regex)
-  if empty(match)
-    return match
-  else
-    let package = match[1]
-    let classes = split(substitute(match[2], '\v\s|\{|}', "", "g"), ",")
-    return [package, classes]
-  endif
+  let package = match[1]
+  let classes = split(substitute(match[2], '\v\s|\{|}', "", "g"), ",")
+  return [package, classes]
 endfunction
 
 function! scalaimports#file#imports_state()
-  let packages = []
-
-  let classes_for_package = {}
-
+  let state = {}
+  let state.packages = []
+  let state.classes_for_package = {}
   let import_lines = filter(
     \ cage433utils#lines_in_current_buffer(),
     \ "v:val =~ '".s:import_regex."'")
 
   for [package, classes] in map(import_lines, 'scalaimports#file#parse_import_text(v:val)')
-    if has_key(classes_for_package, package)
-      let classes_for_package[package] += classes
-    else
-      let classes_for_package[package] = classes
-    endif
-    let classes_ = classes_for_package[package]
+    let state.classes_for_package[package] = get(state.classes_for_package, package, []) + classes
+    let classes_ = state.classes_for_package[package]
     if cage433utils#list_contains(classes_, "_")
         \ || len(classes_) >= 4
         \ || strlen(join(classes_, "")) + strlen(package) > 80
-      let classes_for_package[package] = ["_"]
+      let state.classes_for_package[package] = ["_"]
     endif
-    if ! cage433utils#list_contains(packages, package)
-      call add(packages, package)
+    if ! cage433utils#list_contains(state.packages, package)
+      call add(state.packages, package)
     endif
   endfor
-  let dict = {}
-  let dict.classes_for_package = classes_for_package
-  let dict.packages = packages
-  let dict.scala_file_package = scalaimports#file#scala_package()
-  let dict.scala_file_buffer_name = bufname('%')
+  let state.scala_file_package = scalaimports#file#scala_package()
+  let state.scala_file_buffer_name = bufname('%')
 
-  let dict.classes_to_import = []
+  let state.classes_to_import = []
   for class in scalaimports#file#classes_mentioned()
-    if ! scalaimports#state#already_imported(dict, class)
+    if ! scalaimports#state#already_imported(state, class)
         \ && ! empty(scalaimports#project#packages_for_class(class))
-      call add(dict.classes_to_import, class)
+      call add(state.classes_to_import, class)
     endif
   endfor
 
-  return dict
+  return state
 endfunction
 
 function! scalaimports#file#scala_package()
@@ -91,7 +79,7 @@ function! scalaimports#file#replace_import_lines(import_state)
   " delete all import lines
   call SaveWinline()
   let current_line_no = line('.')
-  let cursor_below_imports = !empty(import_range) && current_line_no > import_range[1]
+  let cursor_below_imports = empty(import_range) ? current_line_no > 3 : current_line_no > import_range[1]
   if cursor_below_imports
     exec ":normal! mz"
   endif
