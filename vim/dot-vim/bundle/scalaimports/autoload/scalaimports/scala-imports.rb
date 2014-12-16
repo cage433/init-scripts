@@ -6,7 +6,6 @@ require 'fileutils'
 require 'optparse'
 
 dot_maker_dot_vim = "#{Dir.pwd}/.maker.vim"
-puts dot_maker_dot_vim
 
 $project_packages_file = "#{dot_maker_dot_vim}/project_packages"
 
@@ -55,14 +54,14 @@ class Packages
     (IO.readlines(packages_by_file_file) rescue []).each do
       |line|
         file, klass, package = line.chomp.split("\t")
-        @packages[file] << [package, klass]
+        @packages[file] << [klass, package]
     end
   end
 
   def write_to_file()
     File.open(packages_by_file_file, "w") do |f|
-      @packages.each do |file, package_class_pairs|
-        package_class_pairs.each do |package, klass|
+      @packages.each do |file, class_package_pairs|
+        class_package_pairs.each do |klass, package|
           f.puts("#{file}\t#{klass}\t#{package}")
         end
       end
@@ -71,8 +70,8 @@ class Packages
 
   def write_class_packages_to_file()
     map = Hash.new{|hash, klass| hash[klass] = []}
-    @packages.each{ |file, package_class_pairs| 
-      package_class_pairs.each do |package, klass|
+    @packages.each{ |file, class_package_pairs| 
+      class_package_pairs.each do |klass, package|
           map[klass] << package
       end
     }
@@ -100,8 +99,8 @@ class Packages
       Thread.new{
         slice.each{
           |file|
-            file_class_packages = process_file(file)
-            if !file_class_packages.empty?
+            file_class_packages_pairs = process_file(file)
+            if !file_class_packages_pairs.empty?
               queue << [file, process_file(file)]
             end
         }
@@ -109,9 +108,9 @@ class Packages
     }
     threads.each{|th| th.join}
     while !queue.empty?
-      file, packages = queue.pop
-      if packages
-        @packages[file] = packages
+      file, class_package_pairs = queue.pop
+      if class_package_pairs
+        @packages[file] = class_package_pairs
       end
     end
   end
@@ -170,18 +169,19 @@ class ProjectPackages < Packages
     nil
   end
   def process_file(source_file)
-    project_classes = []
+    class_package_pairs = []
     package = find_package(source_file)
     lines = IO.readlines(source_file)
+
     if !lines.empty? && package
 
       lines.each do |line|
         if line =~ /\s*(class|trait|object)\s+([A-Z]\w+)/ then
-          project_classes << [$2, package]
+          class_package_pairs << [$2, package]
         end
       end
     end
-    project_classes
+    class_package_pairs
   end
 end
 
@@ -231,7 +231,7 @@ class ExternalPackages < Packages
   end
 
   def process_file(jar_file)
-    map = {}
+    class_package_pairs = []
     `$JAVA_HOME/bin/jar tvf #{jar_file}`.split("\n").each do |line|
       if line =~ /(\S+\/[A-Z][^.]+)\.class/ then  
         relative_class_file = $1
@@ -244,12 +244,11 @@ class ExternalPackages < Packages
           puts("line = #{line}")
           exit 0
         end
+        class_package_pairs << [klass, pckg]
 
-        map[klass] = pckg
-        
       end
     end
-    map
+    class_package_pairs
   end
 end
 
