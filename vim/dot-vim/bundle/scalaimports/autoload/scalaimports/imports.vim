@@ -34,6 +34,8 @@ function! scalaimports#imports#importee(term)
 
 endfunction
 
+let s:all_package_importee = scalaimports#imports#importee("_")
+
 function! scalaimports#imports#import_line(package, terms)
   let import_line = {}
   let import_line.importees = []
@@ -49,7 +51,7 @@ function! scalaimports#imports#import_line(package, terms)
   endfunction
 
   function! import_line.to_string() dict
-    let imports_as_string = join(map(self.importees, 'v:val.to_string'), ", ")
+    let imports_as_string = join(map(copy(self.importees), 'v:val.to_string'), ", ")
       
     let import = ""
     if len(self.importees) > 1 || self.importees[0].class_rename != ""
@@ -58,17 +60,25 @@ function! scalaimports#imports#import_line(package, terms)
       let import = self.importees[0].to_string
     endif
     let p = self.package
-    return p.'.'.import
+    return 'import '.p.'.'.import
   endfunction
 
   function! import_line.add_importee(new_importee) dict
-    if a:new_importee.is_package_import
-      let self.importees = [a:new_importee]
-    elseif ! self.imports_class(a:new_importee.class)
-      call add(self.importees, a:new_importee)
+    if type(a:new_importee) == 1   " String
+      let new_importee = scalaimports#imports#importee(a:new_importee)
+    elseif type(a:new_importee) == 4  " Dict
+      let new_importee = a:new_importee
+    end
+    if new_importee.is_package_import
+      let self.importees = [new_importee]
+    elseif ! self.imports_class(new_importee.class)
+      call add(self.importees, new_importee)
     endif
 
- "   if len(self.importees) >= 4 || strlen(join(keys(importees), "")) + strlen(a:package) > 80
+    let text = self.to_string()
+    if len(self.importees) >= 4 || strlen(self.to_string()) > 120
+      let self.importees = [s:all_package_importee]
+    endif
   endfunction
 
   for term in a:terms
@@ -78,7 +88,4 @@ function! scalaimports#imports#import_line(package, terms)
 
   return import_line
 endfunction
-
-let il = scalaimports#imports#import_line("foo.bar", ["Fred", "mike", "Alex =>    Ruby"])
-echo il.to_string()
 

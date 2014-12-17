@@ -3,7 +3,7 @@
 "
 " These can have more imports added, and be written back to the file
 
-let s:import_regex='\v^import\s+([a-zA-Z0-9.]+)\.([a-zA-Z0-9_\{} \t,]+)\s*$'
+let s:import_regex='\v^import\s+([a-zA-Z0-9.]+)\.([a-zA-Z0-9_\{} \t,=>]+)\s*$'
 let s:package_regex='\v^package\s+(.*)$'
 
 function! scalaimports#file#parse_import_text(import_text)
@@ -21,9 +21,10 @@ function! scalaimports#file#imports_state()
     \ cage433utils#lines_in_current_buffer(),
     \ "v:val =~ '".s:import_regex."'")
 
+  let state.import_lines_for_package = {} " Map[Package, import_line]
   for [package, classes] in map(import_lines, 'scalaimports#file#parse_import_text(v:val)')
     let classes_set = cage433utils#list_to_set(classes)
-    call scalaimports#state#extend_imports_for_package(state, package, classes_set)
+    call scalaimports#state#extend_imports_for_package(state, package, classes)
   endfor
   let state.scala_file_package = scalaimports#file#scala_package()
   let state.scala_file_buffer_name = bufname('%')
