@@ -37,3 +37,6 @@
 [difftool]
 	prompt = false
 
+[user]
+	email = cage433@gmail.com
+	name = cage433
