@@ -590,6 +590,7 @@ set nocursorline
 set wildignore+=*.xml,*.sql,*.html,*.jar,*.class,*.log,compilation-analysis-cache,tags
 
 autocmd FileType ruby nnoremap <buffer> <silent> <F5> :! ruby %<CR>
+autocmd FileType python nnoremap <buffer> <silent> <F5> :! python %<CR>
 autocmd FileType vim nnoremap <buffer> <silent> <F5> :source %<CR>
 
 autocmd FileType scala nnoremap <buffer> <silent> <F5> :call scalaimports#buffer#create()<CR>
