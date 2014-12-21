@@ -599,15 +599,6 @@ autocmd FileType scala nnoremap <buffer> <silent> <leader>sr :call scalaimports#
 " Purge imports map file and rebuild
 autocmd FileType scala nnoremap <buffer> <silent> <leader>sR :call scalaimports#rebuild_imports_map(1)<CR>
 
-"function! ClassesUsed()
-"  let result = scalaimports#classes_referred_to_in_buffer()
-"  return result
-"endfunction
-
-
-
-nnoremap <leader>sa :source $HOME/.vim/bundle/scalaimports/autoload/scalaimports.vim<CR>
-
 let g:scalaimports_known_classes = {
       \ "Quantity" : "starling.quantity", 
       \ "UOM" : "starling.quantity",
