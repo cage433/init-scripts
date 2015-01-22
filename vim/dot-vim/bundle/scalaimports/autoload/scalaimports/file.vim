@@ -103,7 +103,7 @@ function! scalaimports#file#classes_mentioned()
       let in_comment = 1
     elseif line =~ '\v\s*\*/'                                     " multiline comment ended
       let in_comment = 0
-    elseif line =~ '\v\s*\*'                                      " middle of scaladoc comment - ignore
+    elseif line =~ '\v^\s*\*'                                      " middle of scaladoc comment - ignore
 
     elseif line =~ '\v^\s*$'                                      " ignore whitespace
 
