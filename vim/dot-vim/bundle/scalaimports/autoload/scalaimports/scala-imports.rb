@@ -159,8 +159,7 @@ class ProjectPackages < Packages
   end
 
   def find_package(file)
-    # Just read the first lines to search for `package`
-    lines = File.foreach(file).first(20)
+    lines = File.foreach(file)
     lines.find_index{|line| 
       if line =~ /^package\s+([A-Za-z0-9.]+)$/
         return $1
@@ -205,7 +204,8 @@ class ExternalPackages < Packages
 
 
   def project_jar_files
-    (Dir.glob("*/lib_managed/*.jar") << "#{ENV["JAVA_HOME"]}/jre/lib/rt.jar" << "scala-libs/scala-library-2.9.2.jar").compact.uniq { |file|
+    scala_library = Dir.glob("scala-libs/scala-library*.jar").select{|jar| ! jar.include?("source")}
+    (Dir.glob("*/lib_managed/*.jar") + scala_library << "#{ENV["JAVA_HOME"]}/jre/lib/rt.jar").compact.uniq { |file|
       File.basename(file)
     }
   end

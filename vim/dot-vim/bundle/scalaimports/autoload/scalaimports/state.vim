@@ -1,7 +1,7 @@
 " Maintains the state of imports in a scala file
 
 let g:packages_in_scope = {"scala" : 1, "java.lang" : 1}
-let g:scala_predef_classes = {"Set" : 1, "List" : 1, "Any" : 1, "Map" : 1}
+let g:scala_predef_classes = {"Set" : 1, "List" : 1, "Any" : 1, "Map" : 1, "Vector" : 1, "Seq" : 1}
 
 function! scalaimports#state#already_imported(state, class) 
   if has_key(g:scala_predef_classes, a:class)

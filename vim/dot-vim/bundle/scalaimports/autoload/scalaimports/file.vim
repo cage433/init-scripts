@@ -96,7 +96,7 @@ function! scalaimports#file#classes_mentioned()
   for line in cage433utils#lines_in_current_buffer()
     let line = substitute(line, '\v//.*$', "", "g")               " Remove '//' comments
     let line = substitute(line, '\v/\*[^/*]*\*/', "", "g")        " Remove one line '/*...*/' comments
-    let line = substitute(line, '\v".*"', "", "g")                " Remove literal strings
+    let line = substitute(line, '\v"[^"]"', "", "g")                " Remove literal strings
     if line =~ '\v^\s*import|^package'                            " ignore import/package lines
 
     elseif line =~ '\v^\s*/\*'                                    " multiline comment started - ignore all till end
