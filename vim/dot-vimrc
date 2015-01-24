@@ -1,6 +1,6 @@
 let hostname = substitute(system('hostname'), '\n', '', '')
 let g:current_split = ""
-if hostname == "alex-linux"
+if hostname == "alex-linux" 
   let g:orientation="portrait"
 else
   let g:orientation="landscape"
@@ -145,6 +145,7 @@ noremap <F7> :call ToggleSyntax()<CR>
 filetype plugin indent on
 set autowrite
 autocmd FileType scala setlocal shiftwidth=2 tabstop=2 colorcolumn=120
+autocmd FileType modula2 setlocal shiftwidth=2 tabstop=2 colorcolumn=100
 autocmd FileType rb setlocal shiftwidth=2 tabstop=2
 autocmd FileType c setlocal shiftwidth=4 tabstop=4
 autocmd FileType cpp setlocal shiftwidth=4 tabstop=4
@@ -395,8 +396,6 @@ noremap <leader>S ma:r ! scala-imports.rb -s <cword><CR>`a
 "Show lisp doc
 noremap <leader>L ma: ! ide/links.rb <cword><CR>`a
 
-"Show sub classes
-noremap <leader>s ma:r ! find_subtypes.rb <cword><CR>`a
 
 "Put the selected import line at the top and delete any others
 noremap <leader>iu ma?^[^i]<CR>mb:call SaveWinline()<CR>'ayy'b?\(\(^i\)\\|\(^p\)\)<CR>p'b:.,$g/^import/d<CR>'b,/:call RestoreWinline()<CR>
@@ -589,7 +588,7 @@ set ttimeoutlen=500
 set nocursorline
 set wildignore+=*.xml,*.sql,*.html,*.jar,*.class,*.log,compilation-analysis-cache,tags
 
-autocmd FileType ruby nnoremap <buffer> <silent> <F5> :! ruby %<CR>
+autocmd FileType ruby nnoremap <buffer> <silent> <leader>k :! ruby2.0 %<CR>
 autocmd FileType python nnoremap <buffer> <silent> <F5> :! python %<CR>
 autocmd FileType vim nnoremap <buffer> <silent> <F5> :source %<CR>
 autocmd FileType sh nnoremap <buffer> <silent> <F5> :! source %<CR>
@@ -600,19 +599,15 @@ autocmd FileType scala nnoremap <buffer> <silent> <leader>sr :call scalaimports#
 " Purge imports map file and rebuild
 autocmd FileType scala nnoremap <buffer> <silent> <leader>sR :call scalaimports#project#rebuild_imports_map(1)<CR>
 
-"function! ClassesUsed()
-"  let result = scalaimports#classes_referred_to_in_buffer()
-"  return result
-"endfunction
 
-
-
-nnoremap <leader>sa :source $HOME/.vim/bundle/scalaimports/autoload/scalaimports.vim<CR>
+" \ "Quantity" : "starling.quantity", 
+" \ "UOM" : "starling.quantity",
 
 let g:scalaimports_known_classes = {
-      \ "Quantity" : "starling.quantity", 
-      \ "UOM" : "starling.quantity",
       \ "Ordered" : "scala.math",
       \ "Numeric" : "scala.math",
-      \ "BigDecimal" : "scala.math"
+      \ "BigDecimal" : "scala.math",
+      \ "Logger" : "ch.qos.logback.classic"
       \}
+
+set complete=.,w,b,u,t
