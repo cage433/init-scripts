@@ -1,5 +1,6 @@
 export EDITOR=vim
 export CAGE="cage433.vm.bytemark.co.uk"
+export JQ="johnquays.default.amcguire.uk0.bigv.io"
 alias cage='ssh $CAGE'
 setxkbmap -option "ctrl:nocaps" > /dev/null 2>&1
 export PATH=$HOME/repos/init-scripts/bin/:$PATH
