@@ -205,8 +205,6 @@ class ExternalPackages < Packages
   def project_jar_files
     scala_library = Dir.glob("scala-libs/scala-library*.jar").select{|jar| ! jar.include?("source")}
     (Dir.glob("*/lib_managed/*.jar") + scala_library << "#{ENV["JAVA_HOME"]}/jre/lib/rt.jar").compact.uniq { |file|
-
-    jar_files.compact.uniq { |file|
       File.basename(file)
     }
   end
