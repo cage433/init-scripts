@@ -1,7 +1,7 @@
 " Maintains the state of imports in a scala file
 
 let g:classes_to_ignore = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-let g:packages_in_scope = {"scala" : 1, "java.lang" : 1}
+let g:packages_in_scope = {"scala" : 1, "java.lang" : 1, "scala.collection.immutable" : 1}
 let g:scala_predef_classes = {
       \"Set" : 1, "List" : 1, "Any" : 1, 
       \"Seq" : 1,

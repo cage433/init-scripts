@@ -478,7 +478,7 @@ noremap <leader>sj :silent :call OpenJavaURL(expand("<cword>"))<CR>
 "set efm=[error]\ %f:%l:%m
 set efm=[error]\ %f:%l:\ %m
 "set efm=%f:%l:\ error:%m
-nnoremap <leader>ee :cfile vim-compile-output<CR>:copen<CR><CR>
+nnoremap <leader>ee :cfile vim-compilation-errors<CR>:copen<CR><CR>
 nnoremap <leader>en :cn<CR>
 nnoremap <leader>ep :cp<CR>
 
