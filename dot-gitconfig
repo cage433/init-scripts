@@ -32,6 +32,7 @@
 #	pager = less -r
 [pull]
 	default = current
+	rebase = true
 [color]
 	ui = auto
 [difftool]
