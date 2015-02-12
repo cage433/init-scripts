@@ -240,9 +240,11 @@ function! RunATest(scalafile, classname)
 
     exec "! clear; $JAVA_HOME/bin/java -classpath $CLASSPATH -Xmx4000m -XX:MaxPermSize=500m -XX:+UseConcMarkSweepGC -XX:NewRatio=3 -Dmaker.home=. -Dlog4j.configuration=config/log4j.properties -Dlogback.configurationFile=" . logbackfile . " -Dmaker.test.reporter.classpath=test-reporter/target-maker/classes/ -Dsbt.log.format=false -Dscala.usejavacp=false org.scalatest.tools.Runner ".test_reporter_arg." -s " . fullclassname
   elseif stridx(fullclassname, "Benchmark") >= 0 
-    exec "! clear; /usr/local/scala/bin/scala -cp $CLASSPATH -J-Xmx4000m -J-XX:MaxPermSize=500m -J-XX:+UseConcMarkSweepGC -Dlogback.configurationFile=" . logbackfile . " -Dsbt.log.format=false -Dscala.usejavacp=false org.scalameter.Main -b " . fullclassname
+    exec "! clear; /usr/local/scala/bin/scala -cp $CLASSPATH -J-verbose:gc -J-Xmx12000m -J-XX:MaxPermSize=500m -J-XX:+UseConcMarkSweepGC -Dlogback.configurationFile=" . logbackfile . " -Dsbt.log.format=false -Dscala.usejavacp=false org.scalameter.Main -b " . fullclassname
   else
-    exec "! clear; $JAVA_HOME/bin/java -Xmx4000m -XX:MaxPermSize=500m -XX:+UseConcMarkSweepGC $JAVA_OPTS -classpath $CLASSPATH -Dscala.usejavacp=true -Dlog4j.configuration=config/log4j.properties -Dlogback.configurationFile=" . logbackfile . " scala.tools.nsc.MainGenericRunner " . fullclassname
+    
+    exec "! clear; $JAVA_HOME/bin/java -Xmx4000m -classpath $CLASSPATH $JAVA_OPTS -XX:+HeapDumpOnOutOfMemoryError -Dscala.usejavacp=true -Dlog4j.configuration=config/log4j.properties -Dlogback.configurationFile=" . logbackfile . " scala.tools.nsc.MainGenericRunner " . fullclassname
+    "exec "! clear; $JAVA_HOME/bin/java -Xmx12000m -XX:MaxPermSize=500m –XX:+UseG1GC -XX:+UseStringDeduplication -verbose:gc $JAVA_OPTS -classpath $CLASSPATH -Dscala.usejavacp=true -Dlog4j.configuration=config/log4j.properties -Dlogback.configurationFile=" . logbackfile . " scala.tools.nsc.MainGenericRunner " . fullclassname
   endif
 
 endfunction
