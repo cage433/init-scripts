@@ -108,7 +108,15 @@ function! scalaimports#file#classes_mentioned()
     elseif line =~ '\v^\s*$'                                      " ignore whitespace
 
     elseif ! in_comment
-      let words = split(line, '\v[^A-Za-z0-9_.]+')                " Split into words, leaving full stops
+      let words = filter(
+        \ split(line, '\v[^A-Za-z0-9_.]+'),                
+        \ 'v:val != "."')
+      for word in words
+          if  len(split(word, '\.')) == 0
+            echo word
+            echo line
+          endif
+      endfor
       let words = map(copy(words), 'split(v:val, ''\.'')[0]')     " Take the left of full stop - dropping constants
                                                                   " like MyClass.Constant
       for word in words                                           " Collect terms that look like classes/objects
