@@ -592,6 +592,7 @@ set wildignore+=*.xml,*.sql,*.html,*.jar,*.class,*.log,compilation-analysis-cach
 
 autocmd FileType ruby nnoremap <buffer> <silent> <leader>k :! ruby2.0 %<CR>
 autocmd FileType python nnoremap <buffer> <silent> <F5> :! python %<CR>
+autocmd FileType python nnoremap <buffer> <silent> <leader>k :! python %<CR>
 autocmd FileType vim nnoremap <buffer> <silent> <F5> :source %<CR>
 autocmd FileType sh nnoremap <buffer> <silent> <F5> :! source %<CR>
 
