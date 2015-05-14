@@ -27,7 +27,7 @@ filetype plugin indent on    " required
 " See https://github.com/altercation/vim-colors-solarized/issues/40
 call togglebg#map("")
 set wildignore +=*.xml,*.sha1,*.html
-call scalaimports#state#ignore_classes(['This'])
+call scalaimports#state#ignore_classes(['Either', 'Left', 'Right'])
 
 if filereadable(".vim.settings")
   exec "source".".vim.settings"
