@@ -26,9 +26,10 @@ filetype plugin indent on    " required
 "Needed to force vim-colors-solarized to autoload
 " See https://github.com/altercation/vim-colors-solarized/issues/40
 call togglebg#map("")
-set wildignore +=*.xml,*.sha1,*.html
+set wildignore +=*.xml,*.sha1,*.html,tags,by_source_file,by_class
 call scalaimports#state#ignore_classes(['Either', 'Left', 'Right'])
 
 if filereadable(".vim.settings")
   exec "source".".vim.settings"
 endif
+color solarized
