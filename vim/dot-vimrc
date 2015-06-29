@@ -18,6 +18,7 @@ Plugin 'tpope/vim-fugitive'
 Plugin 'cage433/scalaimports'
 Plugin 'scrooloose/nerdcommenter'
 Plugin 'L9'
+Plugin 'christoomey/vim-tmux-navigator'
 call vundle#end()            " required
 filetype plugin indent on    " required
 " To ignore plugin indent changes, instead use:
