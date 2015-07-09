@@ -5,10 +5,10 @@ setw -g mode-keys vi
 set -g base-index 1
 bind-key -ct vi-edit up history-up
 bind-key -ct vi-edit down history-down
-#bind-key h select-pane -L
-#bind-key j select-pane -D
-#bind-key k select-pane -U
-#bind-key l select-pane -R
+bind-key h select-pane -L
+bind-key j select-pane -D
+bind-key k select-pane -U
+bind-key l select-pane -R
 bind-key left swap-window -t -1
 bind-key right swap-window -t +1
 bind-key -n C-right resize-pane -R 5
@@ -62,13 +62,3 @@ run-shell ~/repos/init-scripts/tmux_goto_session/goto_session.tmux
 bind '"' split-window -c "#{pane_current_path}"
 bind % split-window -h -c "#{pane_current_path}"
 bind c new-window -c "#{pane_current_path}"
-
-# Smart pane switching with awareness of vim splits
-bind -n C-k run-shell 'tmux-vim-select-pane -U'
-bind -n C-j run-shell 'tmux-vim-select-pane -D'
-bind -n C-h run-shell 'tmux-vim-select-pane -L'
-bind -n C-l run-shell 'tmux-vim-select-pane -R'
-bind -n "C-\\" run-shell 'tmux-vim-select-pane -l'
-
-# Bring back clear screen under tmux prefix
-bind C-l send-keys 'C-l'
