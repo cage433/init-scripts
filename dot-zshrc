@@ -1,62 +1,58 @@
-# Path to your oh-my-zsh configuration.
-ZSH=$HOME/.oh-my-zsh
+# Lines configured by zsh-newuser-install
+HISTFILE=~/.histfile
+HISTSIZE=10000
+SAVEHIST=1000
+setopt appendhistory autocd extendedglob
+bindkey -v
+# End of lines configured by zsh-newuser-install
+# The following lines were added by compinstall
+zstyle :compinstall filename '/home/alex/.zshrc'
 
-# Set name of the theme to load.
-# Look in ~/.oh-my-zsh/themes/
-# Optionally, if you set this to "random", it'll load a random theme each
-# time that oh-my-zsh is loaded.
-ZSH_THEME="robbyrussell"
+autoload -Uz compinit
+compinit
+# End of lines added by compinstall
 
-# Example aliases
-# alias zshconfig="mate ~/.zshrc"
-# alias ohmyzsh="mate ~/.oh-my-zsh"
+source "$HOME/.antigen/antigen.zsh"
 
-# Set to this to use case-sensitive completion
-# CASE_SENSITIVE="true"
+antigen bundle git
+antigen-use oh-my-zsh
+antigen-bundle arialdomartini/oh-my-git
+antigen theme arialdomartini/oh-my-git-themes oppa-lana-style
+#antigen bundle pip
+#antigen bundle rsync
+#antigen bundle python
+#antigen bundle node
+#antigen bundle npm
+#antigen bundle bundler
+#antigen bundle zsh-users/zsh-completions src
+#antigen bundle zsh-users/zsh-syntax-highlighting
+#antigen bundle kennethreitz/autoenv
+#antigen bundle command-not-found
+#antigen bundle history
+#antigen bundle tmux
+#antigen bundle vundle
+#antigen bundle sprunge
+#antigen bundle fabric
 
-# Comment this out to disable weekly auto-update checks
-# DISABLE_AUTO_UPDATE="true"
-
-# Change this value to set how frequently ZSH updates¬
-export UPDATE_ZSH_DAYS=13
-
-# Uncomment following line if you want to disable colors in ls
-# DISABLE_LS_COLORS="true"
-
-# Uncomment following line if you want to disable autosetting terminal title.
-# DISABLE_AUTO_TITLE="true"
-
-# Uncomment following line if you want red dots to be displayed while waiting for completion
-# COMPLETION_WAITING_DOTS="true"
-
-# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
-# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-plugins=(git)
-
-source $ZSH/oh-my-zsh.sh
-
-# Customize to your needs...
-export PATH=/home/alex/repos/init-scripts/bin/:/home/alex/bin/:/usr/local/jdk/bin/:/opt/clojure-contrib/launchers/bash:/opt/leiningen/:/usr/local/racket/bin/:/usr/local/bin/:/usr/bin/:/bin/
-export PATH=$PATH:/usr/local/scala/bin/
-export PATH=$PATH:/usr/games
-export PATH=$PATH:$HOME/squirrel-sql-3.5.0/
-
-export CAGE=cage433.vm.bytemark.co.uk
-alias cage='ssh $CAGE'
-alias ta='tmux attach'
-alias ack-scala='ack-grep --type=scala'
-
-#source $HOME/.xinitrc
-export SCALA_HOME=/usr/local/scala/
+#antigen-theme jreese
+antigen-apply
 export JAVA_HOME=/usr/local/jdk/
-export JREBEL_HOME=/usr/local/jrebel/
-export DISABLE_AUTO_TITLE=true
-alias tmux="tmux -2"
-alias irb="rlwrap irb"
-alias racket="rlwrap racket"
-alias sbcl="rlwrap sbcl"
 export EDITOR=vim
-alias traf-tunnel='ssh -f -N -q -L 5051:localhost:5051 $CAGE'
-alias traf='ssh -p 5051 localhost'
-alias ls='ls --color=never'
+export PATH=/usr/local/sbt/bin/:/usr/local/zinc/bin/:/usr/local/jdk/bin/:/usr/local/scala/bin/:$PATH:$HOME/repos/guake-colors-solarized
+export CAGE=cage433.vm.bytemark.co.uk
+export CARY=178.62.56.14
+alias cary='ssh $CARY'
+alias cage='ssh alex@$CAGE'
+alias gs='git status'
+alias zinc='zinc -Dzinc.analysis.cache.limit=50'
+alias gitp='git --no-pager'
+CASE_SENSITIVE=true
+export MAKER_SONATYPE_CREDENTIALS=cage433:zoltan
+export MAKER_GPG_PASS_PHRASE=smal3Pices
+ 
+
+# The next line updates PATH for the Google Cloud SDK.
+source '/home/alex/google-cloud-sdk/path.zsh.inc'
+
+# The next line enables bash completion for gcloud.
+source '/home/alex/google-cloud-sdk/completion.zsh.inc'
