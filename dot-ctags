@@ -1,6 +1,7 @@
 --langdef=scala
 --langmap=scala:.scala
 --regex-scala=/^[ \t]*((sealed|private|protected|abstract|final|case)[ \t]*){0,5}(trait|class|object)[ \t]+([a-zA-Z0-9_]+)/\4/c,caseclasses/
+--regex-scala=/^[ \t]*private\[[a-z]+\][ \t]+(trait|class|object)[ \t]+([a-zA-Z0-9_]+)/\2/c,privateCaseclasses/
 --regex-scala=/^[ \t]*type[ \t]+([a-zA-Z0-9_]+)/\1/T,types/
 --regex-scala=/^[ \t]*((private|protected|override)[ \t]*){0,2}(\[[a-zA-Z.]+\])?[ \t]*def[ \t]+([a-zA-Z0-9_]+)/\4/m,methods/
 --regex-scala=/^[ \t]*((private|protected|implicit|override)[ \t]*){0,2}(\[[a-zA-Z.]+\])?[ \t]*val[ \t]*([A-Z][a-zA-Z0-9_]*)/\4/m,constants/

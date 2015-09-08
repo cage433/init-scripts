@@ -27,9 +27,11 @@ filetype plugin indent on    " required
 " See https://github.com/altercation/vim-colors-solarized/issues/40
 call togglebg#map("")
 set wildignore +=*.xml,*.sha1,*.html,tags,by_source_file,by_class
-call scalaimports#state#ignore_classes(['Either', 'Left', 'Right'])
+call scalaimports#state#ignore_classes(['Either', 'Left', 'Right', 'Version'])
 
 if filereadable(".vim.settings")
   exec "source".".vim.settings"
 endif
 color solarized
+set ruler
+set rulerformat=%55(%{strftime('%a\ %b\ %e\ %I:%M\ %p')}\ %5l,%-6(%c%V%)\ %P%)
