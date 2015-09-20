@@ -18,6 +18,7 @@ Plugin 'tpope/vim-fugitive'
 Plugin 'cage433/scalaimports'
 Plugin 'scrooloose/nerdcommenter'
 Plugin 'tpope/vim-fireplace'
+Plugin 'tpope/vim-eunuch'
 Plugin 'L9'
 call vundle#end()            " required
 filetype plugin indent on    " required

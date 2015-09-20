@@ -3,3 +3,4 @@ scala=.scala
 --nohtml
 --type=scala
 --type=java
+--type=csharp
