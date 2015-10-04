@@ -38,7 +38,7 @@ antigen theme arialdomartini/oh-my-git-themes oppa-lana-style
 antigen-apply
 export JAVA_HOME=/usr/local/jdk/
 export EDITOR=vim
-export PATH=/usr/local/sbt/bin/:/usr/local/zinc/bin/:/usr/local/jdk/bin/:/usr/local/scala/bin/:$PATH:$HOME/repos/guake-colors-solarized
+export PATH=/usr/local/sbt/bin/:/usr/local/zinc/bin/:/usr/local/jdk/bin/:/usr/local/scala/bin/:$PATH:$HOME/repos/guake-colors-solarized:$HOME/bin/
 export CAGE=cage433.vm.bytemark.co.uk
 export CARY=178.62.56.14
 alias cary='ssh $CARY'
@@ -52,7 +52,7 @@ export MAKER_GPG_PASS_PHRASE=smal3Pices
  
 
 # The next line updates PATH for the Google Cloud SDK.
-source '/home/alex/google-cloud-sdk/path.zsh.inc'
+#source '/home/alex/google-cloud-sdk/path.zsh.inc'
 
 # The next line enables bash completion for gcloud.
-source '/home/alex/google-cloud-sdk/completion.zsh.inc'
+#source '/home/alex/google-cloud-sdk/completion.zsh.inc'
