@@ -36,9 +36,10 @@ antigen theme arialdomartini/oh-my-git-themes oppa-lana-style
 
 #antigen-theme jreese
 antigen-apply
-export JAVA_HOME=/usr/local/jdk/
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_60.jdk/Contents/Home/
 export EDITOR=vim
 export PATH=/usr/local/sbt/bin/:/usr/local/zinc/bin/:/usr/local/jdk/bin/:/usr/local/scala/bin/:$PATH:$HOME/repos/guake-colors-solarized
+export PATH=$PATH:$HOME/bin/
 export CAGE=cage433.vm.bytemark.co.uk
 export CARY=178.62.56.14
 alias cary='ssh $CARY'
@@ -49,10 +50,7 @@ alias gitp='git --no-pager'
 CASE_SENSITIVE=true
 export MAKER_SONATYPE_CREDENTIALS=cage433:zoltan
 export MAKER_GPG_PASS_PHRASE=smal3Pices
- 
-
-# The next line updates PATH for the Google Cloud SDK.
-source '/home/alex/google-cloud-sdk/path.zsh.inc'
-
-# The next line enables bash completion for gcloud.
-source '/home/alex/google-cloud-sdk/completion.zsh.inc'
+bindkey -v
+bindkey '^P' up-history
+bindkey '^N' down-history
+bindkey '^r' history-incremental-search-backward
