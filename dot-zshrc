@@ -38,7 +38,7 @@ antigen theme arialdomartini/oh-my-git-themes oppa-lana-style
 antigen-apply
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_60.jdk/Contents/Home/
 export EDITOR=vim
-export PATH=/usr/local/sbt/bin/:/usr/local/zinc/bin/:/usr/local/jdk/bin/:/usr/local/scala/bin/:$PATH:$HOME/repos/guake-colors-solarized:$HOME/bin/
+export PATH=/usr/local/sbt/bin/:/usr/local/zinc/bin/:/usr/local/jdk/bin/:/usr/local/scala/bin/:$PATH:$HOME/repos/guake-colors-solarized:$HOME/bin/:/usr/local/idea/bin/:$HOME/repos/init-scripts/bin/
 export CAGE=cage433.vm.bytemark.co.uk
 export CARY=178.62.56.14
 alias cary='ssh $CARY'
