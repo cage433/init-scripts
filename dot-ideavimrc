@@ -1,0 +1,10 @@
+let mapleader=","
+inoremap jk <ESC>
+nnoremap ; :
+vnoremap ; :
+nnoremap <leader>, <C-S-6>
+nnoremap <leader>k <C-S-F10>
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
