@@ -4,6 +4,8 @@ nnoremap ; :
 vnoremap ; :
 nnoremap <leader>, <C-S-6>
 nnoremap <leader>k <C-S-F10>
+nnoremap <leader>m ;
+vnoremap <leader>m ;
 nnoremap <C-h> <C-w>h
 nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
