@@ -9,7 +9,7 @@ Plugin 'altercation/vim-colors-solarized'
 Plugin 'cage433/cage433-vim-utils'
 Plugin 'cage433/cage433-vim-ide-plugin'
 
-Plugin 'kien/ctrlp.vim'
+Plugin 'ctrlpvim/ctrlp.vim'
 Plugin 'mileszs/ack.vim'
 Plugin 'vim-scripts/bufferlist.vim'
 Plugin 'vim-scripts/BufOnly.vim'
@@ -28,7 +28,13 @@ filetype plugin indent on    " required
 "Needed to force vim-colors-solarized to autoload
 " See https://github.com/altercation/vim-colors-solarized/issues/40
 call togglebg#map("")
-set wildignore +=*.xml,*.sha1,*.html,tags,by_source_file,by_class
+set wildignore +=*.sha1,*.html,tags,by_source_file,by_class
+"let g:ctrlp_custom_ignore = '\v[\/]\.(git|maker)$'
+"let g:ctrlp_custom_ignore = '\v[\/][A-Za-z0-9-_]+[\/]target$'
+let g:ctrlp_custom_ignore = {
+  \ 'dir':  '\v([\/]\.git$)|([\/][A-Za-z0-9-_]+[\/]((target$))|(\.maker$))',
+  \ 'file': '\v(\.xml$)'
+  \ }
 call scalaimports#state#ignore_classes(['Either', 'Left', 'Right', 'Version'])
 
 if filereadable(".vim.settings")
