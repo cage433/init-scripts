@@ -4,3 +4,4 @@ scala=.scala
 --type=scala
 --type=java
 --type=csharp
+--type=vim

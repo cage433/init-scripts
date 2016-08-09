@@ -1,6 +1,7 @@
 set nocompatible              " be iMproved, required
 filetype off                  " required
 
+let g:orientation='portrait'
 set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
 Plugin 'gmarik/Vundle.vim'
@@ -35,7 +36,7 @@ let g:ctrlp_custom_ignore = {
   \ 'dir':  '\v([\/]\.git$)|([\/][A-Za-z0-9-_]+[\/]((target$))|(\.maker$))',
   \ 'file': '\v(\.xml$)'
   \ }
-call scalaimports#state#ignore_classes(['Either', 'Left', 'Right', 'Version'])
+call scalaimports#state#ignore_classes(['Either', 'Left', 'Right', 'Default'])
 
 if filereadable(".vim.settings")
   exec "source".".vim.settings"
@@ -43,3 +44,12 @@ endif
 color solarized
 set ruler
 set rulerformat=%55(%{strftime('%a\ %b\ %e\ %I:%M\ %p')}\ %5l,%-6(%c%V%)\ %P%)
+
+call scalaimports#project#extend_known_imports(
+  \ {
+  \ "FuturesEquivalent" : "com.freetrm.curve.environment.PositionReportStyle",
+  \ "European" : "com.freetrm.maths.EuropeanOrAmerican",
+  \ "American" : "com.freetrm.maths.EuropeanOrAmerican",
+  \ "Version" : "com.freetrm.businessstore"
+  \ }
+  \)
