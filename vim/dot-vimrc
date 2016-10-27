@@ -36,7 +36,11 @@ let g:ctrlp_custom_ignore = {
   \ 'dir':  '\v([\/]\.git$)|([\/][A-Za-z0-9-_]+[\/]((target$))|(\.maker$))',
   \ 'file': '\v(\.xml$)'
   \ }
-call scalaimports#state#ignore_classes(['Either', 'Left', 'Right', 'Default'])
+call scalaimports#state#ignore_classes(
+      \ ['Either', 'Left', 'Right', 'Default', 
+      \ 'Quote', 'Sum', 'Divide', 'Times',
+      \ 'Constant', 'Expression', 'Regexp']
+      \ )
 
 if filereadable(".vim.settings")
   exec "source".".vim.settings"
