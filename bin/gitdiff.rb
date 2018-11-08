@@ -31,18 +31,14 @@ $rights = []
 
 IO.readlines($options.source_file).each do |line|
   if line =~ /^<<<</
-    puts "In left"
     storing = true
   elsif line =~ /^\|\|\|\|\|/
-    puts "end left"
     $lefts.push(stored_lines)
     stored_lines = []
   elsif line =~ /^=====/
-    puts "end mid"
     $mids.push(stored_lines)
     stored_lines = []
   elsif line =~ /^>>>>>>/
-    puts "end right"
     $rights.push(stored_lines)
     stored_lines = []
     storing = false
