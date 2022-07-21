@@ -3,8 +3,8 @@ set-option -g display-time 1200
 #set-option -g default-shell /bin/bash
 setw -g mode-keys vi
 set -g base-index 1
-bind-key -ct vi-edit up history-up
-bind-key -ct vi-edit down history-down
+#bind-key -ct vi-edit up history-up
+#bind-key -ct vi-edit down history-down
 bind-key h select-pane -L
 bind-key j select-pane -D
 bind-key k select-pane -U
@@ -49,11 +49,11 @@ set -g history-limit 50000
 set -g status-bg black
 set -g status-fg white
 set -g status-left ‘#[fg=green]#H’
-set -g pane-active-border-fg yellow
-setw -g window-status-current-bg black
-setw -g window-status-current-fg white
+#set -g pane-active-border-fg yellow
+#setw -g window-status-current-bg black
+#setw -g window-status-current-fg white
 
-set-window-option -g window-status-current-bg yellow
+#set-window-option -g window-status-current-bg yellow
 set-window-option -g automatic-rename off
 set-window-option -g xterm-keys on
 

@@ -33,6 +33,7 @@
 [pull]
 	default = current
 	rebase = true
+	ff = only
 [color]
 	ui = auto
 [difftool]

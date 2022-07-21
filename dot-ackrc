@@ -6,3 +6,6 @@ scala=.scala
 --type=csharp
 --type=vim
 --type=cc
+--type=lisp
+--type=ruby
+--type=python

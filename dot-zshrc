@@ -1,4 +1,7 @@
 # Lines configured by zsh-newuser-install
+#export PS1="${$PWD}: "
+#export PSORG="%/: "
+export PS1="%/: "
 HISTFILE=~/.histfile
 HISTSIZE=10000
 SAVEHIST=1000
@@ -15,8 +18,8 @@ compinit
 source "$HOME/.antigen/antigen.zsh"
 
 antigen bundle git
-antigen-use oh-my-zsh
-antigen-bundle arialdomartini/oh-my-git
+antigen use oh-my-zsh
+antigen bundle arialdomartini/oh-my-git
 antigen theme arialdomartini/oh-my-git-themes oppa-lana-style
 #antigen bundle pip
 #antigen bundle rsync
@@ -35,15 +38,19 @@ antigen theme arialdomartini/oh-my-git-themes oppa-lana-style
 #antigen bundle fabric
 
 #antigen-theme jreese
-antigen-apply
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_60.jdk/Contents/Home/
+antigen apply
+export JAVA_HOME=/usr/local/jdk/
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 export EDITOR=vim
-export PATH=/usr/local/sbt/bin/:/usr/local/zinc/bin/:/usr/local/jdk/bin/:/usr/local/scala/bin/:$PATH:$HOME/repos/guake-colors-solarized:$HOME/bin/:/usr/local/idea/bin/:$HOME/repos/init-scripts/bin/
+export PATH=/usr/local/sbt/bin/:/usr/local/zinc/bin/:$JAVA_HOME/bin/:/usr/local/scala/bin/:$PATH:$HOME/repos/guake-colors-solarized:$HOME/bin/:/usr/local/idea/bin/:$HOME/repos/init-scripts/bin/
+export PATH=$PATH:/usr/local/julia/bin/
+export PATH=$PATH:$HOME/.emacs.d/bin/
 export CAGE=cage433.vm.bytemark.co.uk
 export CARY=178.62.56.14
 alias cary='ssh $CARY'
 alias cage='ssh alex@$CAGE'
 alias gs='git status'
+alias gw='git worktree list'
 alias zinc='zinc -Dzinc.analysis.cache.limit=50'
 alias gitp='git --no-pager'
 CASE_SENSITIVE=true
@@ -53,3 +60,21 @@ bindkey -v
 bindkey '^P' up-history
 bindkey '^N' down-history
 bindkey '^r' history-incremental-search-backward
+alias grb='git rebase -i `git merge-base HEAD upstream/master`'
+alias grm='git rebase -i upstream/master'
+alias scala='TERM=xterm-color && scala'
+alias ack-grep=ack
+alias ta='tmux attach'
+export DESKTOP=192.168.86.110
+export MACBOOK='alexs-mbp-2.lan'
+alias desktop='ssh $DESKTOP'
+alias emacs='emacs -nw'
+alias ocaml='rlwrap ocaml'
+alias sbcl='rlwrap sbcl'
+
+# opam configuration
+test -r /home/alex/.opam/opam-init/init.zsh && . /home/alex/.opam/opam-init/init.zsh > /dev/null 2> /dev/null || true
+
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+export SDKMAN_DIR="$HOME/.sdkman"
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"

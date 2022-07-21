@@ -1,9 +1,0 @@
-# ~/.tmuxinator/Starling.yml
-# you can make as many tabs as you wish...
-
-project_name: Starling
-project_root: ~/repos/dev/starling
-#socket_name: foo # Not needed.  Remove to use default socket
-tabs:
-  - starling-repl: ~/repos/maker/bin/maker.sh -z -j -p maker/Starling.scala -c maker/project
-  - starling-vim: ctags -R . && gtags -i && . starling-classpath && vim

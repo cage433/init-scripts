@@ -8,6 +8,5 @@
 --exclude=*.js
 --exclude=*.sql
 --exclude=*.cs
---exclude=*.py
 --exclude=*.el
 --exclude=*launch4j*
