@@ -1,7 +1,7 @@
 # ~/.tmuxinator/standard.yml
 
-name: vortex
-root: ~/repos/vortex
+name: topaz7
+root: ~/repos/topaz7
 
 # Optional tmux socket
 # socket_name: foo

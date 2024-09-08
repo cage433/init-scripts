@@ -42,7 +42,6 @@ set tabstop=4
 set softtabstop=4
 set shiftwidth=4
 set backspace=indent,eol,start
-syntax on
 
 let mapleader=","
 inoremap jk <ESC>
