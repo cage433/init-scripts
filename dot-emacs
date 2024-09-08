@@ -1,7 +1,4 @@
-;;
-;; MELPA AND PACKAGES
-;;
-
+;; MELPA AND CUSTOME PACKAGES
 (setq custom-file (concat user-emacs-directory "custom.el"))
 (load custom-file t)
 
@@ -76,10 +73,7 @@
 (use-package anaphora)
 
 
-;;
 ;; THEME AND APPEARANCE
-;;
-
 (setq inhibit-startup-screen t)
 (load-theme 'wombat)
 
@@ -90,10 +84,7 @@
 
 (set-frame-font "Inconsolata:pixelsize=16:weight=regular:slant=normal:width=normal:spacing=100:scalable=true")
 
-;;
 ;; TABS
-;;
-
 (setq-default indent-tabs-mode nil)
 (setq-default tab-always-indent nil)
 (setq-default tab-width 2)
@@ -105,7 +96,7 @@
 ;; may not keep this - means one can move back to previous window display
 (winner-mode 1)
 
-;; switch off the fucking bell
+;; switch off the bell
 (setq ring-bell-function 'ignore)
 
 ;; mac specific stuff
