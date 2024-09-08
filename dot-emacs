@@ -16,6 +16,7 @@
                anaphora
                evil
                evil-escape
+               orderless
                projectile
                paredit
                rainbow-delimiters
@@ -23,6 +24,7 @@
                solarized-theme
                s
                use-package
+               vertico
                ))
   (unless (package-installed-p package)
     (package-install package)))
@@ -72,6 +74,30 @@
 
 (use-package anaphora)
 
+;; Enable vertico
+(use-package vertico
+  :init
+  (vertico-mode))
+
+;; Configure directory extension.
+(use-package vertico-directory
+  :after vertico
+  :ensure nil
+  ;; More convenient directory navigation commands
+  :bind (:map vertico-map
+              ("RET" . vertico-directory-enter)
+              ("DEL" . vertico-directory-delete-char)
+              ("M-DEL" . vertico-directory-delete-word))
+  ;; Tidy shadowed file names
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
+
+(use-package vertico-flat)
+
+(use-package orderless
+  :ensure t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles basic partial-completion)))))
 
 ;; THEME AND APPEARANCE
 (setq inhibit-startup-screen t)
@@ -92,7 +118,10 @@
 ;;
 ;; OTHER
 ;;
-
+(global-set-key (kbd "C-h")  'windmove-left)
+(global-set-key (kbd "C-l") 'windmove-right)
+(global-set-key (kbd "C-k")    'windmove-up)
+(global-set-key (kbd "C-j")  'windmove-down)
 ;; may not keep this - means one can move back to previous window display
 (winner-mode 1)
 
@@ -105,7 +134,9 @@
 (global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#")))
 
 ;; other key bindings
-(evil-global-set-key 'normal (kbd "<f3>") 'ibuffer)
+(evil-global-set-key 'normal (kbd "<f3>") 'switch-to-buffer)
+(add-hook 'minibuffer-setup-hook (lambda ()
+                                   (local-set-key (kbd "<f3>") 'abort-minibuffers)))
 
 (defun indent-current-buffer()
   (interactive) (indent-region (point-min) (point-max)))
@@ -115,7 +146,11 @@
 (defun toggle-maximize-buffer () "Toggle maximize buffer"
        (interactive)
        (if (= 1 (length (window-list)))
-           (jump-to-register '_) 
+           (if (get-register '_)
+               (jump-to-register '_) 
+             (if (> (window-body-height) (window-body-width))
+                 (split-window-vertically)
+               (split-window-horizontally)))
          (progn
            (window-configuration-to-register '_)
            (delete-other-windows))))
@@ -125,3 +160,7 @@
 ;; edit the link, in particular for .emacs -> dot-emacs
 (setq vc-follow-symlinks nil)
 
+
+;; a solid, pink cursor
+(blink-cursor-mode 0)
+(add-to-list 'default-frame-alist '(cursor-color . "#f805fb"))
