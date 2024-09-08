@@ -115,15 +115,13 @@
 
 ;; other key bindings
 (evil-global-set-key 'normal (kbd "<f3>") 'ibuffer)
-(evil-global-set-key 'normal (kbd "<f8>") (lambda () (interactive) (indent-region (point-min) (point-max))))
 
+(defun indent-current-buffer()
+  (interactive) (indent-region (point-min) (point-max)))
 
+(evil-global-set-key 'normal (kbd "<f8>") 'indent-current-buffer)
 
-
-
-
-;; maximise current buffer temporarily
-(defun toggle-maximize-buffer () "Maximize buffer"
+(defun toggle-maximize-buffer () "Toggle maximize buffer"
        (interactive)
        (if (= 1 (length (window-list)))
            (jump-to-register '_) 
@@ -136,5 +134,3 @@
 ;; edit the link, in particular for .emacs -> dot-emacs
 (setq vc-follow-symlinks nil)
 
-;; open in full screen
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
