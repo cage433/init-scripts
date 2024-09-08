@@ -102,20 +102,27 @@
 ;; OTHER
 ;;
 
+;; may not keep this - means one can move back to previous window display
 (winner-mode 1)
 
+;; switch off the fucking bell
+(setq ring-bell-function 'ignore)
+
+;; mac specific stuff
+(setq mac-command-modifier 'meta
+      mac-option-modifier 'super)
+(global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#")))
+
+;; other key bindings
 (evil-global-set-key 'normal (kbd "<f3>") 'ibuffer)
 (evil-global-set-key 'normal (kbd "<f8>") (lambda () (interactive) (indent-region (point-min) (point-max))))
 
 
 
-(setq ring-bell-function 'ignore)
-
-(setq mac-command-modifier 'meta
-      mac-option-modifier 'super)
-(global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#")))
 
 
+
+;; maximise current buffer temporarily
 (defun toggle-maximize-buffer () "Maximize buffer"
        (interactive)
        (if (= 1 (length (window-list)))
@@ -126,4 +133,8 @@
 
 (evil-global-set-key 'normal (kbd "<f10>") 'toggle-maximize-buffer)
 
+;; edit the link, in particular for .emacs -> dot-emacs
 (setq vc-follow-symlinks nil)
+
+;; open in full screen
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
