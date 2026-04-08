@@ -1,37 +1,17 @@
 # act like vim
-set-option -g display-time 1200
-#set-option -g default-shell /bin/bash
+set-option -g display-time 120
+
+
+
+
 setw -g mode-keys vi
 set -g base-index 1
-#bind-key -ct vi-edit up history-up
-#bind-key -ct vi-edit down history-down
-bind-key h select-pane -L
-bind-key j select-pane -D
-bind-key k select-pane -U
-bind-key l select-pane -R
-bind-key left swap-window -t -1
-bind-key right swap-window -t +1
-bind-key -n C-right resize-pane -R 5
-bind-key L resize-pane -R 5
-bind-key -n C-left resize-pane -L 5
-bind-key H resize-pane -L 5
-bind-key -n C-down resize-pane -D 5
-bind-key J resize-pane -D 5
-bind-key -n C-up resize-pane -U 5
-bind-key K resize-pane -U 5
+#bind C-l send-keys 'C-l'
 
-# "Send-keys is asynchronous - hence the nests tmux call
-bind-key C send-keys "clear && tmux clear-history" \; send-keys "Enter" 
-
-
-#reload
-bind-key r source-file ~/.tmux.conf\; display-message "Reloaded"
 
 # act like GNU screen
 unbind C-b
 set -g prefix C-a
-
-set -g default-terminal "screen-256color"
 
 # Don't prompt before killng pane
 unbind x
@@ -43,22 +23,22 @@ bind a send-prefix
 set -g status on
 bind-key b set-option status
 
-set -g history-limit 50000
+unbind r
+bind r source-file ~/.tmux.conf
 
-# Set status bar
-set -g status-bg black
-set -g status-fg white
-set -g status-left ‘#[fg=green]#H’
-#set -g pane-active-border-fg yellow
-#setw -g window-status-current-bg black
-#setw -g window-status-current-fg white
+unbind t
+bind t send-keys -t 1 "C-l" "dune test" Enter
 
-#set-window-option -g window-status-current-bg yellow
-set-window-option -g automatic-rename off
-set-window-option -g xterm-keys on
+unbind t
+bind t send-keys -t 1 "C-l" "pdflatex parity.tex" Enter
 
+set -g display-time 2000
 set -g renumber-windows on
-run-shell ~/repos/init-scripts/tmux_goto_session/goto_session.tmux
-bind '"' split-window -c "#{pane_current_path}"
-bind % split-window -h -c "#{pane_current_path}"
-bind c new-window -c "#{pane_current_path}"
+#set -g @plugin 'christoomey/vim-tmux-navigator'
+#set -g @plugin 'tmux-plugins/tmux-sensible'
+
+bind h select-pane -L
+bind j select-pane -D
+bind k select-pane -U
+bind l select-pane -R
+run '~/.tmux/plugins/tpm/tpm'

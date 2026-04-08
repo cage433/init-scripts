@@ -14,6 +14,7 @@
     (package '(
                ace-window
                anaphora
+               company
                evil
                evil-escape
                orderless
@@ -36,10 +37,12 @@
   :init
   ;; Use ctrl-u for scrolling
   (setq evil-want-C-u-scroll t)         
-  ;; Make all modes start in normal state
+  ;; Make all modes stcardsart in normal state
   (setq evil-emacs-state-modes nil)     
   (setq evil-insert-state-modes nil)
   (setq evil-motion-state-modes nil)
+  ;;give tab back to evil mode
+  (setq evil-want-C-i-jump nil)
   :config
   (evil-define-key* 'motion 'global
     ";" #'evil-ex
@@ -62,7 +65,9 @@
 (use-package sly
   :init
   (add-to-list 'exec-path "/opt/homebrew/bin")
-  (setq inferior-lisp-program "sbcl"))
+  (setq inferior-lisp-program "sbcl")
+  (set-cursor-color "#f805fb")
+  )
 
 
 (use-package ace-window
@@ -99,6 +104,10 @@
   (completion-styles '(orderless basic))
   (completion-category-overrides '((file (styles basic partial-completion)))))
 
+(use-package company
+  :init
+  (add-hook 'after-init-hook 'global-company-mode))
+
 ;; THEME AND APPEARANCE
 (setq inhibit-startup-screen t)
 (load-theme 'wombat)
@@ -118,10 +127,44 @@
 ;;
 ;; OTHER
 ;;
-(global-set-key (kbd "C-h")  'windmove-left)
-(global-set-key (kbd "C-l") 'windmove-right)
-(global-set-key (kbd "C-k")    'windmove-up)
-(global-set-key (kbd "C-j")  'windmove-down)
+
+;; Main use is to have my key bindings have the highest priority
+;; https://github.com/kaushalmodi/.emacs.d/blob/master/elisp/modi-mode.el
+
+(defvar my-mode-map (make-sparse-keymap)
+  "Keymap for `my-mode'.")
+
+;;;###autoload
+(define-minor-mode my-mode
+  "A minor mode so that my key settings override annoying major modes."
+  ;; If init-value is not set to t, this mode does not get enabled in
+  ;; `fundamental-mode' buffers even after doing \"(global-my-mode 1)\".
+  ;; More info: http://emacs.stackexchange.com/q/16693/115
+  :init-value t
+  :lighter " my-mode"
+  :keymap my-mode-map)
+
+;;;###autoload
+(define-globalized-minor-mode global-my-mode my-mode my-mode)
+
+;; https://github.com/jwiegley/use-package/blob/master/bind-key.el
+;; The keymaps in `emulation-mode-map-alists' take precedence over
+;; `minor-mode-map-alist'
+(add-to-list 'emulation-mode-map-alists `((my-mode . ,my-mode-map)))
+
+;; Turn off the minor mode in the minibuffer
+(defun turn-off-my-mode ()
+  "Turn off my-mode."
+  (my-mode -1))
+(add-hook 'minibuffer-setup-hook #'turn-off-my-mode)
+
+(provide 'my-mode)
+(define-key my-mode-map (kbd "C-h") #'windmove-left)
+(define-key my-mode-map (kbd "C-l") #'windmove-right)
+(define-key my-mode-map (kbd "C-k") #'windmove-up)
+(define-key my-mode-map (kbd "C-j") #'windmove-down)
+
+
 ;; may not keep this - means one can move back to previous window display
 (winner-mode 1)
 
@@ -164,3 +207,8 @@
 ;; a solid, pink cursor
 (blink-cursor-mode 0)
 (add-to-list 'default-frame-alist '(cursor-color . "#f805fb"))
+(add-hook 'after-init-hook
+          (lambda () (run-with-timer 5 nil #'set-cursor-color "#f805fb")))
+;; ## added by OPAM user-setup for emacs / base ## 56ab50dc8996d2bb95e7856a6eddb17b ## you can edit, but keep this line
+(require 'opam-user-setup "~/.emacs.d/opam-user-setup.el")
+;; ## end of OPAM user-setup addition for emacs / base ## keep this line
