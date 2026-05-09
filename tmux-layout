@@ -1,0 +1,32 @@
+#!/bin/zsh
+
+create_session () {
+  tmux new-session -s "$1" -d -c "$2"
+}
+repos=(
+  topaz-01 
+  topaz-02 
+  topaz-03 
+  topaz-04 
+  topaz-05 
+  topaz-06
+  topaz-07 
+  topaz-08
+  topaz-09
+  topaz-10
+  topaz-11
+  topaz-12
+  topaz-13
+  topaz-14
+  topaz-15
+  topaz-pr-01
+  topaz-pr-02
+  topaz-main
+)
+for name in ${repos[@]}; do
+  create_session "$name" $HOME/tz/"$name"/topaz
+done
+
+create_session vortex $HOME/repos/vortex-repos/vortex
+create_session general $HOME
+

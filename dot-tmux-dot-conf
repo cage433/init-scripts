@@ -26,11 +26,6 @@ bind-key b set-option status
 unbind r
 bind r source-file ~/.tmux.conf
 
-unbind t
-bind t send-keys -t 1 "C-l" "dune test" Enter
-
-unbind t
-bind t send-keys -t 1 "C-l" "pdflatex parity.tex" Enter
 
 set -g display-time 2000
 set -g renumber-windows on
@@ -42,3 +37,13 @@ bind j select-pane -D
 bind k select-pane -U
 bind l select-pane -R
 run '~/.tmux/plugins/tpm/tpm'
+
+# Pane splits should open to the same path as the current pane
+bind '"' split-window -v -c "#{pane_current_path}"
+bind % split-window -h -c "#{pane_current_path}"
+
+unbind t
+bind t send-keys -t 1 "C-l" "dune test" Enter
+
+unbind t
+bind t send-keys -t 1 "C-l" "pdflatex split-fx.tex" Enter
