@@ -1,44 +1,81 @@
 [receive]
 	denyNonFastForwards = true
+
 [merge]
   conflictstyle = diff3
 	stat = true
-  tool = threesome
-#  tool = bash
-[mergetool "threesome"]
-  cmd = "vim -f $BASE $LOCAL $REMOTE $MERGED -c 'ThreesomeInit'"
-  trustExitCode = true
-[mergetool "bash"]
-  cmd = "export BASE=$BASE && /bin/bash"
-  trustExitCode = true
+
 [diff]
+  colorMoved = default
 	conflictstyle = diff3
 	renames = copies
 	mnemonicprefix = true
   tool=vimdiff
   renameLimit=5000
+
+[interactive]
+  diffFilter = delta --color-only
+
 [branch]
 	autosetupmerge = true
 	autosetuprebase = always
+
 [push]
 	default = current
+
 [alias]
 	s = status
+  sh = show --pretty=format:
 	a = add
+	b = branch
 	l = log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'
   ll = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --numstat
 	d = diff --color-words
-#[core]
-#	pager = less -r
+
 [pull]
 	default = current
 	rebase = true
 	ff = only
+
 [color]
 	ui = auto
+
 [difftool]
 	prompt = false
 
 [user]
 	email = cage433@gmail.com
 	name = cage433
+
+[core]
+#    pager = delta
+
+[interactive]
+#    diffFilter = delta --color-only --features=interactive
+    diffFilter = delta --color-only 
+
+[delta]
+  navigate = true
+  hyperlinks=false
+#  dark = true
+#    features = decorations
+#    side-by-side=true
+
+[delta "interactive"]
+#    keep-plus-minus-markers = false
+
+[delta "decorations"]
+#    commit-decoration-style = blue ol
+#    commit-style = raw
+#    file-style = omit
+#    hunk-header-decoration-style = blue box
+#    hunk-header-file-style = red
+#    hunk-header-line-number-style = "#067a00"
+#    hunk-header-style = file line-number syntax
+
+[init]
+	defaultBranch = main
+
+[advice]
+	skippedCherryPicks = false
+

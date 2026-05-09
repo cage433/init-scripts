@@ -1,0 +1,44 @@
+[receive]
+	denyNonFastForwards = true
+[merge]
+  conflictstyle = diff3
+	stat = true
+  tool = threesome
+#  tool = bash
+[mergetool "threesome"]
+  cmd = "vim -f $BASE $LOCAL $REMOTE $MERGED -c 'ThreesomeInit'"
+  trustExitCode = true
+[mergetool "bash"]
+  cmd = "export BASE=$BASE && /bin/bash"
+  trustExitCode = true
+[diff]
+	conflictstyle = diff3
+	renames = copies
+	mnemonicprefix = true
+  tool=vimdiff
+  renameLimit=5000
+[branch]
+	autosetupmerge = true
+	autosetuprebase = always
+[push]
+	default = current
+[alias]
+	s = status
+	a = add
+	l = log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'
+  ll = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --numstat
+	d = diff --color-words
+#[core]
+#	pager = less -r
+[pull]
+	default = current
+	rebase = true
+	ff = only
+[color]
+	ui = auto
+[difftool]
+	prompt = false
+
+[user]
+	email = cage433@gmail.com
+	name = cage433
