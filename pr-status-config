@@ -1,0 +1,8 @@
+owner:topaztechnology
+repo-name:topaz
+ignore-author:scala-steward-topaz,github-actions
+ai-author:coderabbitai,claude
+author-name:thomasrynnetopaz=thomas,cage433=alex,jonfox=jon,davidcorcoran=dave,Lgoldfinch=louis,boomah=nick
+ignore-comment:/build
+show-usage-on-startup:false
+alias:all-since-mk:list --no-ai --filter LCT>MK
