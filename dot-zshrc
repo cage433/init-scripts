@@ -28,6 +28,7 @@ export CROUCH="82.69.17.20"
 alias head-modules="git show --name-only HEAD | sed 's/\/.*//' | grep '^[a-z]' | uniq"
 
 alias new-branch="git checkout --no-track upstream/master -b "
+alias my-remote-branches='git branch -r | grep origin/'
 alias topazdoc='docker run --rm --volume "$(pwd):/data" topaztechnology/topaz-md-to-pdf:latest'
 alias topazdoclua='docker run --rm --volume "$(pwd):/data" topaztechnology/topaz-md-to-pdf:lualatex-latest'
 alias emc='emacsclient -n -c -a ""'
