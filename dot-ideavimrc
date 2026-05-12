@@ -14,3 +14,6 @@ nnoremap <C-k> <C-w>k
 nnoremap <C-l> <C-w>l
 set ideajoin
 set gdefault
+set belloff=all
+set visualbell
+set noerrorbells
