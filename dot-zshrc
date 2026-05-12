@@ -48,6 +48,7 @@ alias plex='ssh alex@192.168.0.15'
 export LINODE="172.236.30.101"
 alias linode='ssh cage433@$LINODE'
 alias vi=nvim
+alias vim=nvim
 
 fpath+=~/.zfunc
 autoload -Uz compinit && compinit

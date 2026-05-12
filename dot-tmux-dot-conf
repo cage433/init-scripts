@@ -38,6 +38,9 @@ bind k select-pane -U
 bind l select-pane -R
 run '~/.tmux/plugins/tpm/tpm'
 
+# New sessions open in the same directory as the current pane
+bind c new-window -c "#{pane_current_path}"
+
 # Pane splits should open to the same path as the current pane
 bind '"' split-window -v -c "#{pane_current_path}"
 bind % split-window -h -c "#{pane_current_path}"
