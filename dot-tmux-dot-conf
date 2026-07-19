@@ -6,6 +6,11 @@ set-option -g display-time 120
 
 setw -g mode-keys vi
 set -g base-index 1
+
+# True colour: tell tmux the outer terminal (iTerm2) supports 24-bit colour, so it
+# doesn't downgrade to 256 and oversaturate muted themes like Solarized.
+set -g default-terminal "tmux-256color"
+set -as terminal-features ",xterm-256color:RGB"
 #bind C-l send-keys 'C-l'
 
 
