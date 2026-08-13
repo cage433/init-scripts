@@ -1,0 +1,58 @@
+# As a minimum, the owner and repo-name must be specified in the config
+owner:topaztechnology
+repo-name:topaz
+youtrack-url:https://topaz.youtrack.cloud
+youtrack-token:perm-YWxleA==.NTItMg==.jOHUa3xjXvKpIbV9PicqZPvKPldI5g
+
+#timely-application-id:IrJgiGQGDdHEeUI8dQ8Fi0KTOBUTUu9njxaJiRlUgvQ
+#timely-secret:efcf0af2cd48b28a86170ee9e030ef6ae3254590f1b3731a5ccd1ed428e51e87
+#timely-callback-url:https://localhost:8888/callback
+#timely-code:DqCeyYPju2era8_gthVUPhbLbkExiKXyA0lVW7VIOT0
+timely-access-token:IdYoLP-wxDZDt4qPXVJHBgmH-_LAIb83HLibzqgam08
+timely-refresh-token:yY874TpXsT98uzh5-AqiU8Uec6ASiGz-gFhs3oP66w0
+timely-account-id:695730
+
+
+
+timely-ignore-project:support,leave,non-billable,cybersecurity
+timely-short-names:Evangelos Fanis=Van
+
+timely-short-projects:JERAGM Consultancy=JERA,IXM Prism interface=IXM Prism,Shell STASCO consultancy=Shell STASCO,Shell SLMT consultancy=Shell SLMT
+
+this-author:alex
+
+# Ignore all PRs from these authors
+ignore-author:scala-steward-topaz,github-actions
+
+# A list of ai-authors
+ai-author:coderabbitai,claude,copilot-pull-request-reviewer
+
+# A mapping from github handle to name
+author-name:thomasrynnetopaz=thomas,cage433=alex,jonfox=jon,davidcorcoran=dave
+author-name:Lgoldfinch=louis,boomah=nick,paulandrewthomas=paul,liamgladdentopaz=liam
+author-name:dgeyer=daphne,edkennard=ed,maxthebigcoda=max
+
+# map PR YT tickets to Timely tickets for workday counting
+timely-yt-map:JERAGMPhys-157=JERAGMPhys-112
+
+# Ignore these PRs
+#ignore-pr:4836
+
+# Ignore comments that exactly match this
+ignore-comment:^/build
+ignore-label: build
+ignore-comment:^@coderabbitai
+
+ignore-title:^\[Backport
+# aliases for reports
+alias:all-since-mk:report --filter LCT>MK
+alias:to-review:report P,CI,T,A,R,UH,UA,AG,LOC,B --filter RO=alex
+alias:mine:report P,CI,T,A,R,UH,UA,AG_,LOC,V_ --filter A=alex --sort=LOC:r
+alias:invalid:report P,T,A,R,YS_,UA_,V_ --filter V=false --sort=A,P
+alias:all:report P,CI,T,A,R,YS_,UH_,UA_,V_ --sort=A,V,P
+alias:work:report P,T,A,R_,WD_,AGE_ --sort=A,V,P
+alias:my-work:report P,CI,T,A,R_,WD_,AGE_ --sort=A,V,P --filter A=alex
+
+cache-directory:~/.cache/pr-status
+max-threads:50
+youtrack-threads:10
