@@ -1,6 +1,9 @@
 [receive]
 	denyNonFastForwards = true
 
+[fetch]
+	prune = true
+
 [merge]
   conflictstyle = diff3
 	stat = true

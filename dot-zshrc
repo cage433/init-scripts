@@ -25,13 +25,10 @@ export PATH="/opt/homebrew/opt/make/libexec/gnubin:$PATH"
 
 export CROUCH="82.69.17.20"
 
-alias head-modules="git show --name-only HEAD | sed 's/\/.*//' | grep '^[a-z]' | uniq"
-
 alias new-branch="git checkout --no-track upstream/master -b "
 alias my-remote-branches='git branch -r | grep origin/'
 alias topazdoc='docker run --rm --volume "$(pwd):/data" topaztechnology/topaz-md-to-pdf:latest'
 alias topazdoclua='docker run --rm --volume "$(pwd):/data" topaztechnology/topaz-md-to-pdf:lualatex-latest'
-alias emc='emacsclient -n -c -a ""'
 alias cleardns='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder'
 alias git-modules="git show --name-only | sed 's/\/.*//' | uniq"
 alias gb='git branch'
@@ -81,3 +78,11 @@ alias sfmt='scalafmt --mode diff-ref=upstream/master'
 export PATH="$PATH:/Users/alex/Library/Application Support/Coursier/bin"
 alias gs='git status'
 alias gd='git diff'
+alias gdn='git diff --name-only'
+alias gsd='cl;git diff HEAD~ HEAD'
+alias gsdn='cl;git diff HEAD~ HEAD --name-only'
+alias pr-status='~/repos/topaz-repos/pr-status/pr-status.sh'
+alias wcs='sbt --error "writeChangedModules -n 1"'
+alias wcc='sbt --error writeChangedModules'
+
+source /opt/homebrew/opt/zsh-vi-mode/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh
