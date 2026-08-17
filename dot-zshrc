@@ -86,3 +86,32 @@ alias wcs='sbt --error "writeChangedModules -n 1"'
 alias wcc='sbt --error writeChangedModules'
 
 source /opt/homebrew/opt/zsh-vi-mode/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh
+
+# Silence JDK 25 warnings emitted by the sbt launcher (Unsafe deprecation + restricted
+# native access in ipcsocket). -J passes these through sbt-extras to the JVM.
+export SBT_OPTS="-J--enable-native-access=ALL-UNNAMED -J--sun-misc-unsafe-memory-access=allow"
+
+# Name a Claude session after its worktree node, so peer sessions are addressable as
+# topaz-06, topaz-11 etc rather than the derived basename+hash (every node's leaf
+# directory is `topaz`, an IntelliJ requirement, so the derived names all collide).
+# Outside ~/tz/<node>/topaz, or when -n/--name is given explicitly, defer to the default.
+claude() {
+  local top rel node has_name=0 a
+  for a in "$@"; do
+    case $a in
+      -n|--name|--name=*) has_name=1 ;;
+    esac
+  done
+  if (( ! has_name )); then
+    top=$(git rev-parse --show-toplevel 2>/dev/null)
+    rel=${top#$HOME/tz/}
+    if [[ $rel == */topaz && $rel != */*/* ]]; then
+      node=${rel%/topaz}
+    fi
+  fi
+  if [[ -n $node ]]; then
+    command claude -n "$node" "$@"
+  else
+    command claude "$@"
+  fi
+}
