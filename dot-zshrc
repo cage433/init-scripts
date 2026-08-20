@@ -115,3 +115,50 @@ claude() {
     command claude "$@"
   fi
 }
+
+
+# Restore a worktree node to a pristine upstream/master, for use once the PR for the
+# branch it was holding has been merged. Each node's default branch is named after the
+# node directory (topaz-11 etc) and is expected to exist already. Refuses to run outside
+# ~/tz/<node>/topaz, or on a tree with any local modifications or untracked files.
+# Tidying up the merged branch is best effort: the local branch is only deleted if it
+# merges cleanly, the remote one only if it is already contained in upstream/master
+# (a colleague may have rebased it before merging). Anything left behind is a warning, and
+# only the upstream fetch is allowed to abort the restore.
+restore-worktree-branch() {
+  local top rel node old dirty origin_fetched=1
+  top=$(git rev-parse --show-toplevel 2>/dev/null)
+  rel=${top#$HOME/tz/}
+  if [[ -z $top || $rel != */topaz || $rel == */*/* ]]; then
+    print -u2 "restore-worktree-branch: not in a worktree node under $HOME/tz"
+    return 1
+  fi
+  node=${rel%/topaz}
+  if ! git rev-parse --verify --quiet "refs/heads/$node" >/dev/null; then
+    print -u2 "restore-worktree-branch: no branch $node, the node branch should always exist"
+    return 1
+  fi
+  dirty=$(git status --porcelain)
+  if [[ -n $dirty ]]; then
+    print -u2 "restore-worktree-branch: $node is not clean"
+    print -u2 -- "$dirty"
+    return 1
+  fi
+  old=$(git rev-parse --abbrev-ref HEAD)
+  git checkout "$node" || return 1
+  git fetch upstream || return 1
+  git fetch origin || { origin_fetched=0; print -u2 "restore-worktree-branch: could not fetch origin" }
+  git reset --hard upstream/master || return 1
+  [[ $old == $node || $old == HEAD ]] && return 0
+  git branch -d "$old" || print -u2 "restore-worktree-branch: left local branch $old in place"
+  if (( ! origin_fetched )); then
+    print -u2 "restore-worktree-branch: origin not fetched, left any remote copy of $old in place"
+  elif git rev-parse --verify --quiet "refs/remotes/origin/$old" >/dev/null; then
+    if git merge-base --is-ancestor "refs/remotes/origin/$old" upstream/master; then
+      git push origin --delete "$old" || print -u2 "restore-worktree-branch: failed to delete origin/$old"
+    else
+      print -u2 "restore-worktree-branch: origin/$old is not contained in upstream/master, left it in place"
+    fi
+  fi
+}
+alias rwb='restore-worktree-branch'
