@@ -3,6 +3,7 @@
 
 [fetch]
 	prune = true
+	pruneTags = true
 
 [merge]
   conflictstyle = diff3
