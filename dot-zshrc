@@ -85,6 +85,11 @@ alias pr-status='~/repos/topaz-repos/pr-status/pr-status.sh'
 alias wcs='sbt --error "writeChangedModules -n 1"'
 alias wcc='sbt --error writeChangedModules'
 
+# Russian/Anki — refresh the Obsidian "Anki learning vocab" notes (needs Anki running).
+# Guarded so it only exists on machines that have the repo checked out.
+[[ -x "$HOME/repos/russian/.venv/bin/python" ]] && \
+  alias ruvocab='~/repos/russian/.venv/bin/python ~/repos/russian/scripts/export_learning_vocab.py'
+
 source /opt/homebrew/opt/zsh-vi-mode/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh
 
 # Silence JDK 25 warnings emitted by the sbt launcher (Unsafe deprecation + restricted
