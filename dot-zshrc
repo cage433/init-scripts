@@ -85,10 +85,14 @@ alias pr-status='~/repos/topaz-repos/pr-status/pr-status.sh'
 alias wcs='sbt --error "writeChangedModules -n 1"'
 alias wcc='sbt --error writeChangedModules'
 
-# Russian/Anki — refresh the Obsidian "Anki learning vocab" notes (needs Anki running).
-# Guarded so it only exists on machines that have the repo checked out.
-[[ -x "$HOME/repos/russian/.venv/bin/python" ]] && \
+# Russian/Anki — both need Anki running with AnkiConnect.
+# Guarded so they only exist on machines that have the repo checked out.
+#   ruvocab   refresh the Obsidian "Anki learning vocab" notes
+#   rupromote bring `promote`-tagged new cards to the front of the queue for today
+if [[ -x "$HOME/repos/russian/.venv/bin/python" ]]; then
   alias ruvocab='~/repos/russian/.venv/bin/python ~/repos/russian/scripts/export_learning_vocab.py'
+  alias rupromote='~/repos/russian/.venv/bin/python ~/repos/russian/scripts/promote_new_cards.py'
+fi
 
 source /opt/homebrew/opt/zsh-vi-mode/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh
 
