@@ -46,6 +46,9 @@ run '~/.tmux/plugins/tpm/tpm'
 # New sessions open in the same directory as the current pane
 bind c new-window -c "#{pane_current_path}"
 
+# Sort the session list by name rather than creation order
+bind s choose-tree -Zs -O name
+
 # Pane splits should open to the same path as the current pane
 bind '"' split-window -v -c "#{pane_current_path}"
 bind % split-window -h -c "#{pane_current_path}"
