@@ -1,0 +1,147 @@
+#!/bin/zsh
+# doctor - check that this machine's development setup is intact.
+#
+#   doctor          report only
+#   doctor --fix    create missing symlinks (never replaces a real file or directory)
+#
+# Exit status: 0 healthy, 1 problems found, 2 the repo was updated and doctor should be re-run.
+
+emulate -L zsh
+set -u
+
+REPO=${0:A:h:h}
+FIX=0
+[[ ${1:-} == --fix ]] && FIX=1
+
+integer problems=0 warnings=0
+
+ok()   { print -r -- "  ok    $1" }
+warn() { print -r -- "  warn  $1"; (( warnings++ )) }
+bad()  { print -r -- "  FAIL  $1"; (( problems++ )) }
+
+typeset -a LINKS
+LINKS=(
+  "$HOME/.zshrc|dot-zshrc"
+  "$HOME/.tmux.conf|dot-tmux-dot-conf"
+  "$HOME/.gitconfig|dot-gitconfig"
+  "$HOME/.ideavimrc|dot-ideavimrc"
+  "$HOME/bin/tmux-layout|tmux-layout"
+  "$HOME/bin/iterm-name|bin/iterm-name"
+  "$HOME/bin/doctor|bin/doctor"
+  "$HOME/.config/pr-status/config|pr-status-config"
+)
+if [[ $OSTYPE == darwin* ]]; then
+  LINKS+=( "$HOME/Library/Application Support/iTerm2/DynamicProfiles/Topaz.json|iterm2-dynamic-profiles/Topaz.json" )
+fi
+
+typeset -a TOOLS
+TOOLS=(git tmux nvim java sbt gh python3 scalafmt rg fzf)
+
+dirty() { [[ -n $(git -C $REPO status --porcelain) ]] }
+
+check_repo() {
+  print -r -- "init-scripts ($REPO)"
+  if ! git -C $REPO rev-parse --git-dir >/dev/null 2>&1; then
+    bad "not a git repository"
+    return
+  fi
+  if ! git -C $REPO fetch --quiet origin 2>/dev/null; then
+    warn "could not reach origin; skipping the freshness check"
+    return
+  fi
+  local upstream head remote base
+  upstream=$(git -C $REPO rev-parse --abbrev-ref '@{u}' 2>/dev/null)
+  if [[ -z $upstream ]]; then
+    warn "branch has no upstream; skipping the freshness check"
+    return
+  fi
+  head=$(git -C $REPO rev-parse HEAD)
+  remote=$(git -C $REPO rev-parse '@{u}')
+  base=$(git -C $REPO merge-base HEAD '@{u}')
+  if [[ $head == $remote ]]; then
+    ok "up to date with $upstream"
+    dirty && warn "working tree has uncommitted changes"
+    return
+  fi
+  if [[ $head == $base ]]; then
+    if dirty; then
+      bad "behind $upstream, but the working tree is dirty - commit or stash, then re-run"
+      return
+    fi
+    print -r -- "  behind $upstream - pulling"
+    if git -C $REPO pull --ff-only --quiet; then
+      print -r -- ""
+      print -r -- "init-scripts updated to $(git -C $REPO rev-parse --short HEAD). Re-run doctor."
+      exit 2
+    fi
+    bad "pull failed"
+    return
+  fi
+  if [[ $remote == $base ]]; then
+    warn "$(git -C $REPO rev-list --count '@{u}'..HEAD) local commit(s) not pushed to $upstream"
+  else
+    bad "diverged from $upstream - reconcile by hand"
+  fi
+  dirty && warn "working tree has uncommitted changes"
+}
+
+check_links() {
+  print -r -- "symlinks"
+  local entry dest rel src shown
+  for entry in "${LINKS[@]}"; do
+    dest=${entry%%|*}
+    rel=${entry#*|}
+    src=$REPO/$rel
+    shown=${dest/$HOME/\~}
+    if [[ ! -e $src ]]; then
+      bad "$shown: $rel is not in the repo"
+      continue
+    fi
+    if [[ -L $dest ]]; then
+      if [[ ${dest:A} == ${src:A} ]]; then
+        ok "$shown"
+      else
+        bad "$shown points at ${dest:A}, expected $rel"
+        if (( FIX )) && ln -sfn $src $dest; then
+          print -r -- "        relinked"
+        fi
+      fi
+    elif [[ -e $dest ]]; then
+      bad "$shown is a real file - move it aside to let $rel take over"
+    else
+      bad "$shown is missing"
+      if (( FIX )) && mkdir -p ${dest:h} && ln -s $src $dest; then
+        print -r -- "        created"
+      fi
+    fi
+  done
+}
+
+check_tools() {
+  print -r -- "development tools"
+  local tool
+  local -a missing
+  for tool in "${TOOLS[@]}"; do
+    command -v $tool >/dev/null 2>&1 || missing+=$tool
+  done
+  if (( ${#missing} )); then
+    warn "not on PATH: ${missing[*]}"
+  else
+    ok "${#TOOLS} present"
+  fi
+}
+
+check_repo
+print -r -- ""
+check_links
+print -r -- ""
+check_tools
+print -r -- ""
+
+if (( problems )); then
+  print -r -- "doctor: $problems problem(s), $warnings warning(s)"
+  (( FIX )) || print -r -- "re-run with --fix to create or repoint symlinks"
+  exit 1
+fi
+print -r -- "doctor: healthy, $warnings warning(s)"
+exit 0
