@@ -1,0 +1,173 @@
+#!/bin/zsh
+# Name tmux sessions and iTerm2 windows "<node> (<branch>)", so both the Window menu
+# and the tmux session list are navigable. A leading YouTrack id is dropped, so
+# JERAGMPhys-256-marker-fallback shows as "topaz-08 (marker fallback)". The branch is
+# omitted when it matches the node. Sessions stay addressable by their node name, which
+# tmux matches as a prefix.
+#
+#   iterm-name              name this window and its session
+#   iterm-name FOO          name this window FOO, leaving the session alone
+#   iterm-name --all        name every session, and every window with a client attached
+#   iterm-name --list       show tty / current window title / attached tmux session
+#   iterm-name --tty T      name the window whose client tty is T, and its session
+#   iterm-name --label S    print the label that session S would get
+
+emulate -L zsh
+set -u
+
+WORKTREES=$HOME/tz
+
+set_session_name() {
+  osascript - "$1" "$2" <<'APPLESCRIPT'
+on run argv
+  set targetTty to item 1 of argv
+  set newName to item 2 of argv
+  tell application "iTerm2"
+    repeat with w in windows
+      repeat with t in tabs of w
+        repeat with s in sessions of t
+          if (tty of s) is targetTty then
+            set name of s to newName
+            return "ok"
+          end if
+        end repeat
+      end repeat
+    end repeat
+  end tell
+  return "notfound"
+end run
+APPLESCRIPT
+}
+
+set_terminal_title() {
+  printf '\033]2;%s\007' "$2" > "$1" 2>/dev/null
+}
+
+my_tty() {
+  if [[ -n ${TMUX:-} ]]; then
+    tmux display-message -p '#{client_tty}'
+  else
+    tty
+  fi
+}
+
+session_key() {
+  print -r -- "${1%%" ("*}"
+}
+
+repo_for_session() {
+  local dir=$WORKTREES/$(session_key "$1")/topaz
+  if git -C $dir rev-parse --git-dir >/dev/null 2>&1; then
+    print -r -- $dir
+  else
+    tmux display-message -p -t "$1" '#{pane_current_path}' 2>/dev/null
+  fi
+}
+
+branch_words() {
+  local branch=$(git -C "$1" symbolic-ref --quiet --short HEAD 2>/dev/null)
+  [[ -z $branch ]] && return
+  print -r -- "$branch" | sed -E 's/^[A-Za-z0-9][A-Za-z0-9-]*-[0-9]+//; s/^[-_]+//; s/[-_]+/ /g'
+}
+
+session_label() {
+  local key=$(session_key "$1") repo words branch
+  repo=$(repo_for_session "$key")
+  [[ -z $repo ]] && { print -r -- "$key"; return }
+  branch=$(git -C "$repo" symbolic-ref --quiet --short HEAD 2>/dev/null)
+  [[ -z $branch || $branch == $key ]] && { print -r -- "$key"; return }
+  words=$(branch_words "$repo")
+  if [[ -n $words ]]; then
+    print -r -- "$key ($words)"
+  else
+    print -r -- "$key"
+  fi
+}
+
+rename_session() {
+  local current=$1 label=$2
+  [[ $current == $label ]] && return
+  tmux rename-session -t "$current" "$label" 2>/dev/null
+}
+
+tmux_clients() {
+  tmux list-clients -F '#{client_tty}|#{session_name}' 2>/dev/null
+}
+
+session_for_tty() {
+  local tty session
+  while IFS='|' read -r tty session; do
+    [[ $tty == $1 ]] && { print -r -- "$session"; return }
+  done < <(tmux_clients)
+}
+
+apply() {
+  set_session_name "$1" "$2" >/dev/null
+  set_terminal_title "$1" "$2"
+}
+
+list_windows() {
+  local -A attached
+  local tty session name
+  while IFS='|' read -r tty session; do
+    attached[$tty]=$session
+  done < <(tmux_clients)
+
+  osascript <<'APPLESCRIPT' | while IFS='|' read -r tty name; do
+set sep to "|"
+set out to ""
+tell application "iTerm2"
+  repeat with w in windows
+    tell current session of current tab of w
+      set out to out & (tty of it) & sep & (name of w) & linefeed
+    end tell
+  end repeat
+end tell
+return out
+APPLESCRIPT
+    [[ -z $tty ]] && continue
+    printf '%-14s %-40s %s\n' "$tty" "$name" "${attached[$tty]:-—}"
+  done
+}
+
+name_all_from_tmux() {
+  local tty session label
+  while read -r session; do
+    rename_session "$session" "$(session_label "$session")"
+  done < <(tmux list-sessions -F '#{session_name}' 2>/dev/null)
+
+  while IFS='|' read -r tty session; do
+    label=$(session_label "$session")
+    printf '%-14s -> %s\n' "$tty" "$label"
+    apply "$tty" "$label"
+  done < <(tmux_clients)
+}
+
+case "${1:-}" in
+  --list)  list_windows ;;
+  --all)   name_all_from_tmux ;;
+  --label) session_label "$2" ;;
+  --tty)
+    local session=$(session_for_tty "$2")
+    [[ -z $session ]] && return 1
+    local label=$(session_label "$session")
+    rename_session "$session" "$label"
+    apply "$2" "$label"
+    ;;
+  -h|--help) sed -n '2,15p' "$0" ;;
+  *)
+    local target=$(my_tty)
+    local want
+    if [[ -n ${1:-} ]]; then
+      want=$1
+    elif [[ -n ${TMUX:-} ]]; then
+      local current=$(tmux display-message -p '#{session_name}')
+      want=$(session_label "$current")
+      rename_session "$current" "$want"
+    else
+      want=${PWD:t}
+    fi
+    apply "$target" "$want"
+    print -r -- "$target -> $want"
+    ;;
+esac

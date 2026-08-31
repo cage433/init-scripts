@@ -1,6 +1,15 @@
 #!/bin/zsh
 
+session_exists () {
+  local existing
+  for existing in ${(f)"$(tmux list-sessions -F '#{session_name}' 2>/dev/null)"}; do
+    [[ -n $existing && ( $existing == "$1" || $existing == "$1 ("* ) ]] && return 0
+  done
+  return 1
+}
+
 create_session () {
+  session_exists "$1" && return
   tmux new-session -s "$1" -d -c "$2"
 }
 repos=(
@@ -30,3 +39,4 @@ done
 create_session vortex $HOME/repos/vortex-repos/vortex
 create_session general $HOME
 
+$HOME/repos/init-scripts/bin/iterm-name --all >/dev/null
