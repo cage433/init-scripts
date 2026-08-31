@@ -63,3 +63,14 @@ bind t send-keys -t 1 "C-l" "dune test" Enter
 
 unbind t
 bind t send-keys -t 1 "C-l" "pdflatex split-fx.tex" Enter
+
+# Name the terminal window after the tmux session, so iTerm2's Window menu is navigable
+set -g set-titles on
+set -g set-titles-string "#S"
+
+# Profiles that ignore the terminal-set title need the name pushed in over AppleScript
+set-hook -g client-attached        'run-shell -b "~/repos/init-scripts/bin/iterm-name --tty #{client_tty}"'
+set-hook -g client-session-changed 'run-shell -b "~/repos/init-scripts/bin/iterm-name --tty #{client_tty}"'
+
+# Sessions carry the branch in their name; the status bar shows only the node part
+set -g status-left '[#{s/ \(.*//:session_name}] '
