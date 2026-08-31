@@ -67,7 +67,7 @@ repo_for_session() {
 branch_words() {
   local branch=$(git -C "$1" symbolic-ref --quiet --short HEAD 2>/dev/null)
   [[ -z $branch ]] && return
-  print -r -- "$branch" | sed -E 's/^[A-Za-z0-9][A-Za-z0-9-]*-[0-9]+//; s/^[-_]+//; s/[-_]+/ /g'
+  print -r -- "$branch" | sed -E 's/^[A-Z][A-Za-z0-9]*-[0-9]+-//; s/[-_]+/ /g'
 }
 
 session_label() {
