@@ -5,6 +5,14 @@ set-option -g display-time 120
 
 
 setw -g mode-keys vi
+
+# Scrollback. The 2000-line default fills up inside a single Claude Code session
+# (tool output is verbose), so anything older is discarded before you can reach it.
+set -g history-limit 100000
+
+# Let the wheel scroll into copy-mode. In iTerm2, hold Option while dragging to
+# bypass tmux mouse reporting and make a native selection instead.
+set -g mouse on
 set -g base-index 1
 
 # True colour: tell tmux the outer terminal (iTerm2) supports 24-bit colour, so it
@@ -25,7 +33,6 @@ bind x kill-pane
 bind a send-prefix
 
 set -g status on
-bind-key b set-option status
 
 unbind r
 bind r source-file ~/.tmux.conf
