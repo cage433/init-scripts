@@ -46,7 +46,7 @@ ignore-comment:^@coderabbitai
 ignore-title:^\[Backport
 # aliases for reports
 alias:all-since-mk:report --filter LCT>MK
-alias:to-review:report P,CI,T,A,R,UH,UA,AG,LOC,B --filter RO=alex
+alias:to-review:report P,CI,T,A,R,UH,UA,AG,LOC,B,D --filter RO=alex --include-drafts
 alias:mine:report P,CI,T,A,R,UH,UA,AG_,LOC,V_ --filter A=alex --sort=LOC:r
 alias:invalid:report P,T,A,R,YS_,UA_,V_ --filter V=false --sort=A,P
 alias:all:report P,CI,T,A,R,YS_,UH_,UA_,V_,B --sort=A,V,P
