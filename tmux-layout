@@ -37,6 +37,7 @@ for name in ${repos[@]}; do
 done
 
 create_session vortex $HOME/repos/vortex-repos/vortex
+create_session russian $HOME/repos/russian
 create_session general $HOME
 
 $HOME/repos/init-scripts/bin/iterm-name --all >/dev/null
