@@ -79,5 +79,10 @@ set -g set-titles-string "#S"
 set-hook -g client-attached        'run-shell -b "~/repos/init-scripts/bin/iterm-name --tty #{client_tty}"'
 set-hook -g client-session-changed 'run-shell -b "~/repos/init-scripts/bin/iterm-name --tty #{client_tty}"'
 
-# Sessions carry the branch in their name; the status bar shows only the node part
-set -g status-left '[#{s/ \(.*//:session_name}] '
+# Sessions are named "<node> (<branch words>)" by iterm-name. The status bar shows the node, then
+# reads the branch from the session's worktree on every refresh, so a checkout mid-session shows up
+# without waiting for iterm-name to rename anything. Sessions outside ~/tz have no worktree there
+# and get nothing. Note the node is stripped at the first space inside #(), not at " (": tmux scans
+# for the ")" that closes #(), and an unbalanced "(" in the format swallows the rest of it.
+set -g status-left-length 60
+set -g status-left '[#{s/ \(.*//:session_name}] #(git -C "$HOME/tz/#{s/ .*//:session_name}/topaz" symbolic-ref --quiet --short HEAD 2>/dev/null) '
