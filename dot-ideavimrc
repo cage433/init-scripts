@@ -17,5 +17,73 @@ set gdefault
 "set belloff=all
 set visualbell
 "set noerrorbells
-" Isolate & pin the current tab, regardless of pinned status
-nmap <leader>o <Action>(CloseAllOtherTabs)
+
+" Closes every tab but the focused one, pinned included and across splits, then pins
+" it. From the Alex McGuire Plugin; CloseAllEditorsButActive spares pinned tabs.
+nmap <leader>o <Action>(CloseOthersAndPin)
+
+" Search behaviour. IdeaVim follows vim's defaults, not IntelliJ's, so these are off
+" unless set here. nohlsearch is asserted rather than omitted, so re-sourcing turns it
+" off again in a session where something had set it.
+set incsearch
+set nohlsearch
+set ignorecase
+set smartcase
+set scrolloff=5
+
+" Keeps normal mode when IntelliJ opens its inline rename editor.
+set idearefactormode=keep
+
+" Read in place instead of jumping and coming back.
+nmap <leader>d <Action>(QuickImplementations)
+nmap <leader>u <Action>(ShowUsages)
+nmap <leader>h <Action>(HighlightUsagesInFile)
+
+" Find Usages via its settings dialog, for "Instance creation only" plus the
+" Production scope. The scope sticks IDE-wide; the tick cannot, the Scala dialog
+" clears it on open, so it has to be ticked every time.
+nmap <leader>U <Action>(ShowSettingsAndFindUsages)
+
+" Instantiations of the class under the caret - constructors and companion apply
+" calls - from the Alex McGuire Plugin, no dialog and nothing to tick.
+nmap <leader>N <Action>(FindInstanceCreations)
+nmap <leader>P <Action>(FindProductionInstanceCreations)
+
+" Navigate by where you have been, not by filename.
+nmap <leader>r <Action>(RecentFiles)
+nmap <leader>R <Action>(RecentLocations)
+
+" Semantic navigation with no vim equivalent.
+nmap <leader>i <Action>(GotoImplementation)
+nmap <leader>t <Action>(GotoTest)
+nmap <leader>H <Action>(MethodHierarchy)
+
+nmap <leader>a <Action>(GotoAction)
+
+nmap <leader>c <Action>(ChooseRunConfiguration)
+nmap <leader>b <Action>(ViewBreakpoints)
+
+nmap <leader>x <Action>(ShowErrorDescription)
+nmap ]e <Action>(GotoNextError)
+nmap [e <Action>(GotoPreviousError)
+
+" Covers uncommitted work, which git at the command line cannot reach.
+nmap <leader>L <Action>(LocalHistory.ShowHistory)
+
+set surround
+set commentary
+set argtextobj
+set textobj-entire
+set highlightedyank
+set ReplaceWithRegister
+set exchange
+set matchit
+
+" Gives \w \b \e \ge and i\w over camelCase boundaries. Without the key variable the
+" extension creates no mappings at all, and it is read when the extension is enabled, so
+" it has to be set first. Backslash keeps this out of the crowded leader namespace.
+let g:camelcasemotion_key = '\'
+set CamelCaseMotion
+
+" Rebinds s and S in normal mode, so it costs substitute-char.
+"set sneak
