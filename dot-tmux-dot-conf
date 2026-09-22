@@ -79,7 +79,12 @@ set-hook -g client-session-changed 'run-shell -b "~/repos/init-scripts/bin/iterm
 # Sessions are named "<node> (<branch words>)" by iterm-name. The status bar shows the node, then
 # reads the branch from the session's worktree on every refresh, so a checkout mid-session shows up
 # without waiting for iterm-name to rename anything. Sessions outside ~/tz have no worktree there
-# and get nothing. Note the node is stripped at the first space inside #(), not at " (": tmux scans
-# for the ")" that closes #(), and an unbalanced "(" in the format swallows the rest of it.
+# and get nothing. The grep and the sed are iterm-name's session_label and branch_words, repeated
+# here so the status bar and the C-a s session list spell the branch the same way - the list can
+# only show the session name, so tmux cannot reconcile them. The grep drops a branch that just
+# repeats the node, and has to run before the sed, which would mangle it to "topaz 01". Note the
+# node is stripped at the first space inside #(), not at " (": tmux scans for the ")" that closes
+# #(), and an unbalanced "(" in the format swallows the rest of it - which is why the sed uses
+# character classes rather than groups.
 set -g status-left-length 60
-set -g status-left '[#{s/ \(.*//:session_name}] #(git -C "$HOME/tz/#{s/ .*//:session_name}/topaz" symbolic-ref --quiet --short HEAD 2>/dev/null) '
+set -g status-left '[#{s/ \(.*//:session_name}] #(git -C "$HOME/tz/#{s/ .*//:session_name}/topaz" symbolic-ref --quiet --short HEAD 2>/dev/null | grep -vFx "#{s/ .*//:session_name}" | sed -E "s/^[A-Z][A-Za-z0-9]*-[0-9]+-//; s/[-_]+/ /g") '
