@@ -1,0 +1,308 @@
+#!/bin/zsh
+# Move a branch from the worktree node it occupies to another node.
+#
+#   move-branch FRAGMENT              move to the highest free node
+#   move-branch FRAGMENT --to NODE    move to a named node
+#   move-branch FRAGMENT --wait       block until compileExternal finishes
+#   move-branch --list                show every node, which are free, builds running
+#
+# FRAGMENT is any unambiguous part of a branch currently checked out in a numbered
+# node, so `move-branch var-risk-splitting` finds JERAGMPhys-86-var-risk-splitting-fix.
+# An exact branch name always wins over a partial match. NODE may be written
+# topaz-04 or just 04.
+#
+# A node is free when its worktree has its own name checked out. The move is two
+# checkouts — the source returns to its parked branch, the destination takes the
+# feature branch — so build artefacts stay behind and the branch compiles cold at
+# its new node. .claude/branch-notes.md, any .claude/*.patch and an untracked
+# plan.md at the worktree root travel with it; settings.local.json and the rest
+# stay with the node.
+#
+# Both nodes change branch, so the tmux session names iterm-name derives from them
+# go stale. The move ends by running iterm-name --all, the only mode that reaches
+# sessions with no client attached.
+#
+# Refuses to move a branch with uncommitted changes, except for that untracked
+# plan.md, which is carried rather than counted. A destination already holding a
+# plan.md is refused outright, so one branch never inherits another's.
+#
+# If build.sbt or any .proto differs between what the destination currently holds
+# and the branch arriving, that node's generated sources are stale for it, so
+# `sbt compileExternal` runs once the move is done. Interrupting the build does not undo the move.
+#
+# That build is detached by default, logging to <node>/.compile-external.log and
+# recording its pid alongside, so tidying several branches in a row does not mean
+# waiting for each. `--wait` blocks instead and returns the build's exit status.
+#
+# A node with a build still running will not accept a move and will not have its
+# branch moved away, since either would pull the sources out from under it.
+# `--list` shows which builds are still going. Two cautions: a detached build
+# holds the node's sbt server, so starting sbt or IntelliJ there meanwhile will
+# contend with it; and moving several branches at once starts several sbt JVMs,
+# which on this build is a lot of memory.
+
+emulate -L zsh
+set -u
+
+WORKTREES=${MOVE_BRANCH_ROOT:-$HOME/tz}
+GENERATED_INPUTS=(build.sbt '*.proto')
+CARRIED_DOCS=(plan.md)
+
+die() { print -u2 -- "move-branch: $*"; exit 1 }
+
+[[ -d $WORKTREES ]] || die "no workspace at $WORKTREES"
+
+worktree_of() { print -r -- "$WORKTREES/$1/topaz" }
+
+nodes() {
+  local d n
+  for d in $WORKTREES/topaz-<->(N/); do
+    n=${d:t}
+    [[ -e $(worktree_of $n)/.git ]] && print -r -- $n
+  done
+}
+
+branch_of() {
+  git -C "$(worktree_of $1)" symbolic-ref --quiet --short HEAD 2>/dev/null
+}
+
+is_free() { [[ $(branch_of $1) == $1 ]] }
+
+dirty_count() {
+  local f
+  local -a exempt
+  for f in $CARRIED_DOCS; do exempt+=(-e "?? $f"); done
+  git -C "$(worktree_of $1)" status --porcelain 2>/dev/null | grep -vxF $exempt | grep -c . || true
+}
+
+last_content_path() { print -r -- "$WORKTREES/$1/.last-content" }
+build_log_path()    { print -r -- "$WORKTREES/$1/.compile-external.log" }
+build_pid_path()    { print -r -- "$WORKTREES/$1/.compile-external.pid" }
+
+# A detached compileExternal still running for this node. Clears a stale pid file.
+build_running() {
+  local f=$(build_pid_path $1) pid
+  [[ -f $f ]] || return 1
+  pid=$(<$f)
+  if [[ -n $pid ]] && kill -0 $pid 2>/dev/null; then
+    print -r -- $pid
+    return 0
+  fi
+  rm -f $f
+  return 1
+}
+
+# What a node's generated sources were built from. After a branch leaves, HEAD
+# reverts to the parked branch while target/ still holds the departed branch's
+# output, so the recorded commit is the honest answer where one exists.
+content_ref_of() {
+  local f=$(last_content_path $1) ref
+  if [[ -f $f ]]; then
+    ref=$(<$f)
+    if git -C "$(worktree_of $1)" cat-file -e "$ref^{commit}" 2>/dev/null; then
+      print -r -- $ref
+      return 0
+    fi
+  fi
+  git -C "$(worktree_of $1)" rev-parse HEAD
+}
+
+normalise_node() {
+  local n=$1
+  [[ $n == <-> ]] && n=topaz-$n
+  print -r -- $n
+}
+
+cmd_list() {
+  local n b pid build
+  printf '%-10s %-46s %-6s %-10s %s\n' NODE BRANCH DIRTY STATE BUILD
+  for n in $(nodes); do
+    b=$(branch_of $n) || b='<detached>'
+    if pid=$(build_running $n); then build="compiling (pid $pid)"; else build=''; fi
+    printf '%-10s %-46s %-6s %-10s %s\n' \
+      $n $b "$(dirty_count $n)" "$([[ $b == $n ]] && print free || print occupied)" "$build"
+  done
+}
+
+# --------------------------------------------------------------- branch lookup
+
+# Prints "node branch" for the one occupied node whose branch matches FRAGMENT.
+find_source() {
+  local fragment=$1 n b
+  local -a exact partial
+  for n in $(nodes); do
+    b=$(branch_of $n) || continue
+    [[ $b == $n ]] && continue
+    [[ $b == $fragment ]] && exact+=("$n $b")
+    [[ ${b:l} == *${fragment:l}* ]] && partial+=("$n $b")
+  done
+
+  if (( $#exact == 1 )); then
+    print -r -- $exact[1]
+    return 0
+  fi
+
+  case $#partial in
+    1) print -r -- $partial[1]; return 0 ;;
+    0) print -u2 -- "move-branch: no branch in a numbered node matches '$fragment'"
+       print -u2 -- "  branches currently placed:"
+       for n in $(nodes); do
+         b=$(branch_of $n) || continue
+         [[ $b == $n ]] || print -u2 -- "    $n  $b"
+       done
+       return 1 ;;
+    *) print -u2 -- "move-branch: '$fragment' is ambiguous:"
+       local p
+       for p in $partial; do print -u2 -- "    ${p%% *}  ${p#* }"; done
+       return 1 ;;
+  esac
+}
+
+highest_free() {
+  local n
+  local -a free
+  for n in $(nodes); do
+    is_free $n && [[ $(dirty_count $n) -eq 0 ]] && free+=($n)
+  done
+  (( $#free )) || return 1
+  print -r -- ${${(On)free}[1]}
+}
+
+# ---------------------------------------------------------------------- moving
+
+carry_state() {
+  local src=$(worktree_of $1) dst=$(worktree_of $2) f
+  if [[ -d $src/.claude ]]; then
+    mkdir -p $dst/.claude
+    for f in $src/.claude/branch-notes.md(N) $src/.claude/*.patch(N); do
+      mv -- "$f" "$dst/.claude/"
+      print -r -- "  carried ${f:t}"
+    done
+  fi
+  for f in $CARRIED_DOCS; do
+    [[ -e $src/$f ]] || continue
+    git -C "$src" ls-files --error-unmatch -- "$f" >/dev/null 2>&1 && continue
+    mv -- "$src/$f" "$dst/$f"
+    print -r -- "  carried $f"
+  done
+}
+
+# Session names are derived from the branch each node holds, so two are now wrong.
+# --all is the only mode that renames a session with no client attached, which is
+# most of them.
+rename_sessions() {
+  local naming=$HOME/repos/init-scripts/bin/iterm-name
+  [[ -x $naming ]] || return 0
+  $naming --all >/dev/null 2>&1
+  print -r -- "  renamed tmux sessions"
+}
+
+# ------------------------------------------------------------------------ main
+
+local to='' fragment='' background=yes
+while (( $# )); do
+  case $1 in
+    --list)    cmd_list; exit 0 ;;
+    --wait|--foreground|--fg) background=no ;;
+    --background|--bg) background=yes ;;
+    --to)      shift; (( $# )) || die "--to needs a node"; to=$(normalise_node $1) ;;
+    --to=*)    to=$(normalise_node ${1#--to=}) ;;
+    -h|--help) awk 'NR>1 && /^#/ { sub(/^# ?/, ""); print; next } NR>1 { exit }' "$0"; exit 0 ;;
+    -*)        die "unknown option: $1 (try --help)" ;;
+    *)         [[ -z $fragment ]] || die "only one branch may be given"; fragment=$1 ;;
+  esac
+  shift
+done
+
+[[ -n $fragment ]] || die "name a branch (try --help)"
+
+local found src branch
+found=$(find_source "$fragment") || exit 1
+src=${found%% *}
+branch=${found#* }
+
+if [[ -n $to ]]; then
+  [[ -e $(worktree_of $to)/.git ]] || die "no worktree at $(worktree_of $to)"
+  [[ $to == $src ]] && die "$branch is already at $src"
+  if ! is_free $to; then
+    die "$to is not free — it holds $(branch_of $to)"
+  fi
+  [[ $(dirty_count $to) -eq 0 ]] || die "$to has uncommitted changes"
+else
+  to=$(highest_free) || die "no free node available; free one or pass --to"
+  [[ $to == $src ]] && die "$branch is already at $src"
+fi
+
+local running
+if running=$(build_running $src); then
+  die "$src has a compileExternal running (pid $running) — wait for it or kill it"
+fi
+if running=$(build_running $to); then
+  die "$to has a compileExternal running (pid $running) — wait for it or kill it"
+fi
+
+if [[ $(dirty_count $src) -gt 0 ]]; then
+  print -u2 -- "move-branch: $src has uncommitted changes — commit or stash first"
+  git -C "$(worktree_of $src)" status --short >&2
+  exit 1
+fi
+
+local doc
+for doc in $CARRIED_DOCS; do
+  [[ -e $(worktree_of $to)/$doc ]] \
+    && die "$to already holds a $doc — delete it first, nothing is moved over it"
+done
+
+# Captured before the move: what the destination's generated sources were built from.
+local dest_before=$(content_ref_of $to)
+local src_commit=$(git -C "$(worktree_of $src)" rev-parse HEAD)
+local needs_external=no
+if ! git -C "$(worktree_of $src)" diff --quiet "$dest_before" "$branch" -- $GENERATED_INPUTS; then
+  needs_external=yes
+fi
+
+print -r -- "$src -> $to  $branch"
+
+git -C "$(worktree_of $src)" checkout --quiet "$src" \
+  || die "could not park $src on branch $src"
+
+if ! git -C "$(worktree_of $to)" checkout --quiet "$branch"; then
+  print -u2 -- "move-branch: could not check out $branch in $to — restoring $src"
+  git -C "$(worktree_of $src)" checkout --quiet "$branch"
+  exit 1
+fi
+
+carry_state $src $to
+
+# The source keeps the departed branch's build output; the destination's is now
+# whatever it is about to build, which HEAD describes accurately.
+print -r -- "$src_commit" > "$(last_content_path $src)"
+rm -f "$(last_content_path $to)"
+
+rename_sessions
+
+if [[ $needs_external == yes ]]; then
+  local -a changed
+  changed=(${(f)"$(git -C "$(worktree_of $to)" diff --name-only "$dest_before" "$branch" -- $GENERATED_INPUTS)"})
+  print -r -- "  generated sources stale (${#changed} file(s) differ: ${changed[1,3]})"
+
+  if [[ $background == yes ]]; then
+    local log=$(build_log_path $to)
+    ( cd "$(worktree_of $to)"
+      nohup sbt -Dsbt.log.noformat=true compileExternal > "$log" 2>&1 &
+      print -r -- $! > "$(build_pid_path $to)"
+      disown 2>/dev/null
+    )
+    print -r -- "  compileExternal detached in $to (pid $(<$(build_pid_path $to)))"
+    print -r -- "  log: $log"
+    exit 0
+  fi
+
+  print -r -- "  running sbt compileExternal in $to"
+  ( cd "$(worktree_of $to)" && sbt compileExternal )
+  local rc=$?
+  (( rc == 0 )) || print -u2 -- "move-branch: compileExternal failed (exit $rc); the move itself is done"
+  exit $rc
+fi
+
+print -r -- "  build.sbt and protos unchanged — no compileExternal needed"
