@@ -69,13 +69,16 @@ export PATH
 
 # Created by `pipx` on 2025-12-06 05:37:22
 export PATH="$PATH:/Users/alex/.local/bin"
-export PATH="$PATH:/Users/alex/bin"
 export PATH="$HOME/.local/bin:$PATH"
 
 alias ce='sbt "compileExternal"'
 export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
 alias sfmt='scalafmt --mode diff-ref=upstream/master'
 export PATH="$PATH:/Users/alex/Library/Application Support/Coursier/bin"
+
+# ~/bin last, so it wins over Homebrew: sbt there is sbt-extras, which is the launcher the -J
+# prefixes in SBT_OPTS below are written for.
+export PATH="$HOME/bin:$PATH"
 alias gs='git status'
 alias gd='git diff'
 alias gdn='git diff --name-only'
