@@ -1,0 +1,92 @@
+#!/bin/zsh
+# intellij-usage-capture - preserve IntelliJ's own usage telemetry before it is deleted.
+#
+# IntelliJ writes per-event JSON to event-log-data/logs/FUS/ and uploads it to JetBrains,
+# deleting the local copy within a day. Those events carry action_id, place (keyboard vs
+# mouse vs menu) and input_event, which the cumulative counters in options/ do not. This
+# script rsyncs the FUS logs somewhere durable and takes a daily snapshot of the two
+# cumulative counters so that change over time is measurable.
+#
+#   intellij-usage-capture           capture (quiet; intended for launchd)
+#   intellij-usage-capture -v        report what was copied
+#
+# Store layout under $INTELLIJ_USAGE_HOME (default ~/.local/share/intellij-usage):
+#   fus/<IdeVersion>/*.log                       raw per-event JSON, accumulated
+#   snapshots/<YYYY-MM-DD>/<IdeVersion>-*.xml    once-daily cumulative counters
+#
+# Analyse with intellij-usage-report.
+
+emulate -L zsh
+set -u
+setopt null_glob
+
+HOME_DIR=${INTELLIJ_USAGE_HOME:-$HOME/.local/share/intellij-usage}
+CONFIG_ROOT=$HOME/Library/Application\ Support/JetBrains
+CACHE_ROOT=$HOME/Library/Caches/JetBrains
+FUS_RETENTION_DAYS=${INTELLIJ_USAGE_RETENTION_DAYS:-365}
+
+VERBOSE=0
+[[ ${1:-} == -v ]] && VERBOSE=1
+
+say() { (( VERBOSE )) && print -r -- "$@"; return 0 }
+
+if ! command -v rsync > /dev/null; then
+  print -ru2 -- "intellij-usage-capture: rsync not found"
+  exit 1
+fi
+
+mkdir -p $HOME_DIR/fus $HOME_DIR/snapshots || exit 1
+
+today=$(date +%Y-%m-%d)
+copied_logs=0
+snapshotted=0
+
+# Glob every JetBrains IDE that records FUS, not just the current IntelliJ. A version
+# bump creates a new directory, and hardcoding one would silently stop collection.
+for cache_dir in $CACHE_ROOT/*(/); do
+  version=${cache_dir:t}
+  fus_src=$cache_dir/event-log-data/logs/FUS
+
+  if [[ -d $fus_src ]]; then
+    fus_dest=$HOME_DIR/fus/$version
+    mkdir -p $fus_dest
+    # A session's log is still being appended to. rsync recopies it whenever size or
+    # mtime differ, so repeated ticks converge on the complete file; only events written
+    # after the final tick before deletion are lost.
+    if rsync -a --include='*.log' --exclude='*' $fus_src/ $fus_dest/ 2> /dev/null; then
+      n=$(print -rl -- $fus_src/*.log | grep -c . )
+      (( copied_logs += n ))
+      say "fus: $version ($n log(s) present)"
+    else
+      print -ru2 -- "intellij-usage-capture: rsync failed for $version"
+    fi
+  fi
+done
+
+# The cumulative counters are rewritten by the IDE on exit and are cheap to copy, so one
+# snapshot per day is enough to build a delta series.
+snap_dir=$HOME_DIR/snapshots/$today
+if [[ ! -d $snap_dir ]]; then
+  for config_dir in $CONFIG_ROOT/*(/); do
+    version=${config_dir:t}
+    for counter in actionSummary features.usage.statistics; do
+      src=$config_dir/options/$counter.xml
+      if [[ -f $src ]]; then
+        mkdir -p $snap_dir
+        if cp -p $src $snap_dir/$version-$counter.xml; then
+          (( snapshotted++ ))
+          say "snapshot: $version/$counter.xml"
+        fi
+      fi
+    done
+  done
+fi
+
+# Unbounded growth is the only real cost here; a year of history is more than the
+# week-over-week comparisons need.
+if (( FUS_RETENTION_DAYS > 0 )); then
+  pruned=$(find $HOME_DIR/fus -name '*.log' -type f -mtime +$FUS_RETENTION_DAYS -print -delete 2> /dev/null | grep -c . )
+  (( pruned > 0 )) && say "pruned: $pruned log(s) older than $FUS_RETENTION_DAYS days"
+fi
+
+print -r -- "$(date '+%Y-%m-%d %H:%M:%S') logs=$copied_logs snapshots=$snapshotted"

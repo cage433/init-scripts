@@ -1,0 +1,293 @@
+#!/usr/bin/env python3
+"""intellij-usage-report - analyse the telemetry preserved by intellij-usage-capture.
+
+Three questions the raw files cannot answer on their own:
+
+  1. How was an action invoked - keyboard, mouse, or menu? Only the FUS event log carries
+     `place` and `input_event`. actionSummary.xml counts invocations but not their route.
+
+  2. Which actions get reached for with the mouse despite already having a shortcut? Key
+     Promoter X answers this with a notification per click; here it is answered offline by
+     joining FUS `place` against the resolved keymap.
+
+  3. What changed? actionSummary.xml is cumulative since the IDE version was installed, so
+     a single reading cannot show whether a new binding displaced an old habit. The daily
+     snapshot series can.
+
+IdeaVim makes the raw counts misleading: every keystroke it handles is recorded as
+VimShortcutKeyAction wrapped in AnActionWrapper, which in one sample was 54% of all
+invocations. Those are attributed out of the rankings and reported separately.
+
+  intellij-usage-report                  all sections, IntelliJ only
+  intellij-usage-report --ide PyCharm    a different IDE
+  intellij-usage-report --top 40         longer rankings
+  intellij-usage-report --section delta  one section only
+"""
+
+import argparse
+import collections
+import glob
+import json
+import os
+import re
+import sys
+import xml.etree.ElementTree as ET
+import zipfile
+
+STORE = os.path.expanduser(
+    os.environ.get("INTELLIJ_USAGE_HOME", "~/.local/share/intellij-usage")
+)
+APP = os.path.expanduser("~/Applications/IntelliJ IDEA.app")
+VIM_ACTION = "VimShortcutKeyAction"
+KEYBOARD = "keyboard shortcut"
+
+# `place` is not enough to tell a mouse click from a programmatic dispatch: IdeaVim's
+# <Action>(id) mappings arrive as place='unknown', input_event='Undefined', which is
+# indistinguishable from a menu invocation by `place` alone. `input_event` separates
+# them - a real click reports MouseLeft. Getting this wrong would flag every
+# vim-mapped action as "you used the mouse when a shortcut exists".
+ROUTE_KEYBOARD = "keyboard"
+ROUTE_MOUSE = "mouse"
+ROUTE_PROGRAM = "programmatic"
+
+
+def route_of(data):
+    input_event = data.get("input_event") or ""
+    if input_event.startswith("Mouse") or data.get("context_menu"):
+        return ROUTE_MOUSE
+    if data.get("place") == KEYBOARD:
+        return ROUTE_KEYBOARD
+    if input_event in ("", "Undefined"):
+        return ROUTE_PROGRAM
+    return ROUTE_KEYBOARD
+
+
+def load_fus(ide):
+    """Return the `data` payload of every action.finished event for this IDE."""
+    files = sorted(glob.glob(os.path.join(STORE, "fus", f"{ide}*", "*.log")))
+    events, malformed = [], 0
+    for path in files:
+        with open(path, errors="replace") as handle:
+            for line in handle:
+                try:
+                    record = json.loads(line)
+                except ValueError:
+                    malformed += 1
+                    continue
+                if record.get("group", {}).get("id") != "actions":
+                    continue
+                event = record.get("event", {})
+                # Sibling ids such as action.group.expanded carry none of the route
+                # fields, so they would otherwise all be counted as programmatic.
+                if event.get("id") != "action.finished":
+                    continue
+                data = event.get("data")
+                if data:
+                    events.append(data)
+    return files, events, malformed
+
+
+def section_routes(events, top):
+    """Rank actions by count, split by how they were invoked."""
+    counts = collections.Counter()
+    routes = collections.defaultdict(collections.Counter)
+    vim_keys = collections.Counter()
+
+    for data in events:
+        action = data.get("action_id", "?")
+        if action == VIM_ACTION:
+            vim_keys[data.get("input_event", "?")] += 1
+            continue
+        counts[action] += 1
+        routes[action][route_of(data)] += 1
+
+    print("== Actions by invocation route ==")
+    if not counts:
+        print("  no action events captured yet - the agent needs a tick while the IDE runs")
+    else:
+        print(f"  {'count':>6}  {'keybd':>6}  {'mouse':>6}  {'prog':>6}  action")
+        for action, count in counts.most_common(top):
+            by_route = routes[action]
+            print(f"  {count:6d}  {by_route[ROUTE_KEYBOARD]:6d}  {by_route[ROUTE_MOUSE]:6d}"
+                  f"  {by_route[ROUTE_PROGRAM]:6d}  {action}")
+        print("\n  prog = dispatched in code, which is how .ideavimrc <Action>() mappings appear.")
+
+    total = sum(vim_keys.values())
+    if total:
+        busiest = ", ".join(f"{key} x{n}" for key, n in vim_keys.most_common(6))
+        print(f"\n  IdeaVim handled {total} keystrokes, attributed out of the table above.")
+        print(f"  Most frequent: {busiest}")
+    print()
+
+
+def read_jar_entry(suffix):
+    """First matching entry from the IDE's own jars, or None."""
+    for jar in sorted(glob.glob(f"{APP}/Contents/lib/*.jar")):
+        try:
+            archive = zipfile.ZipFile(jar)
+        except (zipfile.BadZipFile, OSError):
+            continue
+        with archive:
+            for entry in archive.namelist():
+                if entry.endswith(suffix):
+                    return archive.read(entry)
+    return None
+
+
+def keymap_bindings(config_dir):
+    """Action ids holding at least one keyboard shortcut, following the parent chain.
+
+    A user keymap records only its differences from its parent, and an <action> element
+    with no children means the shortcut was deliberately removed. Both matter: an action
+    the user unbound must not count as having a shortcut.
+    """
+    bound, unbound, seen = set(), set(), set()
+    pending = []
+
+    for path in glob.glob(os.path.join(config_dir, "keymaps", "*.xml")):
+        try:
+            with open(path, "rb") as handle:
+                pending.append(handle.read())
+        except OSError:
+            continue
+
+    while pending:
+        try:
+            root = ET.fromstring(pending.pop())
+        except ET.ParseError:
+            continue
+        for action in root.findall("action"):
+            action_id = action.get("id")
+            if action_id is None:
+                continue
+            if action.findall("keyboard-shortcut"):
+                bound.add(action_id)
+            elif len(action) == 0:
+                unbound.add(action_id)
+        parent = root.get("parent")
+        if parent and parent not in seen:
+            seen.add(parent)
+            data = read_jar_entry(f"keymaps/{parent}.xml")
+            if data:
+                pending.append(data)
+
+    return bound - unbound
+
+
+def section_promoter(events, config_dir, threshold):
+    """Actions repeatedly invoked by mouse or menu that already have a shortcut."""
+    mouse = collections.Counter()
+    for data in events:
+        action = data.get("action_id", "?")
+        if action == VIM_ACTION:
+            continue
+        if route_of(data) == ROUTE_MOUSE:
+            mouse[action] += 1
+
+    bound = keymap_bindings(config_dir)
+
+    print("== Invoked by mouse or menu, but a shortcut exists ==")
+    rows = sorted(
+        ((n, a) for a, n in mouse.items() if n >= threshold and a in bound),
+        reverse=True,
+    )
+    if rows:
+        for count, action in rows:
+            print(f"  {count:6d}  {action}")
+    else:
+        print(f"  nothing above the {threshold}-invocation threshold")
+        if not bound:
+            print("  NOTE: no keymap bindings resolved, so the join could not be performed")
+    print()
+
+
+def parse_action_summary(path):
+    counts = {}
+    try:
+        root = ET.parse(path).getroot()
+    except (ET.ParseError, OSError):
+        return counts
+    for element in root.iter("e"):
+        for item in element:
+            try:
+                counts[element.get("n")] = int(item.get("c"))
+            except (TypeError, ValueError):
+                pass
+    return counts
+
+
+def section_delta(ide, top):
+    """Compare the oldest and newest cumulative snapshots."""
+    series = []
+    for date_dir in sorted(glob.glob(os.path.join(STORE, "snapshots", "*"))):
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", os.path.basename(date_dir)):
+            continue
+        matches = sorted(glob.glob(os.path.join(date_dir, f"{ide}*-actionSummary.xml")))
+        if matches:
+            series.append((os.path.basename(date_dir), matches[-1]))
+
+    print("== Change between snapshots ==")
+    if len(series) < 2:
+        print(f"  only {len(series)} snapshot(s) for {ide}; deltas need two separate days")
+        if series:
+            print(f"  baseline recorded {series[0][0]}")
+        print()
+        return
+
+    (first_date, first_path), (last_date, last_path) = series[0], series[-1]
+    before, after = parse_action_summary(first_path), parse_action_summary(last_path)
+
+    # An IDE upgrade starts a fresh counter file, so a fall in the total means a new
+    # install rather than a decline. Say so instead of printing nonsense deltas.
+    if sum(after.values()) < sum(before.values()):
+        print(f"  counters reset between {first_date} and {last_date}, likely an upgrade")
+        print("  deltas across a reset are not meaningful")
+        print()
+        return
+
+    deltas = collections.Counter()
+    for action, count in after.items():
+        change = count - before.get(action, 0)
+        if change > 0:
+            deltas[action] = change
+
+    print(f"  {first_date} -> {last_date}, {sum(deltas.values())} invocations")
+    for action, change in deltas.most_common(top):
+        was = before.get(action, 0)
+        print(f"  +{change:<6d} {action} (was {was}){'  NEW' if was == 0 else ''}")
+    print()
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--ide", default="IntelliJIdea", help="IDE directory prefix")
+    parser.add_argument("--top", type=int, default=25, help="rows per ranking")
+    parser.add_argument("--threshold", type=int, default=3,
+                        help="minimum mouse invocations before reporting an action")
+    parser.add_argument("--section", default="all",
+                        choices=("routes", "promoter", "delta", "all"))
+    args = parser.parse_args()
+
+    if not os.path.isdir(STORE):
+        sys.exit(f"no capture store at {STORE}; run intellij-usage-capture first")
+
+    config_root = os.path.expanduser("~/Library/Application Support/JetBrains")
+    config_dirs = sorted(glob.glob(os.path.join(config_root, f"{args.ide}*")))
+    config_dir = config_dirs[-1] if config_dirs else ""
+
+    files, events, malformed = load_fus(args.ide)
+    print(f"{len(events)} action events from {len(files)} captured log(s) for {args.ide}")
+    if malformed:
+        print(f"{malformed} unparseable line(s) skipped, from partial copies of live logs")
+    print()
+
+    if args.section in ("routes", "all"):
+        section_routes(events, args.top)
+    if args.section in ("promoter", "all"):
+        section_promoter(events, config_dir, args.threshold)
+    if args.section in ("delta", "all"):
+        section_delta(args.ide, args.top)
+
+
+if __name__ == "__main__":
+    main()
