@@ -241,6 +241,7 @@
         "Green Component": 0.9098039215686274,
         "Red Component": 0.9333333333333333
       },
+      "Flashing Bell": false,
       "Foreground Color (Dark)": {
         "Blue Component": 0.5882352941176471,
         "Color Space": "sRGB",
@@ -280,8 +281,11 @@
         "Green Component": 0.9098039215686274,
         "Red Component": 0.9333333333333333
       },
+      "Send Bell Alert": false,
+      "Silence Bell": true,
       "Title Components": 1,
-      "Use Separate Colors for Light and Dark Mode": true
+      "Use Separate Colors for Light and Dark Mode": true,
+      "Visual Bell": false
     }
   ]
 }
