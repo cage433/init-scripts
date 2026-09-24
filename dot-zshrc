@@ -82,8 +82,8 @@ export PATH="$HOME/bin:$PATH"
 alias gs='git status'
 alias gd='git diff'
 alias gdn='git diff --name-only'
-alias gsd='cl;git diff HEAD~ HEAD'
-alias gsdn='cl;git diff HEAD~ HEAD --name-only'
+alias gsd='cl;git diff `git merge-base upstream/master HEAD` HEAD'
+alias gsdn='cl;git diff `git merge-base upstream/master HEAD` HEAD --name-only'
 alias pr-status='~/repos/topaz-repos/pr-status/pr-status.sh'
 unalias wcs wcc 2>/dev/null
 wcs() {
