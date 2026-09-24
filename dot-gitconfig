@@ -20,11 +20,12 @@
   diffFilter = delta --color-only
 
 [branch]
-	autosetupmerge = true
+	autoSetupMerge = false
 	autosetuprebase = always
 
 [push]
 	default = current
+	autoSetupRemote = true
 
 [alias]
 	s = status
@@ -36,7 +37,6 @@
 	d = diff --color-words
 
 [pull]
-	default = current
 	rebase = true
 	ff = only
 
@@ -82,3 +82,8 @@
 [advice]
 	skippedCherryPicks = false
 
+[remote]
+	pushDefault = origin
+
+[checkout]
+	defaultRemote = origin
