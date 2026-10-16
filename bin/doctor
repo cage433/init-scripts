@@ -10,6 +10,7 @@ emulate -L zsh
 set -u
 
 REPO=${0:A:h:h}
+PROTON=$HOME/Proton/dot-files
 FIX=0
 [[ ${1:-} == --fix ]] && FIX=1
 
@@ -35,6 +36,13 @@ LINKS=(
   "$HOME/bin/iterm-name|bin/iterm-name"
   "$HOME/bin/doctor|bin/doctor"
 )
+# Files holding secrets live in Proton Drive, never in this repo.
+typeset -a SECRET_LINKS
+SECRET_LINKS=(
+  "$HOME/.config/pr-status/config|pr-status-config"
+  "$HOME/.config/pr-status/keys|pr-status-keys"
+)
+
 if [[ $OSTYPE == darwin* ]]; then
   LINKS+=( "$HOME/Library/Application Support/iTerm2/DynamicProfiles/Topaz.json|iterm2-dynamic-profiles/Topaz.json" )
 fi
@@ -112,16 +120,20 @@ check_repo() {
   dirty $dir && warn "working tree has uncommitted changes"
 }
 
+# check_links title root entry...
+# Each entry is "dest|path", linking dest to root/path.
 check_links() {
-  print -r -- "symlinks"
-  local entry dest rel src shown
-  for entry in "${LINKS[@]}"; do
+  local title=$1 root=$2; shift 2
+  print -r -- "$title"
+  local entry dest rel src shown rootshown
+  rootshown=${root/$HOME/\~}
+  for entry in "$@"; do
     dest=${entry%%|*}
     rel=${entry#*|}
-    src=$REPO/$rel
+    src=$root/$rel
     shown=${dest/$HOME/\~}
     if [[ ! -e $src ]]; then
-      bad "$shown: $rel is not in the repo"
+      bad "$shown: $rel is not in $rootshown"
       continue
     fi
     if [[ -L $dest ]]; then
@@ -165,7 +177,9 @@ for entry in "${GIT_REPOS[@]}"; do
   check_repo "$fields[1]" "$fields[2]" "${fields[3]:-}"
   print -r -- ""
 done
-check_links
+check_links "symlinks" $REPO "${LINKS[@]}"
+print -r -- ""
+check_links "secret symlinks" $PROTON "${SECRET_LINKS[@]}"
 print -r -- ""
 check_tools
 print -r -- ""
