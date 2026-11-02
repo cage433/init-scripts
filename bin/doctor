@@ -36,6 +36,7 @@ LINKS=(
   "$HOME/bin/iterm-name|bin/iterm-name"
   "$HOME/bin/doctor|bin/doctor"
   "$HOME/bin/clean-shutdown|bin/clean-shutdown"
+  "$HOME/bin/mac-diag-recorder|mac-diag/recorder"
 )
 # Files holding secrets live in Proton Drive, never in this repo.
 typeset -a SECRET_LINKS
@@ -171,6 +172,37 @@ check_tools() {
   fi
 }
 
+# The freeze recorder: a LaunchAgent that runs mac-diag-recorder --snapshot every
+# minute, plus a small Swift helper it builds for Wi-Fi readings.
+check_recorder() {
+  print -r -- "mac-diag recorder"
+  local label=com.cage433.mac-diag-recorder
+  local plist=$HOME/Library/LaunchAgents/$label.plist
+  local link=$HOME/bin/mac-diag-recorder
+  local helper=$HOME/.local/libexec/mac-diag/wifi-signal
+  integer before=$warnings
+  if [[ ! -e $plist ]]; then
+    warn "LaunchAgent not installed"
+  else
+    [[ $(/usr/libexec/PlistBuddy -c 'Print :ProgramArguments:0' $plist 2>/dev/null) == $link ]] \
+      || warn "LaunchAgent does not run ${link/$HOME/~}"
+    launchctl print gui/$UID/$label >/dev/null 2>&1 || warn "LaunchAgent not loaded"
+  fi
+  if [[ ! -x $helper ]]; then
+    warn "Wi-Fi helper not built"
+  elif [[ $REPO/mac-diag/wifi-signal.swift -nt $helper ]]; then
+    warn "Wi-Fi helper older than its source"
+  fi
+  if (( warnings == before )); then
+    ok "LaunchAgent loaded, Wi-Fi helper current"
+  elif (( FIX )) && [[ -x $link ]]; then
+    print -r -- "        running mac-diag-recorder --install"
+    $link --install | sed 's/^/        /'
+  else
+    print -r -- "        fix with: mac-diag-recorder --install (or doctor --fix)"
+  fi
+}
+
 typeset entry
 typeset -a fields
 for entry in "${GIT_REPOS[@]}"; do
@@ -184,6 +216,10 @@ check_links "secret symlinks" $PROTON "${SECRET_LINKS[@]}"
 print -r -- ""
 check_tools
 print -r -- ""
+if [[ $OSTYPE == darwin* ]]; then
+  check_recorder
+  print -r -- ""
+fi
 
 if (( problems )); then
   print -r -- "doctor: $problems problem(s), $warnings warning(s)"

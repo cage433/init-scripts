@@ -1,0 +1,254 @@
+#!/bin/zsh -f
+# mac-diag-recorder - record a once-a-minute snapshot of this Mac's state, to help
+# diagnose occasional freezes. Reads local state only: nothing is sent off the
+# machine, and nothing needs root.
+#
+#   mac-diag-recorder                 same as --status
+#   mac-diag-recorder --status [--days N]
+#                                     summarise what has been recorded (default 1 day)
+#   mac-diag-recorder --install       build the Wi-Fi helper, write and load the LaunchAgent
+#   mac-diag-recorder --uninstall     unload and remove the LaunchAgent; keeps the data
+#   mac-diag-recorder --snapshot      append one snapshot (what launchd runs)
+#
+# Snapshots go to ~/mac-diag/recorder/snap-YYYY-MM-DD.log. Earlier days are gzipped,
+# and files older than 7 days are deleted.
+#
+# Each section header is written before its command runs, so if a command blocks
+# (as configd did in the October 2026 freezes) the snapshot ends at that header,
+# which shows where the system was stuck.
+
+zmodload zsh/datetime
+setopt pipe_fail
+
+LABEL=com.cage433.mac-diag-recorder
+SELF=${0:A}
+HERE=${SELF:h}
+DATA=$HOME/mac-diag/recorder
+HELPER_DIR=$HOME/.local/libexec/mac-diag
+HELPER=$HELPER_DIR/wifi-signal
+HELPER_SRC=$HERE/wifi-signal.swift
+PLIST=$HOME/Library/LaunchAgents/$LABEL.plist
+LINK=$HOME/bin/mac-diag-recorder
+KEEP_DAYS=7
+STEP_TIMEOUT=10          # seconds; a step taking longer is killed and marked with !!
+
+usage() { sed -n '2,/^$/{s/^# \{0,1\}//;p;}' $SELF }
+
+# ---------------------------------------------------------------------------
+# snapshot
+
+# Runs a command with a time limit. The alarm survives exec, so the command itself
+# receives SIGALRM; a process stuck in the kernel dies when it next returns.
+limit() {
+  perl -e 'alarm shift; exec @ARGV or die "exec: $!\n"' $STEP_TIMEOUT "$@"
+  local rc=$?
+  (( rc == 0 )) || print -u2 "!! $1 exited $rc${${(M)rc:#142}:+ (timed out after ${STEP_TIMEOUT}s)}"
+  return rc
+}
+
+section() { print "## $1" }
+
+snapshot() {
+  PATH=/usr/bin:/bin:/usr/sbin:/sbin
+  mkdir -p $DATA
+  local out=$DATA/snap-$(strftime %Y-%m-%d $EPOCHSECONDS).log
+  exec >>$out 2>&1
+  local start=$EPOCHREALTIME
+
+  print "=== $(strftime '%Y-%m-%dT%H:%M:%S%z' $EPOCHSECONDS) load=$(sysctl -n vm.loadavg)"
+
+  # One process listing, reused by the thread, VPN and pfctl sections.
+  local procs
+  procs=$(limit ps -axo pid=,comm=)
+
+  section "threads (top 15)"
+  # ps -M prints one line per thread: the process's first line starts with the user
+  # name (pid in field 2), the rest start with the pid.
+  limit ps -axM | awk '
+    FNR == NR { l = $0; sub(/^ +/, "", l); p = l; sub(/ .*/, "", p)
+                c = l; sub(/^[0-9]+ +/, "", c); sub(/.*\//, "", c); name[p] = c; next }
+    FNR == 1  { next }
+    { pid = ($1 ~ /^[0-9]+$/) ? $1 : $2; count[pid]++ }
+    END { for (p in count) printf "%5d %6d %s\n", count[p], p, name[p] }' <(print -r -- "$procs") - | sort -rn | head -15
+
+  section "interfaces (up and active, plus utun)"
+  limit ifconfig -a | awk '
+    function flush() {
+      if (name != "" && up && (status == "active" || name ~ /^utun/ || (status == "" && addrs != "")))
+        printf "%-8s %-8s mtu %s%s\n", name, (status == "" ? "-" : status), mtu, addrs
+    }
+    /^[a-z]/ { flush(); name = $1; sub(/:$/, "", name); up = ($0 ~ /<UP/); status = ""; addrs = ""
+               mtu = $0; sub(/.*mtu /, "", mtu); next }
+    $1 == "inet"    { addrs = addrs " " $2 }
+    $1 == "inet6"   { a = $2; sub(/%.*/, "", a); addrs = addrs " " a }
+    $1 == "status:" { status = $2 }
+    END { flush() }'
+
+  section "default routes"
+  limit netstat -rn -f inet  | awk '$1 == "default" || $1 ~ /^(0|128(\.0)*)\/1$/'
+  limit netstat -rn -f inet6 | awk '$1 == "default" || $1 ~ /^::\/1$/ || $1 ~ /^8000::\/1$/'
+
+  section "dns resolvers"
+  limit scutil --dns | awk '
+    function flush() { if (ns != "") printf "%-8s %s ns=%s%s%s\n", scope, r, ns, (dom == "" ? "" : " domain=" dom), (ifn == "" ? "" : " if=" ifn) }
+    /^DNS configuration \(for scoped/ { flush(); r = ""; scope = "scoped"; next }
+    /^DNS configuration/              { scope = "default"; next }
+    /^resolver #/         { flush(); r = $1 $2; ns = ""; dom = ""; ifn = ""; next }
+    $1 == "domain"        { dom = $3 }
+    $1 == "nameserver[0]" { ns = $3; next }
+    $1 ~ /^nameserver\[/  { ns = ns "," $3 }
+    $1 == "if_index"      { ifn = $4; gsub(/[()]/, "", ifn) }
+    END { flush() }'
+
+  section "vpn"
+  limit scutil --nc list | sed 1d
+  print -r -- "$procs" | awk '{ c = $0; sub(/^ *[0-9]+ +/, "", c) }
+    tolower(c) ~ /amnezia|tun2socks|openvpn|wireguard|wg-go|protonvpn|xray|cloak|tailscale/ { sub(/^ +/, ""); print "proc " $0 }'
+
+  section "wifi"
+  if [[ -x $HELPER ]]; then
+    limit $HELPER
+  else
+    print "wifi: unavailable (helper not built - run mac-diag-recorder --install)"
+  fi
+
+  section "pfctl"
+  # Without root there is no record of past pfctl runs: it writes nothing to the
+  # unified log. Two proxies: pfctl running at this instant, and pf rule files
+  # changed in the last minute.
+  local running changed
+  running=$(print -r -- "$procs" | awk '$2 ~ /(^|\/)pfctl$/ { printf " %s", $1 }')
+  changed=$(find /etc/pf.conf /etc/pf.anchors "/Library/Application Support/AmneziaVPN/pf" -mtime -60s 2>/dev/null | tr '\n' ' ')
+  print "running_now=${running:-no} rule_files_changed_last_60s=${changed:-none}"
+
+  printf "## done in %.0fms\n" $(( (EPOCHREALTIME - start) * 1000 ))
+
+  # Housekeeping: compress earlier days, delete anything older than KEEP_DAYS.
+  local f
+  for f in $DATA/snap-*.log(N); do [[ $f == $out ]] || gzip -q $f; done
+  find $DATA -maxdepth 1 -name 'snap-*.log*' -mtime +$KEEP_DAYS -delete
+}
+
+# ---------------------------------------------------------------------------
+# install / uninstall
+
+build_helper() {
+  if [[ -x $HELPER && ! $HELPER_SRC -nt $HELPER ]]; then
+    print "Wi-Fi helper up to date: ${HELPER/$HOME/~}"
+    return 0
+  fi
+  if ! xcrun --find swiftc >/dev/null 2>&1; then
+    print "swiftc not found - install the Command Line Tools (xcode-select --install)."
+    print "Snapshots will record Wi-Fi as unavailable until then."
+    return 1
+  fi
+  mkdir -p $HELPER_DIR
+  if xcrun swiftc -O -o $HELPER $HELPER_SRC; then
+    print "built Wi-Fi helper: ${HELPER/$HOME/~}"
+  else
+    print "building the Wi-Fi helper failed; Wi-Fi will be recorded as unavailable"
+    return 1
+  fi
+}
+
+write_plist() {
+  # launchd expands neither ~ nor $HOME, so the paths are written out in full.
+  mkdir -p ${PLIST:h} $DATA
+  cat > $PLIST <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>$LABEL</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>$LINK</string>
+        <string>--snapshot</string>
+    </array>
+    <key>StartInterval</key>
+    <integer>60</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>Nice</key>
+    <integer>10</integer>
+    <key>LowPriorityIO</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/dev/null</string>
+    <key>StandardErrorPath</key>
+    <string>$DATA/launchd-errors.log</string>
+</dict>
+</plist>
+EOF
+  plutil -lint -s $PLIST
+}
+
+loaded() { launchctl print gui/$UID/$LABEL >/dev/null 2>&1 }
+
+install() {
+  if [[ ! -x $LINK || ${LINK:A} != $SELF ]]; then
+    print "${LINK/$HOME/~} must link to $SELF - run doctor --fix first."
+    return 1
+  fi
+  build_helper
+  loaded && launchctl bootout gui/$UID/$LABEL
+  write_plist || return 1
+  launchctl bootstrap gui/$UID $PLIST || return 1
+  print "LaunchAgent $LABEL loaded; snapshots every 60 s to ${DATA/$HOME/~}"
+}
+
+uninstall() {
+  loaded && launchctl bootout gui/$UID/$LABEL
+  rm -f $PLIST
+  print "LaunchAgent $LABEL removed. Recorded data left in ${DATA/$HOME/~}"
+}
+
+# ---------------------------------------------------------------------------
+# status
+
+agent_status() {
+  print "recorder"
+  if loaded; then
+    local info runs rc
+    info=$(launchctl print gui/$UID/$LABEL)
+    runs=$(print -r -- "$info" | awk -F' = ' '/^\truns/ { print $2 }')
+    rc=$(print -r -- "$info" | awk -F' = ' '/^\tlast exit code/ { print $2 }')
+    print "  agent        loaded (runs since load: $runs, last exit: $rc)"
+  elif [[ -e $PLIST ]]; then
+    print "  agent        NOT LOADED, though its plist is present - run --install"
+  else
+    print "  agent        not installed - run --install"
+  fi
+  if [[ -x $HELPER ]]; then
+    [[ $HELPER_SRC -nt $HELPER ]] && print "  wifi helper  out of date - run --install" || print "  wifi helper  built"
+  else
+    print "  wifi helper  not built - run --install"
+  fi
+  [[ -s $DATA/launchd-errors.log ]] && print "  launchd errors: see ${DATA/$HOME/~}/launchd-errors.log"
+  print "  data         ${DATA/$HOME/~} ($(du -sh $DATA 2>/dev/null | cut -f1 | tr -d ' '))"
+}
+
+status() {
+  local days=1
+  [[ ${1:-} == --days ]] && days=${2:?--days needs a number}
+  agent_status
+  print
+  local running=0
+  [[ $(launchctl print gui/$UID/$LABEL 2>/dev/null) == *"state = running"* ]] && running=1
+  pmset -g log 2>/dev/null | grep -E '^20[0-9-]+ [0-9:]+ [+-][0-9]{4} (Sleep|Wake|DarkWake|Start) ' |
+    /usr/bin/python3 -I $HERE/status.py --days $days --data $DATA --running $running --power -
+}
+
+# ---------------------------------------------------------------------------
+
+case ${1:-} in
+  --snapshot)   snapshot ;;
+  ""|--status)  shift 2>/dev/null; status "$@" ;;
+  --install)    install ;;
+  --uninstall)  uninstall ;;
+  -h|--help)    usage ;;
+  *)            usage >&2; exit 2 ;;
+esac
