@@ -184,4 +184,6 @@ if (( DRY_RUN )); then
   exit 0
 fi
 say "asking macOS to $action"
-osascript -e "tell application \"System Events\" to $action"
+# Without "state saving preference", System Events always saves state and the
+# next login reopens the apps, whatever the "Reopen windows" setting says.
+osascript -e "tell application \"System Events\" to $action with state saving preference"
