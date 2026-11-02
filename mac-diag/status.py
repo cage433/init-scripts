@@ -162,6 +162,11 @@ def parse_stalls(path: str) -> list[tuple[datetime, float | None]]:
             continue
         if f[1] == "stall" and len(f) > 2:
             out.append((ts, float(f[2].rstrip("s"))))
+        elif f[1] == "windowserver" and len(f) > 2:
+            if f[2] == "not":
+                WS_UNANSWERED.append(ts)
+            else:
+                WS_STALLS.append((ts, float(f[2].rstrip("s"))))
         elif f[1] == "started":
             out.append((ts, None))
             m = re.search(r"last alive (\S+?)\)", line)
@@ -173,8 +178,10 @@ def parse_stalls(path: str) -> list[tuple[datetime, float | None]]:
     return out
 
 
-# (detector start, when the previous run was last alive), filled in by parse_stalls
-LAST_ALIVE: list[tuple[datetime, datetime]] = []
+# Filled in by parse_stalls:
+LAST_ALIVE: list[tuple[datetime, datetime]] = []    # (detector start, previous run last alive)
+WS_STALLS: list[tuple[datetime, float]] = []        # (request sent, seconds WindowServer took)
+WS_UNANSWERED: list[datetime] = []                  # requests unanswered after 2 s, when sent
 
 
 def near_power_event(ts: datetime, power: list[tuple[datetime, str]], secs: float) -> bool:
@@ -403,6 +410,15 @@ def main() -> int:
     for ts, secs in stalls:
         if secs is not None and secs >= STALL_PROBLEM and not near_power_event(ts, events, secs):
             problems.append((ts, "stall of %.1fs - the stall detector could not run" % secs))
+    ws = [(ts, d) for ts, d in WS_STALLS if ts >= since]
+    for ts, secs in ws:
+        if secs >= STALL_PROBLEM and not near_power_event(ts, events, secs):
+            problems.append((ts, "WindowServer took %.1fs to answer - the pointer and UI freeze while it is stuck" % secs))
+    for ts in WS_UNANSWERED:
+        # A reply, however late, is reported above; one that never came usually ends in a restart.
+        if ts >= since and not any(abs((t - ts).total_seconds()) < 1 for t, _ in ws) \
+                and not near_power_event(ts, events, 0):
+            problems.append((ts, "WindowServer stopped answering and no reply was recorded"))
     for ts, text in sorted(problems):
         print("  %s  %s" % (hm(ts, now), text))
         for line in context(log_events, ts):
@@ -470,14 +486,14 @@ def main() -> int:
     show_changes("thermal", changes(snaps, thermal_key), now)
     print()
 
-    print("stalls (the detector wakes 4 times a second; listed when it could not run for >0.5s)")
+    print("stalls (CPU: the detector could not run for >0.5s; WindowServer: took >0.5s to answer)")
     if not stalls:
         print("  no stall data - is %s loaded?" % "com.cage433.mac-diag-stalls")
     else:
         durations = [d for _, d in stalls if d is not None]
         starts = sum(1 for _, d in stalls if d is None)
         if not durations:
-            print("  none")
+            print("  CPU            none")
         else:
             buckets = [(0.5, 1), (1, 2), (2, 5), (5, float("inf"))]
             counts = ["%s: %d" % (("%g-%gs" % (a, b)) if b != float("inf") else ">%gs" % a,
@@ -490,6 +506,12 @@ def main() -> int:
             print("  longest        %.2fs at %s" % (longest[1], hm(longest[0], now)))
         if starts > 1:
             print("  the detector started %d times in this window (restarts, or launchd relaunching it)" % starts)
+        ws = [(ts, d) for ts, d in WS_STALLS if ts >= since]
+        if ws:
+            worst = max(ws, key=lambda w: w[1])
+            print("  WindowServer   %d slow answer(s) over 0.5s, longest %.2fs at %s" % (len(ws), worst[1], hm(worst[0], now)))
+        else:
+            print("  WindowServer   always answered within 0.5s")
     print()
 
     print("events")

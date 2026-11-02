@@ -15,8 +15,9 @@
 #                          interfaces, routes, DNS, VPN, network extensions, Wi-Fi, pfctl
 #   events-YYYY-MM-DD.log  as they happen: primary-interface changes, Wi-Fi link and
 #                          datapath errors, VPN/proxy session changes, configd network changes
-#   stalls-YYYY-MM-DD.log  each time the stall detector, which wakes 4 times a second,
-#                          could not run for more than 0.5 s
+#   stalls-YYYY-MM-DD.log  each time the stall detector could not run for more than
+#                          0.5 s (it wakes 4 times a second), or WindowServer took
+#                          more than 0.5 s to answer it (it asks once a second)
 # Earlier days are gzipped, and files older than 7 days are deleted.
 #
 # Each snapshot section header is written before its command runs, so if a command
