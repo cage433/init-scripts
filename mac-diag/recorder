@@ -1,36 +1,54 @@
 #!/bin/zsh -f
-# mac-diag-recorder - record a once-a-minute snapshot of this Mac's state, to help
-# diagnose occasional freezes. Reads local state only: nothing is sent off the
-# machine, and nothing needs root.
+# mac-diag-recorder - record this Mac's state, to help diagnose occasional freezes.
+# Reads local state only: nothing is sent off the machine, and nothing needs root.
 #
 #   mac-diag-recorder                 same as --status
 #   mac-diag-recorder --status [--days N]
 #                                     summarise what has been recorded (default 1 day)
-#   mac-diag-recorder --install       build the Wi-Fi helper, write and load the LaunchAgent
-#   mac-diag-recorder --uninstall     unload and remove the LaunchAgent; keeps the data
-#   mac-diag-recorder --snapshot      append one snapshot (what launchd runs)
+#   mac-diag-recorder --install       build the helpers, write and load the LaunchAgents
+#   mac-diag-recorder --uninstall     unload and remove the LaunchAgents; keeps the data
+#   mac-diag-recorder --snapshot      append one snapshot (run by launchd every minute)
+#   mac-diag-recorder --events        stream selected system log events (run by launchd)
 #
-# Snapshots go to ~/mac-diag/recorder/snap-YYYY-MM-DD.log. Earlier days are gzipped,
-# and files older than 7 days are deleted.
+# Three LaunchAgents write to ~/mac-diag/recorder, one file per kind per day:
+#   snap-YYYY-MM-DD.log    a snapshot every 60 s: threads, CPU, memory, thermal,
+#                          interfaces, routes, DNS, VPN, network extensions, Wi-Fi, pfctl
+#   events-YYYY-MM-DD.log  as they happen: primary-interface changes, Wi-Fi link and
+#                          datapath errors, VPN/proxy session changes, configd network changes
+#   stalls-YYYY-MM-DD.log  each time the stall detector, which wakes 4 times a second,
+#                          could not run for more than 0.5 s
+# Earlier days are gzipped, and files older than 7 days are deleted.
 #
-# Each section header is written before its command runs, so if a command blocks
-# (as configd did in the October 2026 freezes) the snapshot ends at that header,
-# which shows where the system was stuck.
+# Each snapshot section header is written before its command runs, so if a command
+# blocks (as configd did in the October 2026 freezes) the snapshot ends at that
+# header, which shows where the system was stuck.
 
 zmodload zsh/datetime
 setopt pipe_fail
 
-LABEL=com.cage433.mac-diag-recorder
 SELF=${0:A}
 HERE=${SELF:h}
 DATA=$HOME/mac-diag/recorder
 HELPER_DIR=$HOME/.local/libexec/mac-diag
-HELPER=$HELPER_DIR/wifi-signal
-HELPER_SRC=$HERE/wifi-signal.swift
-PLIST=$HOME/Library/LaunchAgents/$LABEL.plist
+HELPERS=(wifi-signal stall-detector)
 LINK=$HOME/bin/mac-diag-recorder
+AGENTS_DIR=$HOME/Library/LaunchAgents
+SNAP_LABEL=com.cage433.mac-diag-recorder
+EVENTS_LABEL=com.cage433.mac-diag-events
+STALLS_LABEL=com.cage433.mac-diag-stalls
+LABELS=($SNAP_LABEL $EVENTS_LABEL $STALLS_LABEL)
 KEEP_DAYS=7
 STEP_TIMEOUT=10          # seconds; a step taking longer is killed and marked with !!
+
+# What --events keeps from the system log. The kernel Wi-Fi errors and the
+# nesessionmanager interface changes are the messages seen before the October freezes.
+EVENT_PREDICATE='
+  (process == "nesessionmanager" AND (eventMessage CONTAINS "interface changed"
+      OR ((eventMessage CONTAINS "Entering state" OR eventMessage CONTAINS "status changed")
+          AND NOT eventMessage BEGINSWITH "NESMPathControllerSession")))
+  OR (process == "kernel" AND (eventMessage CONTAINS "Datapath timeout"
+      OR eventMessage CONTAINS "Link Down on en" OR eventMessage CONTAINS "Link Up on en"))
+  OR (process == "configd" AND eventMessage BEGINSWITH "network changed")'
 
 usage() { sed -n '2,/^$/{s/^# \{0,1\}//;p;}' $SELF }
 
@@ -51,7 +69,8 @@ section() { print "## $1" }
 snapshot() {
   PATH=/usr/bin:/bin:/usr/sbin:/sbin
   mkdir -p $DATA
-  local out=$DATA/snap-$(strftime %Y-%m-%d $EPOCHSECONDS).log
+  local today=$(strftime %Y-%m-%d $EPOCHSECONDS)
+  local out=$DATA/snap-$today.log
   exec >>$out 2>&1
   local start=$EPOCHREALTIME
 
@@ -70,6 +89,20 @@ snapshot() {
     FNR == 1  { next }
     { pid = ($1 ~ /^[0-9]+$/) ? $1 : $2; count[pid]++ }
     END { for (p in count) printf "%5d %6d %s\n", count[p], p, name[p] }' <(print -r -- "$procs") - | sort -rn | head -15
+
+  section "cpu (top 8, % of one core, decaying average)"
+  limit ps -axo %cpu=,pid=,comm= | sort -rn | head -8 | awk '{ c = $0; sub(/^ *[0-9.]+ +[0-9]+ +/, "", c); sub(/.*\//, "", c); printf "%6s %6d %s\n", $1, $2, c }'
+
+  section "memory"
+  local free swap compressed level
+  free=$(limit memory_pressure -Q | awk -F': ' '/percentage/ { print $2 }')
+  level=$(sysctl -n kern.memorystatus_vm_pressure_level)
+  swap=$(sysctl -n vm.swapusage | awk '{ print $6 }')
+  compressed=$(limit vm_stat | awk '/occupied by compressor/ { gsub(/\./, "", $NF); printf "%.0f", $NF * 16384 / 1048576 }')
+  print "free=$free pressure=${${${level/#1/normal}/#2/warn}/#4/critical} swap_used=$swap compressor=${compressed}M"
+
+  section "thermal"
+  limit pmset -g therm | sed -e 's/^Note: //' -e '/^$/d'
 
   section "interfaces (up and active, plus utun)"
   limit ifconfig -a | awk '
@@ -105,9 +138,14 @@ snapshot() {
   print -r -- "$procs" | awk '{ c = $0; sub(/^ *[0-9]+ +/, "", c) }
     tolower(c) ~ /amnezia|tun2socks|openvpn|wireguard|wg-go|protonvpn|xray|cloak|tailscale/ { sub(/^ +/, ""); print "proc " $0 }'
 
+  section "network extensions"
+  # Network and driver system extensions, with their state; content filters,
+  # transparent proxies and VPN tunnels all arrive as network extensions.
+  limit systemextensionsctl list | awk -F'\t' '$1 == "*" || $1 == "" && NF >= 6 { print $4 " - " $5 " " $6 }'
+
   section "wifi"
-  if [[ -x $HELPER ]]; then
-    limit $HELPER
+  if [[ -x $HELPER_DIR/wifi-signal ]]; then
+    limit $HELPER_DIR/wifi-signal
   else
     print "wifi: unavailable (helper not built - run mac-diag-recorder --install)"
   fi
@@ -125,85 +163,137 @@ snapshot() {
 
   # Housekeeping: compress earlier days, delete anything older than KEEP_DAYS.
   local f
-  for f in $DATA/snap-*.log(N); do [[ $f == $out ]] || gzip -q $f; done
-  find $DATA -maxdepth 1 -name 'snap-*.log*' -mtime +$KEEP_DAYS -delete
+  for f in $DATA/{snap,events,stalls}-*.log(N); do
+    [[ ${f:t:r} == *-$today ]] || gzip -q $f
+  done
+  find $DATA -maxdepth 1 \( -name 'snap-*.log*' -o -name 'events-*.log*' -o -name 'stalls-*.log*' \) \
+    -mtime +$KEEP_DAYS -delete
+}
+
+# ---------------------------------------------------------------------------
+# events
+
+events() {
+  PATH=/usr/bin:/bin:/usr/sbin:/sbin
+  mkdir -p $DATA
+  print "$(strftime '%Y-%m-%d %H:%M:%S' $EPOCHSECONDS).000 -- event stream started" >> $DATA/events-$(strftime %Y-%m-%d $EPOCHSECONDS).log
+  # One file per day, named from each line's own date. Lines that don't start with
+  # a date (the stream's header) are dropped.
+  /usr/bin/log stream --style compact --predicate "$EVENT_PREDICATE" | awk -v dir=$DATA '
+    $1 ~ /^20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/ {
+      f = dir "/events-" $1 ".log"
+      if (f != cur) { if (cur != "") close(cur); cur = f }
+      print >> cur; fflush(cur)
+    }'
 }
 
 # ---------------------------------------------------------------------------
 # install / uninstall
 
-build_helper() {
-  if [[ -x $HELPER && ! $HELPER_SRC -nt $HELPER ]]; then
-    print "Wi-Fi helper up to date: ${HELPER/$HOME/~}"
-    return 0
-  fi
-  if ! xcrun --find swiftc >/dev/null 2>&1; then
-    print "swiftc not found - install the Command Line Tools (xcode-select --install)."
-    print "Snapshots will record Wi-Fi as unavailable until then."
-    return 1
-  fi
-  mkdir -p $HELPER_DIR
-  if xcrun swiftc -O -o $HELPER $HELPER_SRC; then
-    print "built Wi-Fi helper: ${HELPER/$HOME/~}"
-  else
-    print "building the Wi-Fi helper failed; Wi-Fi will be recorded as unavailable"
-    return 1
-  fi
+build_helpers() {
+  local name helper src
+  for name in $HELPERS; do
+    helper=$HELPER_DIR/$name
+    src=$HERE/$name.swift
+    if [[ -x $helper && ! $src -nt $helper ]]; then
+      print "$name up to date"
+      continue
+    fi
+    if ! xcrun --find swiftc >/dev/null 2>&1; then
+      print "swiftc not found - install the Command Line Tools (xcode-select --install)."
+      print "Wi-Fi readings and the stall detector are unavailable until then."
+      return 1
+    fi
+    mkdir -p $HELPER_DIR
+    if xcrun swiftc -O -o $helper $src; then
+      print "built ${helper/$HOME/~}"
+    else
+      print "building $name failed"
+    fi
+  done
 }
 
+# write_plist label process-type keep-alive|interval:N program args...
+# launchd expands neither ~ nor $HOME, so the paths are written out in full.
 write_plist() {
-  # launchd expands neither ~ nor $HOME, so the paths are written out in full.
-  mkdir -p ${PLIST:h} $DATA
-  cat > $PLIST <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
+  local label=$1 ptype=$2 run=$3; shift 3
+  local plist=$AGENTS_DIR/$label.plist arg schedule
+  if [[ $run == keep-alive ]]; then
+    schedule="    <key>KeepAlive</key>
+    <true/>
+    <key>ThrottleInterval</key>
+    <integer>30</integer>"
+  else
+    schedule="    <key>StartInterval</key>
+    <integer>${run#interval:}</integer>"
+  fi
+  mkdir -p $AGENTS_DIR $DATA
+  {
+    print '<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>$LABEL</string>
+    <string>'$label'</string>
     <key>ProgramArguments</key>
-    <array>
-        <string>$LINK</string>
-        <string>--snapshot</string>
-    </array>
-    <key>StartInterval</key>
-    <integer>60</integer>
+    <array>'
+    for arg; do print "        <string>$arg</string>"; done
+    print "    </array>
+$schedule
     <key>RunAtLoad</key>
     <true/>
     <key>ProcessType</key>
-    <string>Background</string>
-    <key>Nice</key>
+    <string>$ptype</string>"
+    [[ $ptype == Background ]] && print "    <key>Nice</key>
     <integer>10</integer>
     <key>LowPriorityIO</key>
-    <true/>
-    <key>StandardOutPath</key>
+    <true/>"
+    print "    <key>StandardOutPath</key>
     <string>/dev/null</string>
     <key>StandardErrorPath</key>
     <string>$DATA/launchd-errors.log</string>
 </dict>
-</plist>
-EOF
-  plutil -lint -s $PLIST
+</plist>"
+  } > $plist
+  plutil -lint -s $plist
 }
 
-loaded() { launchctl print gui/$UID/$LABEL >/dev/null 2>&1 }
+loaded() { launchctl print gui/$UID/$1 >/dev/null 2>&1 }
 
 install() {
   if [[ ! -x $LINK || ${LINK:A} != $SELF ]]; then
     print "${LINK/$HOME/~} must link to $SELF - run doctor --fix first."
     return 1
   fi
-  build_helper
-  loaded && launchctl bootout gui/$UID/$LABEL
-  write_plist || return 1
-  launchctl bootstrap gui/$UID $PLIST || return 1
-  print "LaunchAgent $LABEL loaded; snapshots every 60 s to ${DATA/$HOME/~}"
+  build_helpers
+  # Let a snapshot in progress finish, or unloading kills it half-written.
+  integer waited=0
+  while [[ $(launchctl print gui/$UID/$SNAP_LABEL 2>/dev/null) == *"state = running"* ]] && (( waited++ < 30 )); do
+    sleep 0.5
+  done
+  local label
+  for label in $LABELS; do loaded $label && launchctl bootout gui/$UID/$label; done
+  write_plist $SNAP_LABEL   Background  interval:60 $LINK --snapshot || return 1
+  write_plist $EVENTS_LABEL Background  keep-alive  $LINK --events   || return 1
+  # The stall detector must not be throttled, or throttling would pass for stalls.
+  write_plist $STALLS_LABEL Interactive keep-alive  $HELPER_DIR/stall-detector $DATA || return 1
+  for label in $LABELS; do
+    if [[ $label == $STALLS_LABEL && ! -x $HELPER_DIR/stall-detector ]]; then
+      print "not loading $label: stall-detector is not built"
+      continue
+    fi
+    launchctl bootstrap gui/$UID $AGENTS_DIR/$label.plist && print "loaded $label"
+  done
+  print "recording to ${DATA/$HOME/~}"
 }
 
 uninstall() {
-  loaded && launchctl bootout gui/$UID/$LABEL
-  rm -f $PLIST
-  print "LaunchAgent $LABEL removed. Recorded data left in ${DATA/$HOME/~}"
+  local label
+  for label in $LABELS; do
+    loaded $label && launchctl bootout gui/$UID/$label
+    rm -f $AGENTS_DIR/$label.plist
+  done
+  print "LaunchAgents removed. Recorded data left in ${DATA/$HOME/~}"
 }
 
 # ---------------------------------------------------------------------------
@@ -211,24 +301,30 @@ uninstall() {
 
 agent_status() {
   print "recorder"
-  if loaded; then
-    local info runs rc
-    info=$(launchctl print gui/$UID/$LABEL)
-    runs=$(print -r -- "$info" | awk -F' = ' '/^\truns/ { print $2 }')
-    rc=$(print -r -- "$info" | awk -F' = ' '/^\tlast exit code/ { print $2 }')
-    print "  agent        loaded (runs since load: $runs, last exit: $rc)"
-  elif [[ -e $PLIST ]]; then
-    print "  agent        NOT LOADED, though its plist is present - run --install"
-  else
-    print "  agent        not installed - run --install"
-  fi
-  if [[ -x $HELPER ]]; then
-    [[ $HELPER_SRC -nt $HELPER ]] && print "  wifi helper  out of date - run --install" || print "  wifi helper  built"
-  else
-    print "  wifi helper  not built - run --install"
-  fi
+  local label info runs rc state
+  for label in $LABELS; do
+    if loaded $label; then
+      info=$(launchctl print gui/$UID/$label)
+      runs=$(print -r -- "$info" | awk -F' = ' '/^\truns/ { print $2 }')
+      rc=$(print -r -- "$info" | awk -F' = ' '/^\tlast exit code/ { print $2 }')
+      state=$(print -r -- "$info" | awk -F' = ' '/^\tstate/ { print $2; exit }')
+      printf "  %-30s loaded, %s (runs: %s, last exit: %s)\n" ${label#com.cage433.} $state $runs $rc
+    elif [[ -e $AGENTS_DIR/$label.plist ]]; then
+      printf "  %-30s NOT LOADED, though its plist is present - run --install\n" ${label#com.cage433.}
+    else
+      printf "  %-30s not installed - run --install\n" ${label#com.cage433.}
+    fi
+  done
+  local name
+  for name in $HELPERS; do
+    if [[ ! -x $HELPER_DIR/$name ]]; then
+      printf "  %-30s not built - run --install\n" $name
+    elif [[ $HERE/$name.swift -nt $HELPER_DIR/$name ]]; then
+      printf "  %-30s out of date - run --install\n" $name
+    fi
+  done
   [[ -s $DATA/launchd-errors.log ]] && print "  launchd errors: see ${DATA/$HOME/~}/launchd-errors.log"
-  print "  data         ${DATA/$HOME/~} ($(du -sh $DATA 2>/dev/null | cut -f1 | tr -d ' '))"
+  print "  data                           ${DATA/$HOME/~} ($(du -sh $DATA 2>/dev/null | cut -f1 | tr -d ' '))"
 }
 
 status() {
@@ -236,8 +332,13 @@ status() {
   [[ ${1:-} == --days ]] && days=${2:?--days needs a number}
   agent_status
   print
+  # Without the Command Line Tools /usr/bin/python3 is a stub that only offers to install them.
+  if ! xcode-select -p >/dev/null 2>&1; then
+    print "The summary needs the Command Line Tools for python3: xcode-select --install"
+    return 1
+  fi
   local running=0
-  [[ $(launchctl print gui/$UID/$LABEL 2>/dev/null) == *"state = running"* ]] && running=1
+  [[ $(launchctl print gui/$UID/$SNAP_LABEL 2>/dev/null) == *"state = running"* ]] && running=1
   pmset -g log 2>/dev/null | grep -E '^20[0-9-]+ [0-9:]+ [+-][0-9]{4} (Sleep|Wake|DarkWake|Start) ' |
     /usr/bin/python3 -I $HERE/status.py --days $days --data $DATA --running $running --power -
 }
@@ -246,6 +347,7 @@ status() {
 
 case ${1:-} in
   --snapshot)   snapshot ;;
+  --events)     events ;;
   ""|--status)  shift 2>/dev/null; status "$@" ;;
   --install)    install ;;
   --uninstall)  uninstall ;;

@@ -172,29 +172,35 @@ check_tools() {
   fi
 }
 
-# The freeze recorder: a LaunchAgent that runs mac-diag-recorder --snapshot every
-# minute, plus a small Swift helper it builds for Wi-Fi readings.
+# The freeze recorder: three LaunchAgents (a snapshot every minute, a filtered
+# system-log stream and a stall detector) and two Swift helpers it builds.
 check_recorder() {
   print -r -- "mac-diag recorder"
-  local label=com.cage433.mac-diag-recorder
-  local plist=$HOME/Library/LaunchAgents/$label.plist
   local link=$HOME/bin/mac-diag-recorder
-  local helper=$HOME/.local/libexec/mac-diag/wifi-signal
+  local helpers=$HOME/.local/libexec/mac-diag
+  local label plist name
   integer before=$warnings
-  if [[ ! -e $plist ]]; then
-    warn "LaunchAgent not installed"
-  else
-    [[ $(/usr/libexec/PlistBuddy -c 'Print :ProgramArguments:0' $plist 2>/dev/null) == $link ]] \
-      || warn "LaunchAgent does not run ${link/$HOME/~}"
-    launchctl print gui/$UID/$label >/dev/null 2>&1 || warn "LaunchAgent not loaded"
-  fi
-  if [[ ! -x $helper ]]; then
-    warn "Wi-Fi helper not built"
-  elif [[ $REPO/mac-diag/wifi-signal.swift -nt $helper ]]; then
-    warn "Wi-Fi helper older than its source"
-  fi
+  for label in com.cage433.mac-diag-{recorder,events,stalls}; do
+    plist=$HOME/Library/LaunchAgents/$label.plist
+    if [[ ! -e $plist ]]; then
+      warn "$label not installed"
+      continue
+    fi
+    if [[ $label != *stalls ]] &&
+       [[ $(/usr/libexec/PlistBuddy -c 'Print :ProgramArguments:0' $plist 2>/dev/null) != $link ]]; then
+      warn "$label does not run ${link/$HOME/~}"
+    fi
+    launchctl print gui/$UID/$label >/dev/null 2>&1 || warn "$label not loaded"
+  done
+  for name in wifi-signal stall-detector; do
+    if [[ ! -x $helpers/$name ]]; then
+      warn "$name not built"
+    elif [[ $REPO/mac-diag/$name.swift -nt $helpers/$name ]]; then
+      warn "$name older than its source"
+    fi
+  done
   if (( warnings == before )); then
-    ok "LaunchAgent loaded, Wi-Fi helper current"
+    ok "3 LaunchAgents loaded, helpers current"
   elif (( FIX )) && [[ -x $link ]]; then
     print -r -- "        running mac-diag-recorder --install"
     $link --install | sed 's/^/        /'
