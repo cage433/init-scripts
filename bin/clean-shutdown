@@ -1,0 +1,187 @@
+#!/bin/zsh
+# clean-shutdown - quit everything that would hold up a shutdown, then shut down or restart.
+#
+#   clean-shutdown            quit apps, tmux and Claude Code, then shut down
+#   clean-shutdown --restart  the same, then restart
+#   clean-shutdown --dry-run  list what would be stopped; change nothing
+#
+# When a shutdown stalls on leftover processes, macOS forces it through and
+# records it as unclean, and the next login reopens every app regardless of the
+# "Reopen windows" setting. Running this first leaves nothing for the shutdown
+# to wait on.
+#
+# Apps are asked to quit. Any still running after QUIT_WAIT seconds - usually
+# because they are showing an "are you sure" or unsaved-changes dialog - get
+# SIGTERM, then SIGKILL. Unsaved work in those apps is lost.
+#
+# The work runs detached from the terminal, because quitting tmux and iTerm2
+# would otherwise kill this script part-way through. Progress goes to $LOG.
+
+emulate -L zsh
+set -u
+
+LOG=$HOME/Library/Logs/clean-shutdown.log
+QUIT_WAIT=15
+TERM_WAIT=5
+
+# The apps that reopened after the unclean restart on 2026-11-02, plus the ones
+# still open when that shutdown stalled. Any other visible app is swept up after.
+typeset -a APPS
+APPS=(
+  com.microsoft.CompanyPortalMac
+  com.brave.Browser
+  com.tinyspeck.slackmacgap
+  net.whatsapp.WhatsApp
+  md.obsidian
+  com.spotify.client
+  net.ankiweb.anki
+  com.microsoft.Outlook
+  com.yourcompany.AmneziaVPN
+  ch.protonmail.desktop
+  ru.keepcoder.Telegram
+  com.apple.Preview
+  com.jetbrains.intellij
+)
+# Quit last: tmux, and the shells and Claude Code sessions inside it, live in its windows.
+TERMINAL_APP=com.googlecode.iterm2
+# Never quit: macOS relaunches Finder straight away.
+typeset -a KEEP
+KEEP=(com.apple.finder $TERMINAL_APP)
+CLAUDE_VERSIONS=$HOME/.local/share/claude/versions/
+
+RESTART=0 DRY_RUN=0
+for arg in "$@"; do
+  case $arg in
+    --restart) RESTART=1 ;;
+    --dry-run) DRY_RUN=1 ;;
+    *) print -u2 -r -- "usage: clean-shutdown [--restart] [--dry-run]"; exit 64 ;;
+  esac
+done
+
+say() { print -r -- "$(date +%H:%M:%S) $*" }
+
+alive() { kill -0 $1 2>/dev/null }
+
+# wait_gone pid seconds - true once the process has exited
+wait_gone() {
+  local pid=$1
+  integer tenths=$(( $2 * 10 ))
+  while (( tenths-- > 0 )); do
+    alive $pid || return 0
+    sleep 0.1
+  done
+  ! alive $pid
+}
+
+# app_pid bundle-id - the pid of the running app, or nothing
+app_pid() {
+  local out=$(lsappinfo info -only pid -app $1 2>/dev/null)
+  [[ ${out##*=} == <-> ]] && print -r -- ${out##*=}
+}
+
+# Bundle ids of every app with a Dock presence, in no particular order.
+visible_apps() {
+  local asn out
+  for asn in $(lsappinfo visibleProcessList 2>/dev/null | grep -oE 'ASN:0x[0-9a-f]+-0x[0-9a-f]+-'); do
+    out=$(lsappinfo info -only bundleid $asn 2>/dev/null)
+    [[ $out == *=\"*\" ]] && print -r -- ${${out##*=\"}%\"}
+  done
+}
+
+# request_quit bundle-id - send the app a quit Apple Event without waiting for its reply
+request_quit() {
+  osascript -e 'ignoring application responses' \
+            -e "tell application id \"$1\" to quit" \
+            -e 'end ignoring' >/dev/null 2>&1 &
+  local osa=$!
+  wait_gone $osa 5 || kill $osa 2>/dev/null
+}
+
+# stop_all - stop every pid in STOP (pid -> label); apps in QUIT_ID (pid -> bundle id)
+# are asked to quit first, and everything left is escalated to SIGTERM, then SIGKILL.
+typeset -A STOP QUIT_ID
+stop_all() {
+  local pid
+  (( ${#STOP} )) || return 0
+  if (( DRY_RUN )); then
+    for pid in ${(k)STOP}; do say "would stop $STOP[$pid] (pid $pid)"; done
+    STOP=() QUIT_ID=()
+    return 0
+  fi
+  if (( ${#QUIT_ID} )); then
+    for pid in ${(k)QUIT_ID}; do request_quit $QUIT_ID[$pid]; done
+    for pid in ${(k)QUIT_ID}; do wait_gone $pid $QUIT_WAIT && { say "quit $STOP[$pid]"; unset "STOP[$pid]" }; done
+  fi
+  for pid in ${(k)STOP}; do kill -TERM $pid 2>/dev/null; done
+  for pid in ${(k)STOP}; do wait_gone $pid $TERM_WAIT && { say "terminated $STOP[$pid]"; unset "STOP[$pid]" }; done
+  for pid in ${(k)STOP}; do kill -KILL $pid 2>/dev/null; done
+  for pid in ${(k)STOP}; do
+    if wait_gone $pid 2; then say "killed $STOP[$pid]"; else say "could not stop $STOP[$pid] (pid $pid)"; fi
+  done
+  STOP=() QUIT_ID=()
+}
+
+# add_app bundle-id - queue a running app for stop_all
+add_app() {
+  local pid=$(app_pid $1)
+  [[ -n $pid && -z ${STOP[$pid]:-} ]] || return 0
+  STOP[$pid]=$1 QUIT_ID[$pid]=$1
+}
+
+# System Events carries out the final shutdown, and macOS asks once for
+# permission to control it. Ask now, while there is a terminal to answer from,
+# rather than at the end when nothing is left to answer.
+preflight() {
+  if ! osascript -e 'tell application "System Events" to count processes' >/dev/null 2>&1; then
+    print -u2 -r -- "clean-shutdown: cannot control System Events. Allow it under System Settings > Privacy & Security > Automation, then re-run."
+    return 1
+  fi
+}
+
+if (( ! DRY_RUN )) && [[ ${CLEAN_SHUTDOWN_WORKER:-} != 1 ]]; then
+  preflight || exit 1
+  mkdir -p ${LOG:h}
+  print -r -- "== clean-shutdown $(date '+%Y-%m-%d %H:%M:%S')" >>$LOG
+  print -r -- "Stopping apps in the background; progress is logged to ${LOG/$HOME/~}"
+  # A process group of its own, with SIGHUP ignored, survives the terminal closing.
+  setopt monitor 2>/dev/null
+  CLEAN_SHUTDOWN_WORKER=1 nohup ${0:A} "$@" >>$LOG 2>&1 </dev/null &!
+  exit 0
+fi
+
+typeset bundle pid action
+for bundle in $APPS; do add_app $bundle; done
+for bundle in $(visible_apps); do
+  (( ${KEEP[(Ie)$bundle]} )) || add_app $bundle
+done
+stop_all
+
+if tmux has-session 2>/dev/null; then
+  pid=$(tmux display-message -p '#{pid}' 2>/dev/null)
+  if (( DRY_RUN )); then
+    say "would kill the tmux server (pid $pid) and its $(tmux list-panes -a 2>/dev/null | wc -l | tr -d ' ') pane(s)"
+  else
+    tmux kill-server 2>/dev/null
+    [[ -n $pid ]] && ! wait_gone $pid $TERM_WAIT && STOP[$pid]="tmux server"
+    stop_all
+    say "killed tmux"
+  fi
+fi
+
+# Claude Code runs as "claude" from the shell, but as its version file
+# (e.g. ~/.local/share/claude/versions/2.1.302) when it is started otherwise.
+for pid in $(ps -o pid=,comm= -U $UID | awk -v dir=$CLAUDE_VERSIONS '$2 == "claude" || index($2, dir) == 1 { print $1 }'); do
+  STOP[$pid]="Claude Code"
+done
+stop_all
+
+add_app $TERMINAL_APP
+stop_all
+
+if (( RESTART )); then action=restart; else action="shut down"; fi
+if (( DRY_RUN )); then
+  say "would ask macOS to $action"
+  exit 0
+fi
+say "asking macOS to $action"
+osascript -e "tell application \"System Events\" to $action"

@@ -35,6 +35,7 @@ LINKS=(
   "$HOME/bin/tmux-layout|tmux-layout"
   "$HOME/bin/iterm-name|bin/iterm-name"
   "$HOME/bin/doctor|bin/doctor"
+  "$HOME/bin/clean-shutdown|bin/clean-shutdown"
 )
 # Files holding secrets live in Proton Drive, never in this repo.
 typeset -a SECRET_LINKS
