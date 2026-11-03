@@ -10,7 +10,17 @@ emulate -L zsh
 set -u
 
 REPO=${0:A:h:h}
+# Proton Drive's folder is ~/Proton on some Macs and the File Provider location
+# ~/Library/CloudStorage/ProtonDrive-<account>-folder on others; use whichever
+# holds dot-files.
 PROTON=$HOME/Proton/dot-files
+for dir in $HOME/Proton/dot-files $HOME/Library/CloudStorage/ProtonDrive-*-folder/dot-files(N/); do
+  if [[ -d $dir ]]; then
+    PROTON=$dir
+    break
+  fi
+done
+unset dir
 FIX=0
 [[ ${1:-} == --fix ]] && FIX=1
 
