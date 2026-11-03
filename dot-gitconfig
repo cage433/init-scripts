@@ -87,3 +87,9 @@
 
 [checkout]
 	defaultRemote = origin
+
+[gc]
+	reflogExpire = never
+	reflogExpireUnreachable = never
+	pruneExpire = never
+	worktreePruneExpire = never
