@@ -184,6 +184,11 @@ WS_STALLS: list[tuple[datetime, float]] = []        # (request sent, seconds Win
 WS_UNANSWERED: list[datetime] = []                  # requests unanswered after 2 s, when sent
 
 
+def spans_sleep(a: datetime, b: datetime, power: list[tuple[datetime, str]]) -> bool:
+    """Whether the Mac slept or woke between a and b."""
+    return any(kind in ("Sleep", "Wake", "DarkWake") and a <= p <= b for p, kind in power)
+
+
 def near_power_event(ts: datetime, power: list[tuple[datetime, str]], secs: float) -> bool:
     """Whether a stall overlaps sleep, wake or boot: processes are suspended then."""
     return any(kind in ("Sleep", "Wake", "DarkWake", "Start")
@@ -432,11 +437,15 @@ def main() -> int:
     print()
 
     print("load, threads, cpu, memory")
-    timed = [s.done_ms for s in snaps if s.done_ms is not None]
+    # A snapshot that ran across sleep counts the time asleep, so leave it out.
+    timed = [s for s in snaps if s.done_ms is not None
+             and not spans_sleep(s.ts, s.ts + timedelta(milliseconds=s.done_ms), events)]
     if timed:
-        worst = max((s for s in snaps if s.done_ms is not None), key=lambda s: s.done_ms)
-        print("  snapshot time  median %d ms, slowest %d ms at %s"
-              % (statistics.median(timed), worst.done_ms, hm(worst.ts, now)))
+        worst = max(timed, key=lambda s: s.done_ms)
+        across = sum(1 for s in snaps if s.done_ms is not None) - len(timed)
+        print("  snapshot time  median %d ms, slowest %d ms at %s%s"
+              % (statistics.median(s.done_ms for s in timed), worst.done_ms, hm(worst.ts, now),
+                 " (%d spanning sleep left out)" % across if across else ""))
     peak = max((s for s in snaps if s.load1 is not None), key=lambda s: s.load1)
     print("  load (1 min)   median %.1f, peak %.1f at %s"
           % (statistics.median(s.load1 for s in snaps if s.load1 is not None), peak.load1, hm(peak.ts, now)))
@@ -550,12 +559,21 @@ def main() -> int:
     if not wifi:
         print("  no readings")
     else:
-        snrs = [w.snr for w in wifi]
-        worst_w = min(wifi, key=lambda w: w.snr)
-        low = sum(1 for x in snrs if x < LOW_SNR)
-        print("  snr            median %d dB, min %d dB at %s (rssi %d, noise %d, channel %s)"
-              % (statistics.median(snrs), worst_w.snr, hm(worst_w.ts, now), worst_w.rssi, worst_w.noise, worst_w.channel))
-        print("  below %d dB    %d of %d readings (%.0f%%)" % (LOW_SNR, low, len(snrs), 100 * low / len(snrs)))
+        # CoreWLAN gives 0 for a value it couldn't measure, which makes rssi - noise
+        # meaningless; leave those readings out of the signal figures.
+        measured = [w for w in wifi if w.rssi < 0 and w.noise < 0]
+        unmeasured = len(wifi) - len(measured)
+        note = "  (%d reading(s) without rssi or noise left out)" % unmeasured if unmeasured else ""
+        if not measured:
+            print("  snr            no measured readings" + note)
+        else:
+            snrs = [w.snr for w in measured]
+            worst_w = min(measured, key=lambda w: w.snr)
+            low = sum(1 for x in snrs if x < LOW_SNR)
+            print("  snr            median %d dB, min %d dB at %s (rssi %d, noise %d, channel %s)"
+                  % (statistics.median(snrs), worst_w.snr, hm(worst_w.ts, now), worst_w.rssi, worst_w.noise, worst_w.channel))
+            print("  below %d dB    %d of %d readings (%.0f%%)%s"
+                  % (LOW_SNR, low, len(snrs), 100 * low / len(snrs), note))
         show_changes("channel", changes(snaps, channel_key), now)
     print()
 
