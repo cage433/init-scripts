@@ -131,6 +131,7 @@ EVENT_KINDS = [
     ("wifi stall analysis", re.compile(r"for reason (DatapathStall)"),
      lambda m: "Wi-Fi DatapathStall analysis (airportd)"),
     ("recorder", re.compile(r"-- (event stream started)"), lambda m: m.group(1)),
+    ("mark", re.compile(r"-- mark: (.*)"), lambda m: "mark: " + m.group(1).strip()),
 ]
 NOISY = {"wifi datapath timeout", "wifi fault", "wifi stall analysis", "network changed", "other"}   # counted rather than listed
 # Messages meaning the Wi-Fi path stalled: the N1 driver's datapath timeouts, and
@@ -340,6 +341,87 @@ def latency_summary(rows: list[Latency]) -> str:
     return "; ".join(parts)
 
 
+# --- phases -------------------------------------------------------------------
+
+MIN_PHASE = 10       # minutes; shorter phases are counted but not shown
+
+
+def conditions_of(s: Snapshot, prev: dict[str, str] | None) -> dict[str, str]:
+    """What a test phase changes: VPN state, split tunnelling, Bluetooth, network.
+    A VPN that is connecting or reasserting keeps the previous state, so a brief
+    reconnection doesn't split a phase."""
+    c = {"vpn": "?", "split": "?", "bt": "?", "router": "none"}
+    for line in s.sections.get("vpn", []):
+        m = re.search(r"\((\w+)\)", line)
+        if m and line.startswith("*"):
+            c["vpn"] = m.group(1).lower()
+    if c["vpn"] not in ("connected", "disconnected", "?") and prev:
+        c["vpn"] = prev["vpn"]
+    for line in s.sections.get("conditions", []):
+        m = re.search(r"bluetooth=(\S+) proton_split_tunnel=(\S+)", line)
+        if m:
+            c["bt"], c["split"] = m.group(1).lower(), m.group(2)
+    for line in s.sections.get("default routes", []):
+        f = line.split()
+        if len(f) >= 4 and f[-1] == "en0" and f[1][0].isdigit():
+            c["router"] = f[1]
+    return c
+
+
+@dataclass
+class Phase:
+    snaps: list[Snapshot]
+    cond: dict[str, str]
+    label: str = ""
+
+
+def phases_of(snaps: list[Snapshot], marks: list[Event]) -> list[Phase]:
+    """Runs of snapshots with the same conditions, also split at each mark."""
+    out: list[Phase] = []
+    marks = sorted(marks, key=lambda e: e.ts)
+    mi = 0
+    prev_c = None
+    label = ""          # the latest mark, carried on until the next one
+    for s in snaps:
+        c = conditions_of(s, prev_c)
+        marked = False
+        while mi < len(marks) and marks[mi].ts <= s.ts:
+            label = marks[mi].text[len("mark: "):]
+            mi += 1
+            marked = True
+        if out and c == out[-1].cond and not marked:
+            out[-1].snaps.append(s)
+        else:
+            out.append(Phase([s], c, label))
+        prev_c = c
+    return out
+
+
+def show_phases(phases: list[Phase], log_events: list[Event], now: datetime) -> None:
+    shown = [p for p in phases if len(p.snaps) >= MIN_PHASE]
+    for p in shown:
+        start, end = p.snaps[0].ts, p.snaps[-1].ts + timedelta(seconds=60)
+        mins = len(p.snaps)
+        # Only events in the minute after one of the phase's snapshots, so time
+        # asleep inside a phase (dark wakes included) doesn't count.
+        times = [s.ts for s in p.snaps]
+        def awake(ts: datetime) -> bool:
+            i = bisect.bisect_right(times, ts)
+            return i > 0 and ts - times[i - 1] < timedelta(seconds=60)
+        within = [e for e in log_events if start <= e.ts < end and awake(e.ts)]
+        rate = lambda kind: 60 * sum(1 for e in within if e.kind == kind) / mins
+        c = p.cond
+        print("  %s - %s  %d min%s" % (hm(start, now), hm(end, now), mins, "  [%s]" % p.label if p.label else ""))
+        print("      vpn %s, split tunnel %s, bluetooth %s, router %s" % (c["vpn"], c["split"], c["bt"], c["router"]))
+        print("      per hour: kernel datapath timeouts %.0f, airportd faults %.0f, stall analyses %.0f"
+              % (rate("wifi datapath timeout"), rate("wifi fault"), rate("wifi stall analysis")))
+        lats = [l for l in (latency_of(s) for s in p.snaps) if l]
+        print("      " + (latency_summary(lats).strip() if lats else "no latency readings"))
+    hidden = len(phases) - len(shown)
+    if hidden:
+        print("  (%d phase(s) shorter than %d min not shown)" % (hidden, MIN_PHASE))
+
+
 def extensions_key(s: Snapshot) -> str | None:
     lines = s.sections.get("network extensions")
     if lines is None:
@@ -407,6 +489,8 @@ def main() -> int:
     ap.add_argument("--data", required=True)
     ap.add_argument("--running", type=int, default=0)
     ap.add_argument("--power", type=argparse.FileType("r"))
+    ap.add_argument("--phases", action="store_true")
+    ap.add_argument("--marks", help="another Mac's events file, for its marks")
     args = ap.parse_args()
 
     now = datetime.now().astimezone()
@@ -665,6 +749,14 @@ def main() -> int:
         for l in bad_dns[-3:]:
             print("  slow dns        %s  %s" % (hm(l.ts, now), "timeout" if l.dns_ms is None else "%d ms" % l.dns_ms))
     print()
+
+    marks = [e for e in log_events if e.kind == "mark"]
+    if args.marks:
+        marks += [e for e in parse_events(args.marks) if e.kind == "mark" and e.ts >= since]
+    if args.phases or marks:
+        print("phases (split where the VPN, split tunnelling, Bluetooth or network changed, and at marks)")
+        show_phases(phases_of(snaps, marks), log_events, now)
+        print()
 
     print("pfctl")
     seen = []

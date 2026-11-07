@@ -3,8 +3,15 @@
 # Reads local state only: nothing is sent off the machine, and nothing needs root.
 #
 #   mac-diag-recorder                 same as --status
-#   mac-diag-recorder --status [--days N]
-#                                     summarise what has been recorded (default 1 day)
+#   mac-diag-recorder --status [--days N] [--phases] [--marks FILE]
+#                                     summarise what has been recorded (default 1 day);
+#                                     --phases adds a table of Wi-Fi figures for each
+#                                     phase (a run of minutes with the same VPN, split
+#                                     tunnelling, Bluetooth and network, or between
+#                                     marks); --marks takes marks from another Mac's
+#                                     events file as well
+#   mac-diag-recorder --mark LABEL    record that a test phase starts now, e.g.
+#                                     --mark "proton off"
 #   mac-diag-recorder --install       build the helpers, write and load the LaunchAgents
 #   mac-diag-recorder --uninstall     unload and remove the LaunchAgents; keeps the data
 #   mac-diag-recorder --snapshot      append one snapshot (run by launchd every minute)
@@ -13,9 +20,11 @@
 # Three LaunchAgents write to ~/mac-diag/recorder, one file per kind per day:
 #   snap-YYYY-MM-DD.log    a snapshot every 60 s: threads, CPU, memory, thermal,
 #                          interfaces, routes, DNS, VPN, network extensions, Wi-Fi,
-#                          router ping and DNS lookup times, pfctl
+#                          router ping and DNS lookup times, Bluetooth and split-
+#                          tunnelling state, pfctl
 #   events-YYYY-MM-DD.log  as they happen: primary-interface changes, Wi-Fi link and
-#                          datapath errors, VPN/proxy session changes, configd network changes
+#                          datapath errors, airportd Wi-Fi faults, VPN/proxy session changes,
+#                          configd network changes, and marks from --mark
 #   stalls-YYYY-MM-DD.log  each time the stall detector could not run for more than
 #                          0.5 s (it wakes 4 times a second), or WindowServer took
 #                          more than 0.5 s to answer it (it asks once a second)
@@ -182,6 +191,16 @@ snapshot() {
     /Query time:/   { ms = $4 }
     /^;; SERVER:/   { split($3, s, "#"); srv = s[1] }
     END { if (ms == "") print "dns: timeout"; else printf "dns: server=%s status=%s ms=%d\n", srv, st, ms }'
+
+  section "conditions"
+  # What a test phase changes, so --status --phases can split the record without
+  # being told: Bluetooth power, and whether ProtonVPN's split-tunnelling proxy
+  # runs (its system extension stays "activated" when the feature is off, but its
+  # process only runs while it is on). The VPN's own state is in "vpn" above.
+  local bt split
+  bt=$(limit system_profiler SPBluetoothDataType 2>/dev/null | awk '$1 == "State:" { print $2; exit }')
+  split=$(print -r -- "$procs" | awk '/ch\.protonvpn\.mac\.Transparent-Proxy/ { print "on"; exit }')
+  print "bluetooth=${bt:-unknown} proton_split_tunnel=${split:-off}"
 
   section "pfctl"
   # Without root there is no record of past pfctl runs: it writes nothing to the
@@ -360,9 +379,28 @@ agent_status() {
   print "  data                           ${DATA/$HOME/~} ($(du -sh $DATA 2>/dev/null | cut -f1 | tr -d ' '))"
 }
 
+# Appends a labelled line to today's events file, in the log stream's timestamp
+# format, so --status --phases starts a new phase there.
+mark() {
+  local label="$*"
+  [[ -n $label ]] || { print -u2 "usage: mac-diag-recorder --mark LABEL"; return 2 }
+  mkdir -p $DATA
+  local now=$EPOCHREALTIME
+  print -r -- "$(strftime '%Y-%m-%d %H:%M:%S' ${now%.*}).${${now#*.}[1,3]} -- mark: $label" \
+    >> $DATA/events-$(strftime %Y-%m-%d ${now%.*}).log
+  print "marked $(strftime %H:%M:%S ${now%.*}): $label"
+}
+
 status() {
-  local days=1
-  [[ ${1:-} == --days ]] && days=${2:?--days needs a number}
+  local days=1 extra=()
+  while (( $# )); do
+    case $1 in
+      --days)   days=${2:?--days needs a number}; shift 2 ;;
+      --phases) extra+=(--phases); shift ;;
+      --marks)  extra+=(--marks ${2:?--marks needs a file}); shift 2 ;;
+      *)        usage >&2; return 2 ;;
+    esac
+  done
   agent_status
   print
   # Without the Command Line Tools /usr/bin/python3 is a stub that only offers to install them.
@@ -373,7 +411,7 @@ status() {
   local running=0
   [[ $(launchctl print gui/$UID/$SNAP_LABEL 2>/dev/null) == *"state = running"* ]] && running=1
   pmset -g log 2>/dev/null | grep -E '^20[0-9-]+ [0-9:]+ [+-][0-9]{4} (Sleep|Wake|DarkWake|Start) ' |
-    /usr/bin/python3 -I $HERE/status.py --days $days --data $DATA --running $running --power -
+    /usr/bin/python3 -I $HERE/status.py --days $days --data $DATA --running $running --power - $extra
 }
 
 # ---------------------------------------------------------------------------
@@ -381,6 +419,7 @@ status() {
 case ${1:-} in
   --snapshot)   snapshot ;;
   --events)     events ;;
+  --mark)       mark "${@:2}" ;;
   ""|--status)  shift 2>/dev/null; status "$@" ;;
   --install)    install ;;
   --uninstall)  uninstall ;;
