@@ -44,13 +44,19 @@ STEP_TIMEOUT=10          # seconds; a step taking longer is killed and marked wi
 
 # What --events keeps from the system log. The kernel Wi-Fi errors and the
 # nesessionmanager interface changes are the messages seen before the October freezes.
+# The kernel's "Datapath timeout" lines come from the driver for Apple's N1 Wi-Fi chip
+# only (a Broadcom chip logs nothing comparable); airportd's Wi-Fi faults (DNS
+# failure, slow Wi-Fi) and DatapathStall analyses are logged whatever the chip, so
+# they compare Macs with different chips.
 EVENT_PREDICATE='
   (process == "nesessionmanager" AND (eventMessage CONTAINS "interface changed"
       OR ((eventMessage CONTAINS "Entering state" OR eventMessage CONTAINS "status changed")
           AND NOT eventMessage BEGINSWITH "NESMPathControllerSession")))
   OR (process == "kernel" AND (eventMessage CONTAINS "Datapath timeout"
       OR eventMessage CONTAINS "Link Down on en" OR eventMessage CONTAINS "Link Up on en"))
-  OR (process == "configd" AND eventMessage BEGINSWITH "network changed")'
+  OR (process == "configd" AND eventMessage BEGINSWITH "network changed")
+  OR (process == "airportd" AND (eventMessage CONTAINS "faultEventDetected"
+      OR eventMessage CONTAINS "for reason DatapathStall"))'
 
 usage() { sed -n '2,/^$/{s/^# \{0,1\}//;p;}' $SELF }
 

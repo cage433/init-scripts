@@ -126,9 +126,16 @@ EVENT_KINDS = [
      lambda m: "%s (%s) %s" % (m.group(2), m.group(1), m.group(3))),
     ("network changed", re.compile(r"network changed(?:: (.*))?"),
      lambda m: "network changed: %s" % (m.group(1) or "")),
+    ("wifi fault", re.compile(r"faultEventDetected:event:\] fault type \d+ (\w+)"),
+     lambda m: "Wi-Fi fault %s (airportd)" % m.group(1)),
+    ("wifi stall analysis", re.compile(r"for reason (DatapathStall)"),
+     lambda m: "Wi-Fi DatapathStall analysis (airportd)"),
     ("recorder", re.compile(r"-- (event stream started)"), lambda m: m.group(1)),
 ]
-NOISY = {"wifi datapath timeout", "network changed", "other"}   # counted rather than listed
+NOISY = {"wifi datapath timeout", "wifi fault", "wifi stall analysis", "network changed", "other"}   # counted rather than listed
+# Messages meaning the Wi-Fi path stalled: the N1 driver's datapath timeouts, and
+# airportd's stall analyses and faults, which any chip produces.
+WIFI_TROUBLE = {"wifi datapath timeout", "wifi stall analysis", "wifi fault"}
 
 
 def parse_events(path: str) -> list[Event]:
@@ -635,9 +642,9 @@ def main() -> int:
     if not lats:
         print("  no readings (recorded from 7 Nov 2026 on)")
     else:
-        # Split the minutes by whether the driver logged datapath timeouts around the
-        # measurement: if the timeouts are real slowdowns, those minutes are slower.
-        dp = [e.ts for e in log_events if e.kind == "wifi datapath timeout"]
+        # Split the minutes by whether Wi-Fi stall messages (WIFI_TROUBLE) were logged
+        # around the measurement: if they mean real slowdowns, those minutes are slower.
+        dp = [e.ts for e in log_events if e.kind in WIFI_TROUBLE]
         def near_timeout(ts: datetime) -> bool:
             i = bisect.bisect_left(dp, ts - timedelta(seconds=10))
             return i < len(dp) and dp[i] <= ts + timedelta(seconds=15)
@@ -645,7 +652,7 @@ def main() -> int:
         without = [l for l in lats if not near_timeout(l.ts)]
         print("  all             " + latency_summary(lats))
         if dp:
-            print("  with timeouts   " + latency_summary(with_dp))
+            print("  with wifi msgs  " + latency_summary(with_dp))
             print("  without         " + latency_summary(without))
         worst = sorted((l for l in lats if l.rtt_max is not None), key=lambda l: -l.rtt_max)[:3]
         bad_dns = [l for l in lats if l.dns_ms is None or l.dns_ms >= 1000]
