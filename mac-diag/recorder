@@ -12,7 +12,8 @@
 #
 # Three LaunchAgents write to ~/mac-diag/recorder, one file per kind per day:
 #   snap-YYYY-MM-DD.log    a snapshot every 60 s: threads, CPU, memory, thermal,
-#                          interfaces, routes, DNS, VPN, network extensions, Wi-Fi, pfctl
+#                          interfaces, routes, DNS, VPN, network extensions, Wi-Fi,
+#                          router ping and DNS lookup times, pfctl
 #   events-YYYY-MM-DD.log  as they happen: primary-interface changes, Wi-Fi link and
 #                          datapath errors, VPN/proxy session changes, configd network changes
 #   stalls-YYYY-MM-DD.log  each time the stall detector could not run for more than
@@ -150,6 +151,31 @@ snapshot() {
   else
     print "wifi: unavailable (helper not built - run mac-diag-recorder --install)"
   fi
+
+  section "latency"
+  # Whether the network is actually slow, as opposed to the driver logging datapath
+  # timeouts. Ten pings to the Wi-Fi router over 2 s (bound to en0, so a VPN tunnel
+  # is bypassed) measure the Wi-Fi hop alone; one DNS lookup through the system's
+  # resolver measures the path apps use, VPN included. Neither goes beyond the
+  # router and the configured DNS server. ping and dig limit their own run time
+  # (4 s and 2 s), and a failure here is a measurement, not a recorder error.
+  local gw pingout dnsout
+  gw=$(ipconfig getoption en0 router 2>/dev/null)
+  if [[ -n $gw ]]; then
+    pingout=$(ping -q -n -c 10 -i 0.2 -t 4 -b en0 $gw 2>&1)
+    print -r -- "$pingout" | awk -v gw=$gw '
+      / packets transmitted/ { sent = $1; recv = $4 }
+      /^round-trip/          { split($4, r, "/"); rtt = sprintf(" rtt_ms=%.1f/%.1f/%.1f", r[1], r[2], r[3]) }
+      END { printf "router: gw=%s sent=%d received=%d%s\n", gw, sent, recv, rtt }'
+  else
+    print "router: no Wi-Fi router"
+  fi
+  dnsout=$(dig +tries=1 +time=2 apple.com A 2>&1)
+  print -r -- "$dnsout" | awk '
+    /status:/       { st = $6; sub(/,$/, "", st) }
+    /Query time:/   { ms = $4 }
+    /^;; SERVER:/   { split($3, s, "#"); srv = s[1] }
+    END { if (ms == "") print "dns: timeout"; else printf "dns: server=%s status=%s ms=%d\n", srv, st, ms }'
 
   section "pfctl"
   # Without root there is no record of past pfctl runs: it writes nothing to the

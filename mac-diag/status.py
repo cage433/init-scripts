@@ -7,6 +7,7 @@ snapshot, event and stall files the recorder's three LaunchAgents write.
 from __future__ import annotations
 
 import argparse
+import bisect
 import gzip
 import os
 import re
@@ -278,6 +279,58 @@ def wifi_of(s: Snapshot) -> Wifi | None:
         if m:
             return Wifi(s.ts, int(m.group(1)), int(m.group(2)), int(m.group(3)), m.group(4))
     return None
+
+
+@dataclass
+class Latency:
+    ts: datetime
+    sent: int | None = None       # router pings; None when there was no Wi-Fi router
+    received: int | None = None
+    rtt_avg: float | None = None
+    rtt_max: float | None = None
+    dns_ms: int | None = None     # None when the lookup timed out
+    dns_server: str = ""
+
+
+def latency_of(s: Snapshot) -> Latency | None:
+    lines = s.sections.get("latency")
+    if not lines:
+        return None
+    lat = Latency(s.ts)
+    for line in lines:
+        m = re.match(r"router: gw=\S+ sent=(\d+) received=(\d+)(?: rtt_ms=([\d.]+)/([\d.]+)/([\d.]+))?", line)
+        if m:
+            lat.sent, lat.received = int(m.group(1)), int(m.group(2))
+            if m.group(3):
+                lat.rtt_avg, lat.rtt_max = float(m.group(4)), float(m.group(5))
+        m = re.match(r"dns: server=(\S+) status=\S+ ms=(\d+)", line)
+        if m:
+            lat.dns_server, lat.dns_ms = m.group(1), int(m.group(2))
+    return lat
+
+
+def pct(values: list[float], p: float) -> float:
+    v = sorted(values)
+    return v[min(len(v) - 1, int(p * len(v)))]
+
+
+def latency_summary(rows: list[Latency]) -> str:
+    pinged = [r for r in rows if r.sent]
+    sent = sum(r.sent for r in pinged)
+    lost = sum(r.sent - r.received for r in pinged)
+    rtts = [r.rtt_max for r in pinged if r.rtt_max is not None]
+    dns = [r.dns_ms for r in rows if r.dns_ms is not None]
+    parts = ["%4d min" % len(rows)]
+    if sent:
+        parts.append("router loss %4.1f%% (%d min with any)" % (100 * lost / sent, sum(1 for r in pinged if r.received < r.sent)))
+    if rtts:
+        parts.append("slowest ping median %5.1f ms, p95 %6.1f ms" % (statistics.median(rtts), pct(rtts, 0.95)))
+    if dns:
+        parts.append("dns median %3d ms, p95 %4d ms, %d timeout(s)"
+                     % (statistics.median(dns), pct(dns, 0.95), len(rows) - len(dns)))
+    elif rows:
+        parts.append("dns: all %d lookup(s) timed out" % len(rows))
+    return "; ".join(parts)
 
 
 def extensions_key(s: Snapshot) -> str | None:
@@ -575,6 +628,35 @@ def main() -> int:
             print("  below %d dB    %d of %d readings (%.0f%%)%s"
                   % (LOW_SNR, low, len(snrs), 100 * low / len(snrs), note))
         show_changes("channel", changes(snaps, channel_key), now)
+    print()
+
+    print("latency (10 pings to the Wi-Fi router and one DNS lookup, each snapshot)")
+    lats = [l for l in (latency_of(s) for s in snaps) if l]
+    if not lats:
+        print("  no readings (recorded from 7 Nov 2026 on)")
+    else:
+        # Split the minutes by whether the driver logged datapath timeouts around the
+        # measurement: if the timeouts are real slowdowns, those minutes are slower.
+        dp = [e.ts for e in log_events if e.kind == "wifi datapath timeout"]
+        def near_timeout(ts: datetime) -> bool:
+            i = bisect.bisect_left(dp, ts - timedelta(seconds=10))
+            return i < len(dp) and dp[i] <= ts + timedelta(seconds=15)
+        with_dp = [l for l in lats if near_timeout(l.ts)]
+        without = [l for l in lats if not near_timeout(l.ts)]
+        print("  all             " + latency_summary(lats))
+        if dp:
+            print("  with timeouts   " + latency_summary(with_dp))
+            print("  without         " + latency_summary(without))
+        worst = sorted((l for l in lats if l.rtt_max is not None), key=lambda l: -l.rtt_max)[:3]
+        bad_dns = [l for l in lats if l.dns_ms is None or l.dns_ms >= 1000]
+        lossy = [l for l in lats if l.sent and l.received < l.sent]
+        for l in worst:
+            print("  slowest ping    %s  %.0f ms (avg %.0f ms, %d of %d answered)"
+                  % (hm(l.ts, now), l.rtt_max, l.rtt_avg, l.received, l.sent))
+        for l in lossy[-3:]:
+            print("  lost pings      %s  %d of %d answered" % (hm(l.ts, now), l.received, l.sent))
+        for l in bad_dns[-3:]:
+            print("  slow dns        %s  %s" % (hm(l.ts, now), "timeout" if l.dns_ms is None else "%d ms" % l.dns_ms))
     print()
 
     print("pfctl")
